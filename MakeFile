@@ -1,0 +1,8 @@
+.PHONY: test hello
+
+test:
+        @echo "Это тестовый вывод из Makefile"
+        @echo "Makefile успешно работает!"
+
+hello:
+        @echo "Привет, мир из Makefile!"
