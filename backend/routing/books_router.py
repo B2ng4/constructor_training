@@ -1,9 +1,9 @@
 from typing import List
 
 from fastapi import APIRouter, Depends
-from schemas.books import Book
-from depends import get_book_service
-from services.books import BookService
+from backend.schemas.books import Book
+from backend.depends import get_book_service
+from backend.services.books import BookService
 
 router = APIRouter(prefix="/books", tags=["Книги"])
 

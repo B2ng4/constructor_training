@@ -1,6 +1,9 @@
 from sqlalchemy import text
 from sqlalchemy.orm import Mapped, mapped_column
-from core.database import *
+from backend.core.database import *
+
+
+Base.metadata.clear()
 
 
 class User(Base):
@@ -11,8 +14,6 @@ class User(Base):
     email: Mapped[str] = mapped_column(unique=True)
     password: Mapped[str]
     is_admin: Mapped[bool] = mapped_column(default=False, server_default=text('false'), nullable=False)
-
-    extend_existing = True
 
     def __repr__(self):
         return f"{self.__class__.__name__}(id={self.id})"

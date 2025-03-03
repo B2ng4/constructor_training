@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncAttrs, AsyncSession
 from sqlalchemy.orm import DeclarativeBase, declared_attr
-from core.config import get_db_url
+from backend.core.config import get_db_url
 from sqlalchemy import text
 import asyncio
 
@@ -19,6 +19,7 @@ async_session = async_sessionmaker(
 
 class Base(AsyncAttrs, DeclarativeBase):
     __abstract__ = True
+    __table_args__ = {'extend_existing': True}
     @declared_attr.directive
     def __tablename__(cls) -> str:
         return f"{cls.__name__.lower()}s"

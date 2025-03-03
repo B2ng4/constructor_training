@@ -5,11 +5,11 @@ from typing import List, Optional
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from pydantic import EmailStr
-from schemas.users import UserRegister, UserLogin, User
-from repositories.users import UserRepository
-from utils.security import verify_password, get_password_hash, create_access_token
+from backend.schemas.users import UserRegister, UserLogin, User
+from backend.repositories.users import UserRepository
+from backend.utils.security import verify_password, get_password_hash, create_access_token
 from sqlalchemy.ext.asyncio import AsyncSession
-from core.config import configs
+from backend.core.config import configs
 
 
 
@@ -31,7 +31,7 @@ class UserService:
 
     async def login(self, credential: UserLogin) -> Optional[str]:
         # Используем authenticate_user для проверки email и пароля
-        user = await self.authenticate(email=credential.email, password=credential.password)
+        user = await self.authenticate(email=credential.username, password=credential.password)
         if not user:
             return None
 
@@ -39,8 +39,6 @@ class UserService:
             data={"sub": user.email},
         )
         return access_token
-
-
 
 
     async def get_current_user(self, token: str) -> User:

@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy import Column, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 import sqlalchemy as sa
-from core.database import *
+from backend.core.database import *
 
 
 
