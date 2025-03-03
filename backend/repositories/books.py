@@ -3,8 +3,8 @@ from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.schemas.books import Book
-from backend.services import  books
+from schemas.books import Book
+
 
 from typing import List
 

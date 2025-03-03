@@ -5,11 +5,11 @@ from typing import List, Optional
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from pydantic import EmailStr
-from backend.schemas.users import UserRegister, UserLogin, User
-from backend.repositories.users import UserRepository
-from backend.utils.security import verify_password, get_password_hash, create_access_token
+from schemas.users import UserRegister, UserLogin, User
+from repositories.users import UserRepository
+from utils.security import verify_password, get_password_hash, create_access_token
 from sqlalchemy.ext.asyncio import AsyncSession
-from backend.core.config import configs
+from core.config import configs
 
 
 

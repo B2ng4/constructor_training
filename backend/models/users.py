@@ -1,6 +1,6 @@
 from sqlalchemy import text
 from sqlalchemy.orm import Mapped, mapped_column
-from backend.core.database import *
+from core.database import *
 
 
 class User(Base):
