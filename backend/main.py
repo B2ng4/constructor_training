@@ -20,3 +20,11 @@ app.include_router(books_router.router)
 
 # docker run -p 8001:8001 feec3ca171c7
 
+if __name__ == '__main__':
+    import uvicorn
+    uvicorn.run("main:app", host="localhost", port=8001)
+
+
+# uvicorn.run("main:app", host="localhost", port=8000, reload=True)
+
+
