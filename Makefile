@@ -7,8 +7,11 @@ PORT = 8001
 
 
 .PHONY: dev
- dev:
+ run:
 	$(DOCKER_COMPOSE) build ; $(DOCKER_COMPOSE) up -d
 
  stop:
 	$(DOCKER_COMPOSE) down
+
+ backend:
+	$(PYTHON) backend/main.py
