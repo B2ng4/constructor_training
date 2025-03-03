@@ -22,3 +22,10 @@
 
 
 ## Frontend
+
+vue
+vite
+vue-router
+quasar
+prettier
+eslint
