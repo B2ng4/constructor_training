@@ -1,8 +1,7 @@
 
-
-from backend.models.users import User
-from backend.schemas.users import UserRegister
-from backend.utils.security import get_password_hash
+from models.users import User
+from schemas.users import UserRegister
+from utils.security import get_password_hash
 
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession

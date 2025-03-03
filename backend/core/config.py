@@ -4,9 +4,6 @@ from typing import Optional
 import os
 
 
-
-
-
 class Configs(BaseSettings):
 
     #Для инициализации проекта#

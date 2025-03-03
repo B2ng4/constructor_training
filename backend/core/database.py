@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncAttrs, AsyncSession
 from sqlalchemy.orm import DeclarativeBase, declared_attr
-from backend.core.config import get_db_url
+from core.config import get_db_url
 from sqlalchemy import text
 import asyncio
 

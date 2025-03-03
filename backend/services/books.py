@@ -1,8 +1,8 @@
 from typing import List
 
 
-from backend.schemas.books import Book
-from backend.repositories.books import BookRepository
+from schemas.books import Book
+from repositories.books import BookRepository
 
 
 class BookService:

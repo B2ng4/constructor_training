@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response, Body
 from fastapi.security import OAuth2PasswordBearer
 from starlette import status
 
-from backend.schemas.users import UserRegister
+from schemas.users import UserRegister
 from schemas.books import Book
 from depends import get_book_service, get_user_service
 from schemas.users import UserRegister, UserLogin, User

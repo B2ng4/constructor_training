@@ -24,6 +24,7 @@ pydantic-settings==2.8.1
 pydantic_core==2.27.2
 python-dotenv==1.0.1
 python-jose==3.4.0
+python-multipart==0.0.20
 PyYAML==6.0.2
 requests==2.32.3
 rsa==4.9

@@ -9,10 +9,6 @@ from routing import books_router
 from routing import auth_router
 from core.config import configs
 from core.create_base_app import create_base_app
-import os
-import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
 
 app = create_base_app(configs)
 app.include_router(auth_router.router)
