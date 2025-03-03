@@ -3,8 +3,8 @@ version: '3.8'
 services:
   backend:
     build:
-      context: .
-      dockerfile: dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: backend
     ports:
       - "8001:8001"
