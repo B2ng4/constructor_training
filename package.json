@@ -1,13 +1,13 @@
 {
   "name": "frontend",
   "version": "1.0.0",
-  "scripts": { 
+  "scripts": {
     "dev": "vite",
     "watch": "vite watch",
-    "build": "vite build"
+    "build": "vite build",
+    "eslint": "npx eslint frontend/src",
+    "prettier": "prettier --write frontend/src"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "eslint": "^9.21.0",
     "quasar": "^2.18.0",
@@ -17,6 +17,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.1",
+    "eslint-plugin-vue": "^9.32.0",
     "prettier": "3.5.2"
   }
 }
