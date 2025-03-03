@@ -9,3 +9,6 @@ PORT = 8001
 .PHONY: dev
  dev:
 	$(DOCKER_COMPOSE) build ; $(DOCKER_COMPOSE) up -d
+
+ stop:
+	$(DOCKER_COMPOSE) down
