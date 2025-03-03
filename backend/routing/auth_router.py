@@ -3,13 +3,13 @@ from fastapi import APIRouter, Depends, HTTPException, Response, Body
 from fastapi.security import OAuth2PasswordBearer
 from starlette import status
 
-from backend.schemas.users import UserRegister
-from backend.schemas.books import Book
-from backend.depends import get_book_service, get_user_service
-from backend.schemas.users import UserRegister, UserLogin, User
-from backend.services.books import BookService
-from backend.services.users import UserService
-from backend.utils.security import get_password_hash
+from schemas.users import UserRegister
+from schemas.books import Book
+from depends import get_book_service, get_user_service
+from schemas.users import UserRegister, UserLogin, User
+from services.books import BookService
+from services.users import UserService
+from utils.security import get_password_hash
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
