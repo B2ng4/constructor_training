@@ -4,11 +4,7 @@ from typing import Optional
 import os
 
 
-
-
-
 class Configs(BaseSettings):
-
     #Для инициализации проекта#
     PROJECT_NAME:str = "EventsKnastu"
     PROJECT_DESCRIPTION:str = "Проект для создания мероприятий в Кнагу"

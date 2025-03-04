@@ -19,6 +19,7 @@ async_session = async_sessionmaker(
 
 class Base(AsyncAttrs, DeclarativeBase):
     __abstract__ = True
+    __table_args__ = {'extend_existing': True}
     @declared_attr.directive
     def __tablename__(cls) -> str:
         return f"{cls.__name__.lower()}s"

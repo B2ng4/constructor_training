@@ -1,3 +1,4 @@
+from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Response, Body
 from fastapi.security import OAuth2PasswordBearer
@@ -31,12 +32,25 @@ async def register_user(user_data: UserRegister,
 
 
 
+from fastapi import Form
+
 @router.post("/login")
 async def login_user(
-    user_data: UserLogin = Body(...),
+    username: Optional[str] = Form(default=None),
+    password: Optional[str] = Form(default=None),
+    user_data: Optional[UserLogin] = Body(default=None),
     user_service: UserService = Depends(get_user_service)
 ) -> dict:
-    access_token = await user_service.login(user_data)
+    if user_data:
+        final_user_data = user_data
+    elif username and password:
+        final_user_data = UserLogin(username=username, password=password)
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Некорректные данные",
+        )
+    access_token = await user_service.login(final_user_data)
     if access_token is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -44,8 +58,6 @@ async def login_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     return {"access_token": access_token, "token_type": "bearer"}
-
-
 
 
 @router.get("/me/")

@@ -1,5 +1,6 @@
 from dataclasses import field
 
+from fastapi import Form
 from pydantic import BaseModel, EmailStr, Field, validator, field_validator
 import re
 
@@ -30,5 +31,7 @@ class UserRegister(User):
 
 
 class UserLogin(BaseModel):
-    email: EmailStr = Field(..., description="Электронная почта")
-    password: str = Field(..., min_length=5, max_length=50, description="Пароль, от 5 до 50 знаков")
+    username: EmailStr = Form(...),
+    password: str = Form(...)
+
+

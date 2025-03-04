@@ -1,5 +1,4 @@
 
-
 from models.users import User
 from schemas.users import UserRegister
 from utils.security import get_password_hash
