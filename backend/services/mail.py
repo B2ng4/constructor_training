@@ -3,6 +3,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from backend.core.config import configs
 from backend.schemas.mail import mail_send
+import asyncio
 
 
 class EmailService:
@@ -37,9 +38,16 @@ class EmailService:
             smtp.quit()
             return True
 
-        except:
-            return False
+        except Exception as e:
+            print(e)
 
 
 
+async def send_mail():
+    mail = EmailService()
+    pisimo = mail_send(email="timsidorin@gmail.com", subject="Добро пожаловать в EventsKnastu!", body="Вы успешно зарегистрировались в EventsKnastu!")
+    print(mail.send_email(pisimo))
+
+if __name__ == "__main__":
+    asyncio.run(send_mail())
 
