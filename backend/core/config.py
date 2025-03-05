@@ -34,6 +34,9 @@ class Configs(BaseSettings):
         env_file=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
     )
 
+
+
+
 configs = Configs()
 def get_db_url():
     return (f"postgresql+asyncpg://{configs.DB_USER}:{configs.DB_PASS}@"
