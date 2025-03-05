@@ -24,6 +24,7 @@ class EmailService:
         message.attach(MIMEText(body, "plain"))
 
 
+
         try:
             if self.use_ssl:
                 smtp = smtplib.SMTP_SSL(self.server, self.port)
@@ -40,7 +41,3 @@ class EmailService:
         except:
             return False
 
-
-if __name__ == "__main__":
-    mail_service = EmailService()
-    mail_service.send_welcome_email("timsidorin@gmail.com")

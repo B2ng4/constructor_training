@@ -8,6 +8,7 @@ from repositories.users import UserRepository
 from services.users import UserService
 from repositories.books import BookRepository
 from services.books import  BookService
+from  services.mail import EmailService
 
 """
 Файл внедрения зависимостей
@@ -22,7 +23,8 @@ def get_book_service(session: AsyncSession = Depends(get_async_session)) -> Book
 async def get_user_service(
     session: AsyncSession = Depends(get_async_session)) -> UserService:
     repo = UserRepository(session)
-    return UserService(repo)
+    email_service = EmailService
+    return UserService(repo, email_service)
 
 
 

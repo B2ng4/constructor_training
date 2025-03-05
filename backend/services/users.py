@@ -1,4 +1,4 @@
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, BackgroundTasks
 from os import access
 from typing import List, Optional
 
@@ -20,7 +20,7 @@ class UserService:
         self.email_service = email_service
 
     async def register(self, user_data: UserRegister) -> bool:
-        self.email_service.send_welcome_email(user_data.email)
+        BackgroundTasks.add_task(self.email_service.send_welcome_email, user_data.email)
         return await self.user_repo.add_user(user_data)
 
 

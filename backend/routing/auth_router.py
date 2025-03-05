@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Response, Body, BackgroundTasks, Form
+from fastapi import APIRouter, Depends, HTTPException, Response, Body, Form
 from fastapi.security import OAuth2PasswordBearer
 from starlette import status
 
@@ -21,22 +21,17 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 
-
 @router.post("/register")
-async def register_user(user_data: UserRegister,
-                        backgroundtask:BackgroundTasks,
-                        user_service: UserService = Depends(get_user_service)) -> dict:
-
+async def register_user(
+        user_data: UserRegister,
+        user_service: UserService = Depends(get_user_service)) -> dict:
     if await user_service.register(user_data):
-        return {'message': 'Вы успешно зарегистрированы!'}
+        return {'message': 'Вы успешно зарегистрированы! На ваш email отправлено письмо.'}
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Пользователь с таким email уже существует!"
         )
-
-
-
 
 
 @router.post("/login")
