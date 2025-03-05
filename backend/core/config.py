@@ -21,6 +21,15 @@ class Configs(BaseSettings):
     DB_NAME: Optional[str] = Field(default="timofeymac", env="DB_NAME")
     DB_PASS: Optional[str] = Field(default="admin", env="DB_PASS")
 
+    # Настройки почты
+    MAIL_USERNAME: Optional[str] = Field(default=None, env="MAIL_USERNAME")
+    MAIL_PASSWORD: Optional[str] = Field(default=None, env="MAIL_PASSWORD")
+    MAIL_FROM: Optional[str] = Field(default=None, env="MAIL_FROM")
+    MAIL_PORT: Optional[int] = Field(default=465, env="MAIL_PORT")
+    MAIL_SERVER: Optional[str] = Field(default="smtp.yandex.ru", env="MAIL_SERVER")
+    MAIL_TLS: bool = Field(default=True, env="MAIL_TLS")
+    MAIL_SSL: bool = Field(default=False, env="MAIL_SSL")
+
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
     )
