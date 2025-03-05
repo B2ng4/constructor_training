@@ -22,13 +22,14 @@ class Configs(BaseSettings):
     DB_PASS: Optional[str] = Field(default="admin", env="DB_PASS")
 
     # Настройки почты
-    MAIL_USERNAME: Optional[str] = Field(default=None, env="MAIL_USERNAME")
-    MAIL_PASSWORD: Optional[str] = Field(default=None, env="MAIL_PASSWORD")
-    MAIL_FROM: Optional[str] = Field(default=None, env="MAIL_FROM")
-    MAIL_PORT: Optional[int] = Field(default=465, env="MAIL_PORT")
-    MAIL_SERVER: Optional[str] = Field(default="smtp.yandex.ru", env="MAIL_SERVER")
-    MAIL_TLS: bool = Field(default=True, env="MAIL_TLS")
-    MAIL_SSL: bool = Field(default=False, env="MAIL_SSL")
+    MAIL_USERNAME: Optional[str] = Field(default="f83716ce-c279-4880-adcb-fafe0815012b", env="MAIL_USERNAME")
+    MAIL_PASSWORD: Optional[str] = Field(default="f901ef60-b267-418e-87b5-679c6edb6d9e", env="MAIL_PASSWORD")
+    MAIL_FROM: Optional[str] = Field(default="john.doe@example.org", env="MAIL_FROM")
+    MAIL_PORT: Optional[int] = Field(default=25, env="MAIL_PORT")
+    MAIL_SERVER: Optional[str] = Field(default="app.debugmail.io", env="MAIL_SERVER")
+    MAIL_STARTTLS: bool = Field(default=True, env="MAIL_STARTTLS")
+    MAIL_SSL_TLS: bool = Field(default=False, env="MAIL_SSL_TLS")
+
 
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")

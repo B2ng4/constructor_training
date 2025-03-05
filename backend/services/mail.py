@@ -1,26 +1,46 @@
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from backend.core.config import configs
-
 
 
 class EmailService:
     def __init__(self):
-        self.conf = ConnectionConfig(
-            MAIL_USERNAME=configs.MAIL_USERNAME,
-            MAIL_PASSWORD=configs.MAIL_PASSWORD,
-            MAIL_FROM=configs.MAIL_FROM,
-            MAIL_PORT=configs.MAIL_PORT,
-            MAIL_SERVER=configs.MAIL_SERVER,
-            MAIL_TLS=configs.MAIL_TLS,
-            MAIL_SSL=configs.MAIL_SSL,
-        )
+        self.username = configs.MAIL_USERNAME
+        self.password = configs.MAIL_PASSWORD
+        self.sender = configs.MAIL_FROM
+        self.port = configs.MAIL_PORT
+        self.server = configs.MAIL_SERVER
+        self.use_tls = configs.MAIL_STARTTLS
+        self.use_ssl = configs.MAIL_SSL_TLS
 
-    async def send_welcome_email(self, email: str):
-        message = MessageSchema(
-            subject="Добро пожаловать в EventsKnagu",
-            recipients=[email],
-            body="Спасибо за регистрацию!",
-        )
-        fm = FastMail(self.conf)
-        await fm.send_message(message)
+    def send_welcome_email(self, email: str):
+        # Создаем сообщение
+        message = MIMEMultipart()
+        message["Subject"] = "Добро пожаловать в EventsKnagu"
+        message["From"] = self.sender
+        message["To"] = email
+        body = "Спасибо за регистрацию!"
+        message.attach(MIMEText(body, "plain"))
 
+
+        try:
+            if self.use_ssl:
+                smtp = smtplib.SMTP_SSL(self.server, self.port)
+            else:
+                smtp = smtplib.SMTP(self.server, self.port)
+
+                if self.use_tls:
+                    smtp.starttls()
+            smtp.login(self.username, self.password)
+            smtp.send_message(message)
+            smtp.quit()
+            return True
+
+        except:
+            return False
+
+
+if __name__ == "__main__":
+    mail_service = EmailService()
+    mail_service.send_welcome_email("timsidorin@gmail.com")
