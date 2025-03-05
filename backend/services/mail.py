@@ -2,6 +2,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from backend.core.config import configs
+from backend.schemas.mail import mail_send
 
 
 class EmailService:
@@ -14,16 +15,14 @@ class EmailService:
         self.use_tls = configs.MAIL_STARTTLS
         self.use_ssl = configs.MAIL_SSL_TLS
 
-    def send_welcome_email(self, email: str):
+    def send_email(self, mail_send:mail_send):
         # Создаем сообщение
         message = MIMEMultipart()
-        message["Subject"] = "Добро пожаловать в EventsKnagu"
+        message["Subject"] = mail_send.subject
         message["From"] = self.sender
-        message["To"] = email
-        body = "Спасибо за регистрацию!"
+        message["To"] = mail_send.email
+        body = mail_send.body
         message.attach(MIMEText(body, "plain"))
-
-
 
         try:
             if self.use_ssl:
@@ -40,4 +39,7 @@ class EmailService:
 
         except:
             return False
+
+
+
 
