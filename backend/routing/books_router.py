@@ -3,7 +3,7 @@ from typing import List
 from fastapi import APIRouter, Depends
 from schemas.books import Book
 from depends import get_book_service
-from services.books import BookService
+from services.books_service import BookService
 
 router = APIRouter(prefix="/books", tags=["Книги"])
 

@@ -21,10 +21,14 @@ class UserService:
         self.user_repo = repo
         self.email_service = email_service
 
-    async def register(self, user_data: UserRegister) -> bool:
-        mail = mail_send(email = user_data.email, subject="Добро пожаловать в EventsKnastu!", body="Добро пожаловать в EventsKnastu!")
-        BackgroundTasks.add_task(self.email_service.send_email, mail)
+    async def register(self, user_data: UserRegister, background_tasks: BackgroundTasks) -> bool:
+        mail = mail_send(email = user_data.email,
+                         subject="Добро пожаловать в EventsKnastu!",
+                         body="Вы успешно зарегистрированы в EventsKnastu!")
+        background_tasks.add_task(self.email_service.send_email, mail)
         return await self.user_repo.add_user(user_data)
+
+
 
 
     async def authenticate(self, email: EmailStr, password: str):

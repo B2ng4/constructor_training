@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Response, Body, Form
+from fastapi import APIRouter, Depends, HTTPException, Response, Body, Form, BackgroundTasks
 from fastapi.security import OAuth2PasswordBearer
 from starlette import status
 
@@ -8,8 +8,8 @@ from schemas.users import UserRegister
 from schemas.books import Book
 from depends import get_book_service, get_user_service
 from schemas.users import UserRegister, UserLogin, User
-from services.books import BookService
-from services.users import UserService
+from services.books_service import BookService
+from services.user_service import UserService
 from utils.security import get_password_hash
 
 
@@ -24,6 +24,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 @router.post("/register")
 async def register_user(
         user_data: UserRegister,
+        background_tasks: BackgroundTasks,
         user_service: UserService = Depends(get_user_service)) -> dict:
     if await user_service.register(user_data):
         return {'message': 'Вы успешно зарегистрированы! На ваш email отправлено письмо.'}
