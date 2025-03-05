@@ -5,10 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.database import get_async_session
 from models.users import User
 from repositories.users import UserRepository
-from services.users import UserService
+from services.user_service import UserService
 from repositories.books import BookRepository
-from services.books import  BookService
-from  services.mail import EmailService
+from services.books_service import  BookService
+from  services.mail_service import EmailService
 
 """
 Файл внедрения зависимостей

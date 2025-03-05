@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.config import configs
 
 from backend.schemas.mail import mail_send
-from backend.services.mail import EmailService
+from backend.services.mail_service import EmailService
 
 
 class UserService:
