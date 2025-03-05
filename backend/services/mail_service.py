@@ -16,13 +16,13 @@ class EmailService:
         self.use_tls = configs.MAIL_STARTTLS
         self.use_ssl = configs.MAIL_SSL_TLS
 
-    def send_email(self, mail_send:mail_send):
+    def send_email(self, mail:mail_send):
         # Создаем сообщение
         message = MIMEMultipart()
-        message["Subject"] = mail_send.subject
+        message["Subject"] = mail.subject
         message["From"] = self.sender
-        message["To"] = mail_send.email
-        body = mail_send.body
+        message["To"] = mail.email
+        body = mail.body
         message.attach(MIMEText(body, "plain"))
 
         try:
@@ -39,15 +39,14 @@ class EmailService:
             return True
 
         except Exception as e:
-            print(e)
+            return False
 
 
 
-async def send_mail():
-    mail = EmailService()
-    pisimo = mail_send(email="timsidorin@gmail.com", subject="Добро пожаловать в EventsKnastu!", body="Вы успешно зарегистрировались в EventsKnastu!")
-    print(mail.send_email(pisimo))
-
-if __name__ == "__main__":
-    asyncio.run(send_mail())
-
+# async def send_mail():
+#     mail = EmailService()
+#     pisimo = mail_send(email="sidorina_49@inbox.ru", subject="Добро пожаловать в EventsKnastu!", body="Вы успешно зарегистрировались в EventsKnastu!")
+#     print(mail.send_email(pisimo))
+#
+# if __name__ == "__main__":
+#     asyncio.run(send_mail())

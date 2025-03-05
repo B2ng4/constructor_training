@@ -8,12 +8,12 @@ from pydantic import EmailStr
 from schemas.users import UserRegister, UserLogin, User
 from repositories.users import UserRepository
 from utils.security import verify_password, get_password_hash, create_access_token
-from backend.schemas import mail
+from schemas import mail
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.config import configs
 
-from backend.schemas.mail import mail_send
-from backend.services.mail_service import EmailService
+from schemas.mail import mail_send
+from services.mail_service import EmailService
 
 
 class UserService:
@@ -27,8 +27,6 @@ class UserService:
                          body="Вы успешно зарегистрированы в EventsKnastu!")
         background_tasks.add_task(self.email_service.send_email, mail)
         return await self.user_repo.add_user(user_data)
-
-
 
 
     async def authenticate(self, email: EmailStr, password: str):

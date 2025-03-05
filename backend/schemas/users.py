@@ -30,9 +30,8 @@ class UserRegister(User):
 
 
 
-
 class UserLogin(BaseModel):
-    username: EmailStr = Form(...),
-    password: str = Form(...)
+    username: EmailStr
+    password: str
 
 

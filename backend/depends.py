@@ -23,7 +23,7 @@ def get_book_service(session: AsyncSession = Depends(get_async_session)) -> Book
 async def get_user_service(
     session: AsyncSession = Depends(get_async_session)) -> UserService:
     repo = UserRepository(session)
-    email_service = EmailService
+    email_service = EmailService()
     return UserService(repo, email_service)
 
 
