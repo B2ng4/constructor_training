@@ -1,6 +1,6 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Response, Body, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Response, Body, BackgroundTasks, Form
 from fastapi.security import OAuth2PasswordBearer
 from starlette import status
 
@@ -24,7 +24,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 @router.post("/register")
 async def register_user(user_data: UserRegister,
-                        backgroundtask:BackgroundTasks
+                        backgroundtask:BackgroundTasks,
                         user_service: UserService = Depends(get_user_service)) -> dict:
 
     if await user_service.register(user_data):
@@ -37,7 +37,7 @@ async def register_user(user_data: UserRegister,
 
 
 
-from fastapi import Form
+
 
 @router.post("/login")
 async def login_user(
