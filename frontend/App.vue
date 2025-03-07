@@ -11,4 +11,9 @@
 	name: "App",
   };
   </script>
-  
+
+<style scoped>
+p {
+  color: black;
+}
+</style>

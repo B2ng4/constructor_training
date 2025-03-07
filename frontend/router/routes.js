@@ -1,4 +1,4 @@
-import LoginPage from "@/admin/pages/LoginPage.vue"
+import LoginPage from "../pages/LoginPage.vue"
 
 export const routes = [
     { path: '/' },
