@@ -1,19 +1,9 @@
 <template>
-  <h1>App</h1>
-  <router-link to="/login">
-    <button>login</button>
-  </router-link>
-	<router-view />
-  </template>
+  <router-view />
+</template>
   
-  <script>
+<script>
   export default {
-	name: "App",
+  name: "App",
   };
-  </script>
-
-<style scoped>
-p {
-  color: black;
-}
-</style>
+</script>
