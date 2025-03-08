@@ -5,8 +5,8 @@
     "dev": "vite",
     "watch": "vite watch",
     "build": "vite build",
-    "eslint": "npx eslint frontend/src",
-    "prettier": "prettier --write frontend/src"
+    "eslint": "npx eslint frontend",
+    "prettier": "prettier --write frontend"
   },
   "dependencies": {
     "@quasar/extras": "^1.16.17",

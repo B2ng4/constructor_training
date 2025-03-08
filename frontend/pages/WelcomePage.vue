@@ -1,9 +1,9 @@
 <template>
+	<h1>Начальная страница</h1>
+</template>
 
-  </template>
-    
 <script>
 export default {
-    name: "WelcomePage",
+	name: "WelcomePage",
 };
 </script>
