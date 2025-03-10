@@ -9,7 +9,8 @@ from alembic import context
 from core.database import Base, DATABASE_URL
 
 from models.users import *
-from models.books import *
+from models.events import *
+
 
 # this is the Alembic Config object
 config = context.config
