@@ -1,8 +1,8 @@
 <template>
-	<BaseCard width="500px" title="Вход" class="fixed-center">
-		<template v-slot:body>
+    <BaseCard width="500px" title="Регистрация" class="fixed-center">
+        <template v-slot:body>
 			<q-form
-				@submit="auth"
+				@submit="onSubmit"
 				class="q-gutter-md"
 				>
 				<q-input
@@ -21,7 +21,7 @@
 				/>
 				<div>
 					<q-btn 
-						label="Войти" 
+						label="Регистрация" 
 						type="submit" 
 						color="primary" 
 						class="full-width"
@@ -36,38 +36,15 @@
 				</div>
 			</q-form>
 		</template>
-	</BaseCard>
+    </BaseCard>
 </template>
 
 <script>
-import axios from 'axios';
-import BaseCard from '../components/BaseComponents/BaseCard.vue'
+import BaseCard from '../components/BaseComponents/BaseCard.vue';
 export default {
-	name: "LoginPage",
-	components: {BaseCard},
-	data() {
-		return {
-			mail: '',
-			password: ''
-		}
-	},
-	methods: {
-		onReset() {
-			this.mail = ''
-			this.password = ''
-		},
-		auth() {
-			let form = new FormData()
-			form.append('username', this.mail)
-			form.append('password', this.password)
-			axios.post('http://localhost:8001/auth/login', form)
-			.then((response) => {
-				localStorage.setItem('tokenAuth', response.data.access_token)
-				this.$router.push('/personal')
-			})
-		}
-	}
-};
+    name: 'RegistrationPage',
+    components: {BaseCard}
+}
 </script>
 
 <style scoped>
