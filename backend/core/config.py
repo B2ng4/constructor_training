@@ -47,4 +47,3 @@ def get_db_url():
 def get_auth_data():
     return {"secret_key": configs.SECRET_KEY, "algorithm": configs.ALGORITHM}
 
-
