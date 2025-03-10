@@ -1,7 +1,7 @@
+import uuid
 from datetime import datetime
-
 from sqlalchemy import text, ForeignKey
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from core.database import *
 import sqlalchemy as sa
@@ -14,6 +14,7 @@ class Event(Base):
     type: Mapped["Type_event"] = relationship("Type_event", back_populates="events")
     start_date: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), nullable=False)
     end_date: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), nullable=True)
+    image_uuid: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=True)
 
 
 class Type_event(Base):

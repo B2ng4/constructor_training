@@ -4,8 +4,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from schemas.events import EventCreate
 from fastapi.security import OAuth2PasswordBearer
 from depends import get_events_service
-
+from starlette import status
 from services.events_service import EventsService
+
+from schemas.events import EventResponse
 
 router = APIRouter(prefix="/event", tags=["Мероприятия"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
@@ -17,4 +19,18 @@ async def create_event(ser_data: EventCreate,
                        token: str = Depends(oauth2_scheme),
                        event_service: EventsService = Depends(get_events_service)):
     """Создание нового мероприятия (только админы и суперпользователи"""
-    return await event_service.create_event(ser_data)
+    if await event_service.create_event(ser_data):
+        return HTTPException(status.HTTP_200_OK)
+    else:
+        return HTTPException(status.HTTP_400_BAD_REQUEST)
+
+
+@router.get("/{event_id}", response_model=EventResponse)
+async def get_event(
+    event_id: int,
+    service: EventsService = Depends(get_events_service)
+):
+    event = await service.get_event(event_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Мероприятие не найдено")
+    return event
