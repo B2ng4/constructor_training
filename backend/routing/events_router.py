@@ -20,17 +20,21 @@ async def create_event(ser_data: EventCreate,
                        event_service: EventsService = Depends(get_events_service)):
     """Создание нового мероприятия (только админы и суперпользователи"""
     if await event_service.create_event(ser_data):
-        return HTTPException(status.HTTP_200_OK)
+        return HTTPException(status.HTTP_200_OK, detail="Мероприятие успешно создано")
     else:
-        return HTTPException(status.HTTP_400_BAD_REQUEST)
+        return HTTPException(status_code=404, detail="Мероприятие не создано")
 
 
 @router.get("/{event_id}", response_model=EventResponse)
-async def get_event(
-    event_id: int,
-    service: EventsService = Depends(get_events_service)
-):
+async def get_event(event_id: int,service: EventsService = Depends(get_events_service)):
     event = await service.get_event(event_id)
     if not event:
         raise HTTPException(status_code=404, detail="Мероприятие не найдено")
     return event
+
+@router.delete("/{event_id}")
+async def delete_event(event_id: int, service: EventsService = Depends(get_events_service)):
+    if await service.delete_event(event_id):
+        return HTTPException(status.HTTP_200_OK, detail="Мероприятие успешно удалено")
+    else:
+        raise HTTPException(status_code=404, detail="Мероприятие не найдено")
