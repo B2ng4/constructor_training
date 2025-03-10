@@ -49,3 +49,6 @@ async def delete_event(event_id: int, service: EventsService = Depends(get_event
         return HTTPException(status.HTTP_200_OK, detail="Мероприятие успешно удалено")
     else:
         raise HTTPException(status_code=404, detail="Мероприятие не найдено")
+
+#TODO: Добавить доступ к апихам по ролям, добавить ручки для получения мероприятий по типу(фильтрация)
+
