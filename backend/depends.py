@@ -22,6 +22,5 @@ async def get_user_service(
 async def get_events_service(
     session: AsyncSession = Depends(get_async_session)) -> EventsService:
     repo = UserRepository(session)
-    email_service = EmailService()
-    return UserService(repo, email_service)
+    return EventsService(repo)
 
