@@ -42,19 +42,6 @@ services:
       - app-network
     restart: unless-stopped
 
-  frontend:
-    build:
-      context: .  
-      dockerfile: Dockerfile  
-    container_name: frontend
-    ports:
-      - "8080:80"
-    depends_on:
-      - backend
-    networks:
-      - app-network
-    restart: unless-stopped
-
 volumes:
   postgres_data:
 
