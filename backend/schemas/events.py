@@ -6,7 +6,7 @@ from pydantic import BaseModel
 class EventCreate(BaseModel):
     title: str
     type_id: int
-    start_date: datetime
+    start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
 
 

@@ -7,3 +7,4 @@ class mail_send(BaseModel):
     email: EmailStr = Field(..., description="Электронная почта")
     subject:str
     body:str
+

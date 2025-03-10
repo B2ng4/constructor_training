@@ -67,3 +67,4 @@ def downgrade() -> None:
     op.drop_table('type_events')
     op.drop_table('name_events')
     # ### end Alembic commands ###
+
