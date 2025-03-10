@@ -1,10 +1,10 @@
-from sqlalchemy import text
-from sqlalchemy.orm import Mapped, mapped_column
+from typing import List
+
+from sqlalchemy import text, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from core.database import *
+import sqlalchemy as sa
 import asyncio
-
-
-
 
 
 class User(Base):
@@ -14,8 +14,12 @@ class User(Base):
     last_name: Mapped[str]
     email: Mapped[str] = mapped_column(unique=True)
     password: Mapped[str]
-    is_admin: Mapped[bool] = mapped_column(default=False, server_default=text('false'), nullable=False)
+    role_id: Mapped[int] = mapped_column(ForeignKey("roles.id"))
+    role: Mapped["Role"] = relationship("Role", back_populates="users")
 
-    def __repr__(self):
-        return f"{self.__class__.__name__}(id={self.id})"
+
+class Role(Base):
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(sa.String(100))
+    users: Mapped[List["User"]] = relationship("User", back_populates="role")
 

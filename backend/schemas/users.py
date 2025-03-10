@@ -1,4 +1,5 @@
 from dataclasses import field
+from enum import Enum
 
 from fastapi import Form
 from pydantic import BaseModel, EmailStr, Field, validator, field_validator
@@ -6,12 +7,18 @@ import re
 
 
 
+
+class UserRole(int, Enum):
+    USER = 1
+    ADMIN = 2
+    MANAGER = 3
+
 class User(BaseModel):
     email: EmailStr = Field(..., description="Электронная почта")
     phone_number: str = Field(..., description="Номер телефона в международном формате, начинающийся с '+'")
     first_name: str = Field(..., min_length=3, max_length=50, description="Имя, от 3 до 50 символов")
     last_name: str = Field(..., min_length=3, max_length=50, description="Фамилия, от 3 до 50 символов")
-    is_admin: bool = False
+    role: UserRole = Field(default=UserRole.USER, description="Роль пользователя")
 
     @field_validator('phone_number')
     @classmethod
