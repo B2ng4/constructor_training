@@ -4,12 +4,11 @@ from schemas.users import UserRegister
 from utils.security import get_password_hash
 
 from typing import Optional
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 
 class UserRepository:
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(self, session) -> None:
         self.session = session
 
     async def find_one_or_none(self, email: str) -> User:

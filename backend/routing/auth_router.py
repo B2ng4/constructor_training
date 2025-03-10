@@ -5,10 +5,8 @@ from fastapi.security import OAuth2PasswordBearer
 from starlette import status
 
 from schemas.users import UserRegister
-from schemas.books import Book
-from depends import get_book_service, get_user_service
+from depends import get_user_service
 from schemas.users import UserRegister, UserLogin, User
-from services.books_service import BookService
 from services.user_service import UserService
 from utils.security import get_password_hash
 
@@ -17,7 +15,7 @@ from utils.security import get_password_hash
 
 
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(prefix="/auth", tags=["Auth"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 

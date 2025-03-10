@@ -1,17 +1,15 @@
 from fastapi import HTTPException, status, BackgroundTasks
 from os import access
 from typing import List, Optional
-
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from pydantic import EmailStr
 from schemas.users import UserRegister, UserLogin, User
-from repositories.users import UserRepository
+from repositories.users_repository import UserRepository
 from utils.security import verify_password, get_password_hash, create_access_token
 from schemas import mail
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.config import configs
-
 from schemas.mail import mail_send
 from services.mail_service import EmailService
 

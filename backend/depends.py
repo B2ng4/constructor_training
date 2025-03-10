@@ -4,21 +4,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.database import get_async_session
 from models.users import User
-from repositories.users import UserRepository
+from repositories.users_repository import UserRepository
 from services.user_service import UserService
-from repositories.books import BookRepository
-from services.books_service import  BookService
 from  services.mail_service import EmailService
+from  services.events_service import EventsService
 
 """
 Файл внедрения зависимостей
 """
-
-# Для книг (если используется синхронная сессия)
-def get_book_service(session: AsyncSession = Depends(get_async_session)) -> BookService:
-    repo = BookRepository(session)
-    return BookService(repo)
-
 # Для пользователей (асинхронная версия)
 async def get_user_service(
     session: AsyncSession = Depends(get_async_session)) -> UserService:
@@ -26,5 +19,9 @@ async def get_user_service(
     email_service = EmailService()
     return UserService(repo, email_service)
 
-
+async def get_events_service(
+    session: AsyncSession = Depends(get_async_session)) -> EventsService:
+    repo = UserRepository(session)
+    email_service = EmailService()
+    return UserService(repo, email_service)
 
