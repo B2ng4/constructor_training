@@ -12,16 +12,16 @@ class Event(Base):
     title: Mapped[str] = mapped_column(sa.String(100), unique=True)
     type_id: Mapped[int] = mapped_column(ForeignKey("type_events.id"))
     type: Mapped["Type_event"] = relationship("Type_event", back_populates="events")
-    start_date: Mapped[datetime] = mapped_column(sa.DateTime, nullable=False)
-    end_date: Mapped[datetime] = mapped_column(sa.DateTime, nullable=True)
+    start_date: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), nullable=False)
+    end_date: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), nullable=True)
 
 
 class Type_event(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[int] = mapped_column(ForeignKey("name_events.id"))
+    name_id: Mapped[int] = mapped_column(ForeignKey("name_events.id"))
     name_event: Mapped["Name_event"] = relationship("Name_event", back_populates="type_events")
     events: Mapped[list["Event"]] = relationship("Event", back_populates="type")
-    data: Mapped[dict] = mapped_column(JSONB)
+    data: Mapped[dict] = mapped_column(JSONB, default=lambda: {})
 
 
 class Name_event(Base):

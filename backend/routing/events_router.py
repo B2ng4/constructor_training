@@ -17,4 +17,4 @@ async def create_event(ser_data: EventCreate,
                        token: str = Depends(oauth2_scheme),
                        event_service: EventsService = Depends(get_events_service)):
     """Создание нового мероприятия (только админы и суперпользователи"""
-    pass
+    return await event_service.create_event(ser_data)
