@@ -1,6 +1,6 @@
 from schemas.events import EventCreate, EventUpdate
 from models.events import Event
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, update
 
 from models.events import Name_event, Type_event
 

@@ -1,13 +1,11 @@
 
 from fastapi import APIRouter, Depends, HTTPException
-
-from schemas.events import EventCreate
 from fastapi.security import OAuth2PasswordBearer
 from depends import get_events_service
 from starlette import status
 from services.events_service import EventsService
 
-from schemas.events import EventResponse
+from schemas.events import EventResponse, EventUpdate, EventCreate
 
 router = APIRouter(prefix="/event", tags=["Мероприятия"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
@@ -31,6 +29,19 @@ async def get_event(event_id: int,service: EventsService = Depends(get_events_se
     if not event:
         raise HTTPException(status_code=404, detail="Мероприятие не найдено")
     return event
+
+
+@router.put("/{event_id}")
+async def update_event(
+    event_id: int,
+    event_data: EventUpdate,
+    service: EventsService = Depends(get_events_service)):
+    event = await service.update_event(event_id, event_data)
+    if not event:
+        raise HTTPException(status_code=404, detail="Мероприятие не найдено")
+
+    return HTTPException(status_code=200, detail="Данные мероприятия успешно обновлены")
+
 
 @router.delete("/{event_id}")
 async def delete_event(event_id: int, service: EventsService = Depends(get_events_service)):
