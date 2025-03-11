@@ -1,5 +1,5 @@
 <template>
-    <q-card class="my-card shadow-1" :style="`max-width: ${width}`">
+    <q-card class="my-card shadow-1" :style="{ maxWidth: width }">
       <q-card-section>
         <div class="text-h6">{{ title }}</div>
       </q-card-section>

@@ -1,10 +1,19 @@
 <template>
     <div class="container">
         <div class="left column justify-center items-center content-center">
-            <img src="../../../assets/img/signin-weave.svg" class="absolute" alt="">
+            <img 
+            src="../../../assets/img/signin-weave.svg" class="absolute" alt="">
             <h3 class="text-blue-grey-1 text-weight-bolder">Мероприятия КнАГУ</h3>
             <h6 class="text-blue-grey-1">У вас нет аккаунта?</h6>
-            <q-btn outline rounded color="blue-grey-1" label="Регистрация" class="q-btn--large"/>
+            <router-link to="/registration">
+                <q-btn 
+                    outline 
+                    rounded 
+                    color="blue-grey-1" 
+                    label="Регистрация" 
+                    class="q-btn--large"
+                />
+            </router-link>
         </div>
     </div>
 </template>
@@ -47,9 +56,11 @@ h3 {
     padding: 10px 20px;
     font-size: 16px;
 }
+
 .absolute {
     top: 0%;
     left: 0%;
     width: 40%;
 }
+
 </style>
