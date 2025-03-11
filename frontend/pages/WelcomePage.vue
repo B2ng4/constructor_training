@@ -15,13 +15,10 @@
 			<q-btn outline color="primary" label="Вход" class="q-mr-xl"/>
 		</router-link>
 	</q-toolbar>
-	<InfoBoardWelcomePage/>
 </template>
 <script>
-import InfoBoardWelcomePage from '../components/for_pages/InfoBoardWelcomePage.vue';
 export default {
 	name: "WelcomePage",
-	components: {InfoBoardWelcomePage}
 };
 </script>
 
