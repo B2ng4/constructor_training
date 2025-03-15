@@ -2,10 +2,12 @@
     <div class="container">
         <div class="left column justify-center items-center content-center">
             <img 
-            src="../../../assets/img/signin-weave.svg" class="absolute" alt="">
-            <h3 class="text-blue-grey-1 text-weight-bolder">Мероприятия КнАГУ</h3>
+                src="@assets/img/signin-weave.svg" 
+                class="absolute" 
+                alt=""
+            >
+            <h3 class="text-blue-grey-1 text-weight-bolder">Конструктор Тренингов</h3>
             <h6 class="text-blue-grey-1">У вас нет аккаунта?</h6>
-            <router-link to="/registration">
                 <q-btn 
                     outline 
                     rounded 
@@ -13,7 +15,6 @@
                     label="Регистрация" 
                     class="q-btn--large"
                 />
-            </router-link>
         </div>
     </div>
 </template>
@@ -62,5 +63,4 @@ h3 {
     left: 0%;
     width: 40%;
 }
-
 </style>

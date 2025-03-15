@@ -4,7 +4,7 @@
 			<q-avatar square class="q-mr-xs">
 			<img src="/favicon.svg" alt="">
 		</q-avatar>
-			Мероприятия КнАГУ
+			Конструктор Тренингов
 		</q-toolbar-title>
 		<q-tabs v-model="tab" shrink class="q-mr-xl">
 			<q-tab name="Home" label="Главная" />
