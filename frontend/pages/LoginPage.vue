@@ -6,8 +6,8 @@
 </template>
   
   <script>
-  import Layout from '../components/for_pages/LoginPage/Layout.vue';
-  import Form from '../components/for_pages/LoginPage/Form.vue';
+  import Layout from '@components/for_pages/LoginPage/Layout.vue';
+  import Form from '@components/for_pages/LoginPage/Form.vue';
   export default {
     name: "LoginPage",
     components: { Layout, Form },

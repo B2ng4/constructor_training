@@ -10,7 +10,9 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@assets': path.join(__dirname, '/frontend/assets')
+      '@assets': path.join(__dirname, '/frontend/assets'),
+      '@components': path.join(__dirname, '/frontend/components'),
+      '@pages': path.join(__dirname, '/frontend/pages')
     }
   }
 });
