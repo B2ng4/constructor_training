@@ -23,6 +23,7 @@
                         ]"
                     />
                         <q-btn label="Войти" class="q-mt-lg full-width" color="primary"/>
+                        <vkButton></vkButton>
                 </div>
             </template>
         </BaseCard> 
@@ -31,15 +32,16 @@
 
 <script>
 import BaseCard from '../../BaseComponents/BaseCard.vue';
+import vkButton from './vkButton.vue';
 export default {
     name: 'Form',
-    components: {BaseCard},
+    components: {BaseCard, vkButton},
     data() {
         return {
             email: '',
             password: ''
         }
-    }
+    },
 }
 </script>
 
