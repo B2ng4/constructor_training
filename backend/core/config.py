@@ -6,8 +6,8 @@ import os
 
 class Configs(BaseSettings):
     #Для инициализации проекта#
-    PROJECT_NAME:str = "EventsKnastu"
-    PROJECT_DESCRIPTION:str = "Проект для создания мероприятий в Кнагу"
+    PROJECT_NAME:str = "TrainingKnastu"
+    PROJECT_DESCRIPTION:str = "веб-сервис Коснтруктор тренингов"
 
     #Для аутенфикации
     SECRET_KEY: str = Field(default="your-secret-key", env="SECRET_KEY")  # Секретный ключ для JWT и шифрования

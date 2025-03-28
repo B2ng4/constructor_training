@@ -1,11 +1,11 @@
-from schemas.events import EventCreate, EventUpdate
+from schemas.trainings import EventCreate, EventUpdate
 from models.events import Event
 from sqlalchemy import select, delete, update
 
 from models.events import Name_event, Type_event
 
 
-class EventsRepository:
+class TrainingRepository:
     def __init__(self, session) -> None:
         self.session = session
     async def create(self, event_data: EventCreate) -> bool:

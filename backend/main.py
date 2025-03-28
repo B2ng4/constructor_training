@@ -5,13 +5,13 @@
 
 
 from fastapi import FastAPI, APIRouter
-from routing import auth_router, events_router
+from routing import auth_router, training_router
 from core.config import configs
 from core.create_base_app import create_base_app
 
 app = create_base_app(configs)
 app.include_router(auth_router.router)
-app.include_router(events_router.router)
+app.include_router(training_router.router)
 
 
 #feec3ca171c7
