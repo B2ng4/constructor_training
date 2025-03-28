@@ -3,7 +3,7 @@ from typing import Optional, Dict, Any
 from pydantic import BaseModel
 from uuid import UUID
 
-class EventCreate(BaseModel):
+class TrainingCreate(BaseModel):
     title: str
     type_id: int
     start_date: Optional[datetime] = None
@@ -11,7 +11,7 @@ class EventCreate(BaseModel):
     image_uuid: Optional[UUID] = None
 
 
-class EventUpdate(BaseModel):
+class TrainingUpdate(BaseModel):
     title: Optional[str] = None
     type_id: Optional[int] = None
     start_date: Optional[datetime] = None
@@ -19,7 +19,7 @@ class EventUpdate(BaseModel):
     image_uuid: Optional[UUID] = None
 
 
-class EventResponse(BaseModel):
+class TrainingResponse(BaseModel):
     id: int
     title: str
     type_id: int
@@ -31,7 +31,7 @@ class EventResponse(BaseModel):
         from_attributes = True
 
 
-class EventDetailResponse(EventResponse):
+class TrainingDetailResponse(TrainingResponse):
     type_name: str
     type_data: Optional[Dict[str, Any]] = None
     image_uuid: Optional[UUID] = None

@@ -2,7 +2,7 @@ from typing import List
 
 from repositories.trainings_repository import TrainingRepository
 
-from schemas.trainings import EventCreate, EventResponse, EventDetailResponse, EventUpdate
+from schemas.trainings import TrainingCreate, TrainingResponse, TrainingDetailResponse, TrainingUpdate
 
 
 
@@ -11,36 +11,36 @@ class TrainingsService:
     def __init__(self, repo: TrainingRepository):
         self.repo = repo
 
-    async def create_event(self, event_data: EventCreate)->bool:
-        return await self.repo.create(event_data)
+    async def create_training(self, Training_data: TrainingCreate)->bool:
+        return await self.repo.create(Training_data)
 
-    async def get_event(self, event_id: int) -> EventResponse:
-        event = await self.repo.get_by_id(event_id)
-        if not event:
+    async def get_training(self, Training_id: int) -> TrainingResponse:
+        Training = await self.repo.get_by_id(Training_id)
+        if not Training:
             return None
-        return EventResponse.model_validate(event)
+        return TrainingResponse.model_validate(Training)
 
-    async def get_event_with_details(self, event_id: int) -> EventDetailResponse:
-        event_data = await self.repo.get_with_type_details(event_id)
-        if not event_data:
+    async def get_training_with_details(self, Training_id: int) -> TrainingDetailResponse:
+        Training_data = await self.repo.get_with_type_details(Training_id)
+        if not Training_data:
             return None
-        event_response = EventResponse.model_validate(event_data["Event"])
+        Training_response = TrainingResponse.model_validate(Training_data["Training"])
 
-        return EventDetailResponse(
-            **event_response.model_dump(),
-            type_name=event_data["type_name"],
-            type_data=event_data["type_data"]
+        return TrainingDetailResponse(
+            **Training_response.model_dump(),
+            type_name=Training_data["type_name"],
+            type_data=Training_data["type_data"]
         )
 
-    async def get_events(self, skip: int = 0, limit: int = 100) -> List[EventResponse]:
-        events = await self.repo.get_all(skip, limit)
-        return [EventResponse.model_validate(event) for event in events]
+    async def get_trainings(self, skip: int = 0, limit: int = 100) -> List[TrainingResponse]:
+        Trainings = await self.repo.get_all(skip, limit)
+        return [TrainingResponse.model_validate(Training) for Training in Trainings]
 
-    async def update_event(self, event_id: int, event_data: EventUpdate) -> EventResponse:
-        event = await self.repo.update(event_id, event_data)
-        if not event:
+    async def update_training(self, Training_id: int, Training_data: TrainingUpdate) -> TrainingResponse:
+        Training = await self.repo.update(Training_id, Training_data)
+        if not Training:
             return None
-        return EventResponse.model_validate(event)
+        return TrainingResponse.model_validate(Training)
 
-    async def delete_event(self, event_id: int) -> bool:
-        return await self.repo.delete(event_id)
+    async def delete_training(self, Training_id: int) -> bool:
+        return await self.repo.delete(Training_id)
