@@ -1,8 +1,8 @@
 from schemas.trainings import EventCreate, EventUpdate
-from models.events import Event
+from models.trainings import Event
 from sqlalchemy import select, delete, update
 
-from models.events import Name_event, Type_event
+from models.trainings import Name_event, Type_event
 
 
 class TrainingRepository:
