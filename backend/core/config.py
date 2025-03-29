@@ -30,6 +30,10 @@ class Configs(BaseSettings):
     MAIL_STARTTLS: bool = Field(default=True, env="MAIL_STARTTLS")
     MAIL_SSL_TLS: bool = Field(default=False, env="MAIL_SSL_TLS")
 
+    YANDEX_CLIENT_ID: Optional[str] = Field(default="5a7977bc60cf4a33bfff8cb4a1006bf4", env="YANDEX_CLIENT_ID")
+    YANDEX_CLIENT_SECRET: Optional[str] = Field(default="ddb099cef39348b4a68b4dc720861ee7", env="YANDEX_CLIENT_ID")
+    YANDEX_REDIRECT_URI: Optional[str] = Field(default="http://localhost:8002/auth/yandex/callback",env="YANDEX_CLIENT_ID")
+
 
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")

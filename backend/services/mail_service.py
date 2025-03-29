@@ -17,7 +17,6 @@ class EmailService:
         self.use_ssl = configs.MAIL_SSL_TLS
 
     def send_email(self, mail:mail_send):
-        # Создаем сообщение
         message = MIMEMultipart()
         message["Subject"] = mail.subject
         message["From"] = self.sender
@@ -41,12 +40,3 @@ class EmailService:
         except Exception as e:
             return False
 
-
-
-# async def send_mail():
-#     mail = EmailService()
-#     pisimo = mail_send(email="sidorina_49@inbox.ru", subject="Добро пожаловать в EventsKnastu!", body="Вы успешно зарегистрировались в EventsKnastu!")
-#     print(mail.send_email(pisimo))
-#
-# if __name__ == "__main__":
-#     asyncio.run(send_mail())

@@ -5,27 +5,27 @@ from depends import get_trainings_service
 from starlette import status
 from services.trainings_service import TrainingsService
 
-from schemas.trainings import EventResponse, EventUpdate, EventCreate
+from schemas.trainings import TrainingResponse, TrainingUpdate, TrainingCreate
 
 router = APIRouter(prefix="/trainings", tags=["Тренинги"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 
-@router.post("training/create_training")
+@router.post("/create_training")
 
-async def create_training(ser_data: EventCreate,
+async def create_training(ser_data: TrainingCreate,
                        token: str = Depends(oauth2_scheme),
                        event_service: TrainingsService = Depends(get_trainings_service)):
     """Создание нового тренинга (только админы и суперпользователи"""
-    if await event_service.create_event(ser_data):
+    if await event_service.create_training(ser_data):
         return HTTPException(status.HTTP_200_OK, detail="Тренинг успешно создан")
     else:
         return HTTPException(status_code=404, detail="Тренинг не создан")
 
 
-@router.get("/{training_id}", response_model=EventResponse)
+@router.get("/{training_id}", response_model=TrainingResponse)
 async def get_training(training_id: int,service: TrainingsService = Depends(get_trainings_service)):
-    event = await service.get_event(training_id)
+    event = await service.get_training(training_id)
     if not event:
         raise HTTPException(status_code=404, detail="Тренинг не найден")
     return event
@@ -34,9 +34,9 @@ async def get_training(training_id: int,service: TrainingsService = Depends(get_
 @router.put("/{training_id}")
 async def update_event(
     event_id: int,
-    event_data: EventUpdate,
+    event_data: TrainingUpdate,
     service: TrainingsService = Depends(get_trainings_service)):
-    event = await service.update_event(event_id, event_data)
+    event = await service.update_training(event_id, event_data)
     if not event:
         raise HTTPException(status_code=404, detail="Тренинг не найден")
 
@@ -45,7 +45,7 @@ async def update_event(
 
 @router.delete("/{training_id}")
 async def delete_event(training_id: int, service: TrainingsService = Depends(get_trainings_service)):
-    if await service.delete_event(training_id):
+    if await service.delete_training(training_id):
         return HTTPException(status.HTTP_200_OK, detail="Тренинг успешно удален")
     else:
         raise HTTPException(status_code=404, detail="Тренинг не найден")

@@ -1,31 +1,40 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import text, ForeignKey
+from sqlalchemy import text, ForeignKey, JSON
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from core.database import *
 import sqlalchemy as sa
 
+from models.users import User
+
 
 class Training(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
-    title: Mapped[str] = mapped_column(sa.String(100), unique=True)
-    type_id: Mapped[int] = mapped_column(ForeignKey("type_trainings.id"))
-    type: Mapped["Type_training"] = relationship("Type_training", back_populates="trainings")
-    start_date: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), nullable=False)
-    end_date: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), nullable=True)
-    image_uuid: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=True)
+    title: Mapped[str] = mapped_column(index=True)
+    description: Mapped[str]
+    creator_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+    creator: Mapped["User"] = relationship(back_populates="created_trainings")
+    steps: Mapped[list["TrainingStep"]] = relationship(back_populates="training", order_by="TrainingStep.step_number")
+    assignments: Mapped[list["TrainingAssignment"]] = relationship(back_populates="training")
 
 
-class Type_training(Base):
+class TrainingStep(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
-    name_id: Mapped[int] = mapped_column(ForeignKey("name_trainings.id"))
-    name_training: Mapped["Name_training"] = relationship("Name_training", back_populates="type_trainings")
-    trainings: Mapped[list["Training"]] = relationship("Training", back_populates="type")
-    data: Mapped[dict] = mapped_column(JSONB, default=lambda: {})
+    training_id: Mapped[int] = mapped_column(ForeignKey("trainings.id"))
+    step_number: Mapped[int]
+    image_url: Mapped[str]
+    area: Mapped[dict] = mapped_column(JSON)
+    description: Mapped[str]
+    training: Mapped["Training"] = relationship(back_populates="steps")
 
 
-class Name_training(Base):
+class TrainingAssignment(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(sa.String(100), unique=True)
-    type_trainings: Mapped[list["Type_training"]] = relationship("Type_training", back_populates="name_training")
+    training_id: Mapped[int] = mapped_column(ForeignKey("trainings.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    assigned_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+    completed_at: Mapped[datetime] = mapped_column(nullable=True)
+    training: Mapped["Training"] = relationship(back_populates="assignments")
+    user: Mapped["User"] = relationship(back_populates="assigned_trainings")
