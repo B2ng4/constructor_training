@@ -1,13 +1,16 @@
+from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from fastapi.security import OAuth2PasswordBearer
-from depends import get_trainings_service
+from depends import get_trainings_service, get_s3_service
 from starlette import status
 from services.trainings_service import TrainingsService
-
+from services.s3_service import S3Service
 from schemas.trainings import TrainingResponse, TrainingUpdate, TrainingCreate
 
-router = APIRouter(prefix="/trainings", tags=["Тренинги"])
+
+
+router = APIRouter(prefix="/training", tags=["Тренинги"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 
@@ -50,5 +53,33 @@ async def delete_event(training_id: int, service: TrainingsService = Depends(get
     else:
         raise HTTPException(status_code=404, detail="Тренинг не найден")
 
+
 #TODO: Добавить доступ к апихам по ролям, добавить ручки для получения тренингов по типу(фильтрация)
+
+
+
+
+
+@router.post("/upload-photos/")
+async def upload_photos(files: List[UploadFile] = File(..., description="Загрузка фото"), s3_service: S3Service = Depends(get_s3_service)):
+    uploaded_urls = []
+    for file in files:
+        try:
+            object_name = s3_service.generate_unique_filename(file.filename)
+            file_content = await file.read()
+            file_url = s3_service.upload_file(file_content,object_name)
+            uploaded_urls.append(file_url)
+        except Exception as e:
+            raise HTTPException(status_code=500,detail=f"Ошибка загрузки файла: {str(e)}")
+        finally:
+            await file.close()
+    return {"uploaded_urls": uploaded_urls}
+
+
+
+
+
+
+
+
 

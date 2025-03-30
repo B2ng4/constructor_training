@@ -30,9 +30,17 @@ class Configs(BaseSettings):
     MAIL_STARTTLS: bool = Field(default=True, env="MAIL_STARTTLS")
     MAIL_SSL_TLS: bool = Field(default=False, env="MAIL_SSL_TLS")
 
+    # Настройки OAUTH2
     YANDEX_CLIENT_ID: Optional[str] = Field(default="5a7977bc60cf4a33bfff8cb4a1006bf4", env="YANDEX_CLIENT_ID")
     YANDEX_CLIENT_SECRET: Optional[str] = Field(default="ddb099cef39348b4a68b4dc720861ee7", env="YANDEX_CLIENT_ID")
     YANDEX_REDIRECT_URI: Optional[str] = Field(default="http://localhost:8002/auth/yandex/callback",env="YANDEX_CLIENT_ID")
+
+    # Настройки S3
+    AWS_ACCESS_KEY_ID : Optional[str] = Field(default="ASBZAQIUA7VOLQU0DDTD", env="AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY : Optional[str] = Field(default="GFsM7bTRHbQ4CoZVDCmKsP19Lt8FN0ipQpl5OnTM", env="AWS_SECRET_ACCESS_KEY")
+    S3_BUCKET_NAME : Optional[str] = Field(default="d08d3831-edc9b373-5fab-42f0-9e2f-441c90348394", env="S3_BUCKET_NAME")
+    S3_ENDPOINT_URL : Optional[str] = Field(default="https://s3.twcstorage.ru/", env="S3_ENDPOINT_URL")
+    S3_REGION_NAME : Optional[str] = Field(default="ru-1", env="S3_REGION_NAME")
 
 
     model_config = SettingsConfigDict(

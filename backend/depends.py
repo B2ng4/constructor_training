@@ -1,3 +1,4 @@
+import boto3
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +10,8 @@ from repositories.trainings_repository import TrainingRepository
 from services.user_service import UserService
 from  services.mail_service import EmailService
 from  services.trainings_service import TrainingsService
+from core.config import configs, Configs
+from services.s3_service import S3Service
 
 """
 Файл внедрения зависимостей
@@ -26,3 +29,6 @@ async def get_trainings_service(
     repo = TrainingRepository(session)
     return TrainingsService(repo)
 
+
+def get_s3_service() -> S3Service:
+    return S3Service()
