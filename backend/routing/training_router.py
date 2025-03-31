@@ -37,7 +37,7 @@ async def get_training(
 
 
 @router.put("/{training_id}")
-async def update_event(
+async def update_training(
     event_id: int,
     event_data: TrainingUpdate,
     service: TrainingsService = Depends(get_trainings_service),
@@ -50,7 +50,7 @@ async def update_event(
 
 
 @router.delete("/{training_id}")
-async def delete_event(
+async def delete_training(
     training_id: int, service: TrainingsService = Depends(get_trainings_service)
 ):
     if await service.delete_training(training_id):

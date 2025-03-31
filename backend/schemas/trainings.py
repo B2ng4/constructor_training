@@ -16,7 +16,6 @@ class TrainingBase(BaseModel):
 
 class TrainingStepBase(BaseModel):
     """Шаг Тренинга"""
-
     step_number: int
     image_url: str
     area: Dict[str, int]
@@ -48,7 +47,6 @@ class TrainingUpdate(BaseModel):
 class TrainingStepResponse(TrainingStepBase):
     id: int
     training_id: int
-
     class Config:
         from_attributes = True
 
