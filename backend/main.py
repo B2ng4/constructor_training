@@ -23,7 +23,7 @@ app.include_router(training_router.router)
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("main:app", host=configs.HOST, port=configs.PORT)
+    uvicorn.run("main:app", host=configs.HOST, port=configs.PORT, reload=True)
 
 
 # uvicorn.run("main:app", host="localhost", port=8000, reload=True)

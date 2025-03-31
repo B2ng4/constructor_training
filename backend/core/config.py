@@ -8,8 +8,8 @@ class Configs(BaseSettings):
 
 
     # ------------ Настройки проекта ------------
-    PROJECT_NAME: str = "TrainingKnastu"
-    PROJECT_DESCRIPTION: str = "веб-сервис Конструктор тренингов"
+    PROJECT_NAME: str = "Конструктор Тренингов"
+    PROJECT_DESCRIPTION: str = "веб-сервис Конструктор тренингов."
 
 
     # ------------ Веб-сервер ------------
