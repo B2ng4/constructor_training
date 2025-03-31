@@ -8,6 +8,9 @@ export default defineConfig({
     vue(),
     quasar()
   ],
+  define: {
+    __BASE__URL__: JSON.stringify('http://localhost:8002'),
+  },
   resolve: {
     alias: {
       '@assets': path.join(__dirname, '/frontend/assets'),
