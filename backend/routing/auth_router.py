@@ -34,9 +34,10 @@ async def register_user(
     user_service: UserService = Depends(get_user_service),
 ) -> dict:
     if await user_service.register(user_data, background_tasks):
-        return {
-            "message": "Вы успешно зарегистрированы! На ваш email отправлено письмо."
-        }
+        return HTTPException(
+            status_code=200,
+            detail= "Вы успешно зарегистрированы! На ваш email отправлено письмо.",
+        )
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -57,13 +58,13 @@ async def login_user(
         final_user_data = UserLogin(username=username, password=password)
     else:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=400,
             detail="Некорректные данные",
         )
     access_token = await user_service.login(final_user_data)
     if access_token is None:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=401,
             detail="Неверный email или пароль",
             headers={"WWW-Authenticate": "Bearer"},
         )
