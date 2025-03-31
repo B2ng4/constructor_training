@@ -5,14 +5,20 @@ import os
 
 
 class Configs(BaseSettings):
-    #Для инициализации проекта#
-    PROJECT_NAME:str = "TrainingKnastu"
-    PROJECT_DESCRIPTION:str = "веб-сервис Коснтруктор тренингов"
+    # Для инициализации проекта#
+    PROJECT_NAME: str = "TrainingKnastu"
+    PROJECT_DESCRIPTION: str = "веб-сервис Коснтруктор тренингов"
 
-    #Для аутенфикации
-    SECRET_KEY: str = Field(default="your-secret-key", env="SECRET_KEY")  # Секретный ключ для JWT и шифрования
-    ALGORITHM: str = Field(default="HS256", env="ALGORITHM")  # Алгоритм шифрования для JWT
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=60, env="ACCESS_TOKEN_EXPIRE_MINUTES")  # Время жизни токена
+    # Для аутенфикации
+    SECRET_KEY: str = Field(
+        default="your-secret-key", env="SECRET_KEY"
+    )  # Секретный ключ для JWT и шифрования
+    ALGORITHM: str = Field(
+        default="HS256", env="ALGORITHM"
+    )  # Алгоритм шифрования для JWT
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(
+        default=60, env="ACCESS_TOKEN_EXPIRE_MINUTES"
+    )  # Время жизни токена
 
     # Настройки БД
     DB_HOST: Optional[str] = Field(default="localhost", env="DB_HOST")
@@ -22,8 +28,12 @@ class Configs(BaseSettings):
     DB_PASS: Optional[str] = Field(default="admin", env="DB_PASS")
 
     # Настройки почты
-    MAIL_USERNAME: Optional[str] = Field(default="timsidorin@gmail.com", env="MAIL_USERNAME")
-    MAIL_PASSWORD: Optional[str] = Field(default="xdfj qlia vmpy gskl", env="MAIL_PASSWORD")
+    MAIL_USERNAME: Optional[str] = Field(
+        default="timsidorin@gmail.com", env="MAIL_USERNAME"
+    )
+    MAIL_PASSWORD: Optional[str] = Field(
+        default="xdfj qlia vmpy gskl", env="MAIL_PASSWORD"
+    )
     MAIL_FROM: Optional[str] = Field(default="timsidorin@gmail.com", env="MAIL_FROM")
     MAIL_PORT: Optional[int] = Field(default=587, env="MAIL_PORT")
     MAIL_SERVER: Optional[str] = Field(default="smtp.gmail.com", env="MAIL_SERVER")
@@ -31,31 +41,37 @@ class Configs(BaseSettings):
     MAIL_SSL_TLS: bool = Field(default=False, env="MAIL_SSL_TLS")
 
     # Настройки OAUTH2
-    YANDEX_CLIENT_ID: Optional[str] = Field(default="5a7977bc60cf4a33bfff8cb4a1006bf4", env="YANDEX_CLIENT_ID")
-    YANDEX_CLIENT_SECRET: Optional[str] = Field(default="ddb099cef39348b4a68b4dc720861ee7", env="YANDEX_CLIENT_ID")
-    YANDEX_REDIRECT_URI: Optional[str] = Field(default="http://localhost:8002/auth/yandex/callback",env="YANDEX_CLIENT_ID")
+
 
     # Настройки S3
-    AWS_ACCESS_KEY_ID : Optional[str] = Field(default="ASBZAQIUA7VOLQU0DDTD", env="AWS_ACCESS_KEY_ID")
-    AWS_SECRET_ACCESS_KEY : Optional[str] = Field(default="GFsM7bTRHbQ4CoZVDCmKsP19Lt8FN0ipQpl5OnTM", env="AWS_SECRET_ACCESS_KEY")
-    S3_BUCKET_NAME : Optional[str] = Field(default="d08d3831-edc9b373-5fab-42f0-9e2f-441c90348394", env="S3_BUCKET_NAME")
-    S3_ENDPOINT_URL : Optional[str] = Field(default="https://s3.twcstorage.ru/", env="S3_ENDPOINT_URL")
-    S3_REGION_NAME : Optional[str] = Field(default="ru-1", env="S3_REGION_NAME")
-
+    AWS_ACCESS_KEY_ID: Optional[str] = Field(
+        default="ASBZAQIUA7VOLQU0DDTD", env="AWS_ACCESS_KEY_ID"
+    )
+    AWS_SECRET_ACCESS_KEY: Optional[str] = Field(
+        default="GFsM7bTRHbQ4CoZVDCmKsP19Lt8FN0ipQpl5OnTM", env="AWS_SECRET_ACCESS_KEY"
+    )
+    S3_BUCKET_NAME: Optional[str] = Field(
+        default="d08d3831-edc9b373-5fab-42f0-9e2f-441c90348394", env="S3_BUCKET_NAME"
+    )
+    S3_ENDPOINT_URL: Optional[str] = Field(
+        default="https://s3.twcstorage.ru/", env="S3_ENDPOINT_URL"
+    )
+    S3_REGION_NAME: Optional[str] = Field(default="ru-1", env="S3_REGION_NAME")
 
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
     )
 
 
-
-
 configs = Configs()
+
+
 def get_db_url():
-    return (f"postgresql+asyncpg://{configs.DB_USER}:{configs.DB_PASS}@"
-            f"{configs.DB_HOST}:{configs.DB_PORT}/{configs.DB_NAME}")
+    return (
+        f"postgresql+asyncpg://{configs.DB_USER}:{configs.DB_PASS}@"
+        f"{configs.DB_HOST}:{configs.DB_PORT}/{configs.DB_NAME}"
+    )
 
 
 def get_auth_data():
     return {"secret_key": configs.SECRET_KEY, "algorithm": configs.ALGORITHM}
-

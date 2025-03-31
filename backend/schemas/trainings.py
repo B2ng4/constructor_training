@@ -4,12 +4,9 @@ from pydantic import BaseModel, UUID4
 from uuid import UUID
 
 
-
-
-
-
 class TrainingBase(BaseModel):
     """Базовый тренинг"""
+
     title: str
     description: str
     start_date: Optional[datetime] = None
@@ -17,9 +14,9 @@ class TrainingBase(BaseModel):
     cover_image_uuid: Optional[UUID4] = None
 
 
-
 class TrainingStepBase(BaseModel):
     """Шаг Тренинга"""
+
     step_number: int
     image_url: str
     area: Dict[str, int]
@@ -30,23 +27,22 @@ class TrainingStepCreate(TrainingStepBase):
     pass
 
 
-
 class TrainingCreate(TrainingBase):
     """Создание тренига (добавление шагов и типа тренинга)"""
+
     steps: List[TrainingStepCreate]
     type_id: Optional[int] = None
 
 
 class TrainingUpdate(BaseModel):
     """Обновление тренига (Обновление  шагов и типа тренинга)"""
+
     title: Optional[str] = None
     description: Optional[str] = None
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
     cover_image_uuid: Optional[UUID4] = None
     type_id: Optional[int] = None
-
-
 
 
 class TrainingStepResponse(TrainingStepBase):
@@ -57,14 +53,13 @@ class TrainingStepResponse(TrainingStepBase):
         from_attributes = True
 
 
-
 # Модели для назначения тренингов
 class TrainingAssignmentCreate(BaseModel):
     user_ids: List[int]
 
+
 class TrainingAssignmentUpdate(BaseModel):
     completed: bool
-
 
 
 class TrainingResponse(TrainingBase):
@@ -76,7 +71,6 @@ class TrainingResponse(TrainingBase):
 
     class Config:
         from_attributes = True
-
 
 
 class TrainingAssignmentResponse(BaseModel):
@@ -93,17 +87,3 @@ class TrainingDetailResponse(TrainingResponse):
     assignments: List[TrainingAssignmentResponse]
     type_name: Optional[str] = None
     type_data: Optional[Dict[str, Any]] = None
-
-
-
-
-
-
-
-
-
-
-
-
-
-

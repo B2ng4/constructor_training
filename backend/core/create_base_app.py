@@ -18,12 +18,10 @@ def create_base_app(configs):
         yield
         logger.info("Завершение работы приложения...")
 
-
     app = FastAPI(
         title=configs.PROJECT_NAME,
         lifespan=lifespan,
-        description=configs.PROJECT_DESCRIPTION
-
+        description=configs.PROJECT_DESCRIPTION,
     )
 
     app.add_middleware(
@@ -31,7 +29,7 @@ def create_base_app(configs):
         allow_origins=["*"],
         allow_credentials=True,
         allow_methods=["*"],
-        allow_headers=["*"]
+        allow_headers=["*"],
     )
 
     @app.get("/", response_class=HTMLResponse)
@@ -63,4 +61,4 @@ def create_base_app(configs):
         </html>
         """
 
-    return  app
+    return app

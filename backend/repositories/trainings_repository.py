@@ -3,11 +3,10 @@ from models.trainings import Training
 from sqlalchemy import select, delete, update
 
 
-
-
 class TrainingRepository:
     def __init__(self, session) -> None:
         self.session = session
+
     async def create(self, event_data: TrainingCreate) -> bool:
         new_event = Training(**event_data.model_dump(exclude_unset=True))
         self.session.add(new_event)
@@ -30,7 +29,12 @@ class TrainingRepository:
             # Если нет данных для обновления, просто возвращаем существующее событие
             return await self.get_by_id(event_id)
 
-        query = update(Training).where(Training.id == event_id).values(**update_data).returning(Training)
+        query = (
+            update(Training)
+            .where(Training.id == event_id)
+            .values(**update_data)
+            .returning(Training)
+        )
         result = await self.session.execute(query)
         await self.session.commit()
         return result.scalar_one()
@@ -40,4 +44,3 @@ class TrainingRepository:
         result = await self.session.execute(query)
         await self.session.commit()
         return result.rowcount > 0
-

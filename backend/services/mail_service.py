@@ -16,7 +16,7 @@ class EmailService:
         self.use_tls = configs.MAIL_STARTTLS
         self.use_ssl = configs.MAIL_SSL_TLS
 
-    def send_email(self, mail:mail_send):
+    def send_email(self, mail: mail_send):
         message = MIMEMultipart()
         message["Subject"] = mail.subject
         message["From"] = self.sender
@@ -39,4 +39,3 @@ class EmailService:
 
         except Exception as e:
             return False
-

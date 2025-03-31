@@ -16,8 +16,12 @@ class Training(Base):
     creator_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
     creator: Mapped["User"] = relationship(back_populates="created_trainings")
-    steps: Mapped[list["TrainingStep"]] = relationship(back_populates="training", order_by="TrainingStep.step_number")
-    assignments: Mapped[list["TrainingAssignment"]] = relationship(back_populates="training")
+    steps: Mapped[list["TrainingStep"]] = relationship(
+        back_populates="training", order_by="TrainingStep.step_number"
+    )
+    assignments: Mapped[list["TrainingAssignment"]] = relationship(
+        back_populates="training"
+    )
 
 
 class TrainingStep(Base):

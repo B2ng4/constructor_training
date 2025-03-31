@@ -1,6 +1,7 @@
 """
 Точка входа в backend
 """
+
 #
 
 
@@ -14,15 +15,14 @@ app.include_router(auth_router.router)
 app.include_router(training_router.router)
 
 
-#feec3ca171c7
+# feec3ca171c7
 
 # docker run -p 8001:8001 feec3ca171c7
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run("main:app", host="localhost", port=8002)
 
 
 # uvicorn.run("main:app", host="localhost", port=8000, reload=True)
-
-

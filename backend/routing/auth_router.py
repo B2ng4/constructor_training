@@ -1,6 +1,15 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Response, Body, Form, BackgroundTasks, Query
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Response,
+    Body,
+    Form,
+    BackgroundTasks,
+    Query,
+)
 from fastapi.security import OAuth2PasswordBearer
 from starlette import status
 from starlette.requests import Request
@@ -14,23 +23,24 @@ from core.config import configs
 from fastapi.responses import RedirectResponse
 
 
-
-
 router = APIRouter(prefix="/auth", tags=["Auth"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 
 @router.post("/register")
 async def register_user(
-        user_data: UserRegister,
-        background_tasks: BackgroundTasks,
-        user_service: UserService = Depends(get_user_service)) -> dict:
+    user_data: UserRegister,
+    background_tasks: BackgroundTasks,
+    user_service: UserService = Depends(get_user_service),
+) -> dict:
     if await user_service.register(user_data, background_tasks):
-        return {'message': 'Вы успешно зарегистрированы! На ваш email отправлено письмо.'}
+        return {
+            "message": "Вы успешно зарегистрированы! На ваш email отправлено письмо."
+        }
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Пользователь с таким email уже существует!"
+            detail="Пользователь с таким email уже существует!",
         )
 
 
@@ -39,7 +49,7 @@ async def login_user(
     username: Optional[str] = Form(default=None),
     password: Optional[str] = Form(default=None),
     user_data: Optional[UserLogin] = Body(default=None),
-    user_service: UserService = Depends(get_user_service)
+    user_service: UserService = Depends(get_user_service),
 ) -> dict:
     if user_data:
         final_user_data = user_data
@@ -63,7 +73,7 @@ async def login_user(
 @router.get("/me/")
 async def get_me(
     token: str = Depends(oauth2_scheme),
-    user_service: UserService = Depends(get_user_service)
+    user_service: UserService = Depends(get_user_service),
 ) -> User:
     current_user = await user_service.get_current_user(token)
     return current_user
@@ -86,19 +96,21 @@ async def login_yandex():
 @router.get("/yandex/callback")
 async def yandex_callback(
     request: Request,
-    code: Optional[str] = Query(None, description="Код авторизации, полученный от Яндекса"),
+    code: Optional[str] = Query(
+        None, description="Код авторизации, полученный от Яндекса"
+    ),
     error: Optional[str] = Query(None),
     user_service: UserService = Depends(get_user_service),
 ):
     if error:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Yandex OAuth error: {error}"
+            detail=f"Yandex OAuth error: {error}",
         )
     if not code:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Authorization code not provided"
+            detail="Authorization code not provided",
         )
 
     try:
@@ -108,9 +120,6 @@ async def yandex_callback(
         jwt_token = await user_service.create_access_token_by_yandex(user)
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e)
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
     return {"access_token": jwt_token, "token_type": "bearer"}
-
-
