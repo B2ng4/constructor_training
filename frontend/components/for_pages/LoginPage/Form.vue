@@ -22,8 +22,7 @@
                         val => val !== null && val !== '' || 'Введите пароль',
                         ]"
                     />
-                        <q-btn label="Войти" class="q-mt-lg full-width" color="primary"/>
-                        <vkButton></vkButton>
+                        <q-btn label="Войти" class="q-mt-lg full-width" color="primary" @click="login()"/>
                 </div>
             </template>
         </BaseCard> 
@@ -31,6 +30,7 @@
 </template>
 
 <script>
+import axios from 'axios'
 import BaseCard from '../../BaseComponents/BaseCard.vue';
 import vkButton from './vkButton.vue';
 export default {
@@ -42,6 +42,19 @@ export default {
             password: ''
         }
     },
+    methods: {
+        async login() {
+            let form = new FormData()
+            form.set('username', this.email)
+            form.set('password', this.password)
+            axios.post(`${__BASE__URL__}/auth/login`, form)
+                .then((response) => {
+                    localStorage.setItem('tokenAuth', response.data.access_token)
+                })
+                .catch(() => {
+                }) 
+        }
+    }
 }
 </script>
 
