@@ -34,7 +34,7 @@ async def register_user(
     user_service: UserService = Depends(get_user_service),
 ) -> dict:
     if await user_service.register(user_data, background_tasks):
-        return HTTPException(
+        raise HTTPException(
             status_code=200,
             detail= "Вы успешно зарегистрированы! На ваш email отправлено письмо.",
         )
