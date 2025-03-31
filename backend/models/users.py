@@ -15,11 +15,9 @@ class User(Base):
     password: Mapped[str]
     first_name: Mapped[str]
     last_name: Mapped[str]
-    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(default=datetime.now())
     created_trainings: Mapped[list["Training"]] = relationship(back_populates="creator")
-    assigned_trainings: Mapped[list["TrainingAssignment"]] = relationship(
-        back_populates="user"
-    )
+    assigned_trainings: Mapped[list["TrainingAssignment"]] = relationship( back_populates="user")
 
 
 # class Role(Base):
