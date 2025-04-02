@@ -1,10 +1,12 @@
 <template>
-    Личный кабинет
+    <Layout/>
 </template>
 
 <script>
+import Layout from '@components/for_pages/PersonalPage/Layout.vue';
 export default {
-    name: 'PersonalPage'
+    name: 'PersonalPage',
+    components: {Layout}
 }
 
 </script>
