@@ -16,24 +16,26 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 @router.post("/create_training")
 async def create_training(
     ser_data: TrainingCreate,
-    token: str = Depends(oauth2_scheme),
-    event_service: TrainingsService = Depends(get_trainings_service),
+    #token: str = Depends(oauth2_scheme),
+    training_service: TrainingsService = Depends(get_trainings_service),
 ):
-    """Создание нового тренинга (только админы и суперпользователи"""
-    if await event_service.create_training(ser_data, 1):
+    """Создание нового тренинга"""
+    if await training_service.create_training(ser_data, 1):
         return HTTPException(status.HTTP_200_OK, detail="Тренинг успешно создан")
     else:
         return HTTPException(status_code=404, detail="Тренинг не создан")
+
+
 
 
 @router.get("/{training_id}", response_model=TrainingResponse)
 async def get_training(
     training_id: int, service: TrainingsService = Depends(get_trainings_service)
 ):
-    event = await service.get_training(training_id)
-    if not event:
+    training = await service.get_training(training_id)
+    if not training:
         raise HTTPException(status_code=404, detail="Тренинг не найден")
-    return event
+    return training
 
 
 @router.put("/{training_id}")
@@ -49,6 +51,7 @@ async def update_training(
     return HTTPException(status_code=200, detail="Данные тренинга успешно обновлены")
 
 
+
 @router.delete("/{training_id}")
 async def delete_training(
     training_id: int, service: TrainingsService = Depends(get_trainings_service)
@@ -60,7 +63,6 @@ async def delete_training(
 
 
 # TODO: Добавить доступ к апихам по ролям, добавить ручки для получения тренингов по типу(фильтрация)
-
 
 
 @router.post("/upload-photos/")

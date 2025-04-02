@@ -10,29 +10,32 @@ from core.database import Base
 import sqlalchemy as sa
 
 
-
-
-
-
-
 class Training(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[Optional[str]] = mapped_column(sa.String(100))
+    cover_image: Mapped[Optional[UUID]] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("images.uuid"),
+        name="cover_image"
+    )
+    image: Mapped["Image"] = relationship()
     description: Mapped[Optional[str]] = mapped_column(sa.Text)
     creator_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[Optional[datetime]] = mapped_column(sa.DateTime, default=datetime.now())
+    created_at: Mapped[Optional[datetime]] = mapped_column(
+        sa.DateTime, default=datetime.now()
+    )
     creator: Mapped["User"] = relationship(back_populates="created_trainings")
     steps: Mapped[List["TrainingStep"]] = relationship(
-    back_populates = "training",
-    order_by = "TrainingStep.id",
-    cascade = "all, delete-orphan",
-    lazy = "joined"
-)
-
+        back_populates="training",
+        order_by="TrainingStep.id",
+        cascade="all, delete-orphan",
+        lazy="joined",
+    )
 
 class TrainingStep(Base):
-    id: Mapped[int] = mapped_column( primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
     training_id: Mapped[int] = mapped_column(ForeignKey("trainings.id"))
+    step_number: Mapped[int] = mapped_column(sa.Integer)
     action_type_id: Mapped[Optional[int]] = mapped_column(ForeignKey("typesactions.id"))
     area: Mapped[Optional[Dict]] = mapped_column(JSONB)
     meta: Mapped[Optional[Dict]] = mapped_column(JSONB)
@@ -53,5 +56,3 @@ class Image(Base):
     uuid: Mapped[UUID4] = mapped_column(UUID, primary_key=True)
     url: Mapped[str] = mapped_column(sa.String(50), unique=True)
     steps: Mapped[List["TrainingStep"]] = relationship(back_populates="image")
-
-

@@ -36,7 +36,7 @@ async def register_user(
     if await user_service.register(user_data, background_tasks):
         raise HTTPException(
             status_code=200,
-            detail= "Вы успешно зарегистрированы! На ваш email отправлено письмо.",
+            detail="Вы успешно зарегистрированы! На ваш email отправлено письмо.",
         )
     else:
         raise HTTPException(
@@ -78,5 +78,3 @@ async def get_me(
 ) -> User:
     current_user = await user_service.get_current_user(token)
     return current_user
-
-

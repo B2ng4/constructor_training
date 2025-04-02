@@ -30,8 +30,7 @@ async def get_user_service(
 async def get_trainings_service(
     session: AsyncSession = Depends(get_async_session),
 ) -> TrainingsService:
-    repo = TrainingRepository(session)
-    return TrainingsService(repo)
+    return TrainingsService(session)
 
 
 def get_s3_service() -> S3Service:

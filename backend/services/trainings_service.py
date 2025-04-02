@@ -6,10 +6,9 @@ from schemas.trainings import (
     TrainingResponse,
     TrainingDetailResponse,
     TrainingUpdate,
-    TrainingStepCreate
+    TrainingStepCreate,
 )
 from models.trainings import Training, TrainingStep, Image, TypesAction
-from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
 
@@ -18,46 +17,34 @@ class TrainingsService:
     def __init__(self, session: AsyncSession):
         self.repo = TrainingRepository(session)
         self.session = session
-    async def create_training(self, training_data: TrainingCreate, creator_id: int) -> TrainingResponse:
-        try:
-            training_dict = training_data.model_dump(exclude={"steps", "cover_image_uuid"})
-            training = Training(**training_dict, creator_id=creator_id)
 
-            if training_data.cover_image_uuid:
-                cover_image = await self._get_image(training_data.cover_image_uuid)
-                training.cover_image = cover_image
-
-            # Создаем шаги тренинга
-            training.steps = []
-            for step_data in training_data.steps:
-                step = await self._create_training_step(step_data)
-                training.steps.append(step)
-
-            # Сохраняем в БД
-            created_training = await self.repo.create(training)
-            await self.session.commit()
-
-            return TrainingResponse.model_validate(created_training)
-
-        except IntegrityError as e:
-            await self.session.rollback()
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Ошибка целостности данных: " + str(e)
+    async def create_training(
+            self, training_data: TrainingCreate, creator_id: int
+    ) -> TrainingResponse:
+        training_dict = training_data.model_dump(
+            exclude={"steps", "cover_image"}
             )
+        training = Training(**training_dict, creator_id=creator_id)
 
-    async def _create_training_step(self, step_data: TrainingStepCreate) -> TrainingStep:
-        # Валидация типа действия
-        action_type = await self.session.get(TypesAction, step_data.action_type_id)
-        if not action_type:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Тип действия с ID {step_data.action_type_id} не найден"
-            )
+        if training_data.cover_image:
+            cover_image = await self._get_image(training_data.cover_image)
+            training.cover_image = cover_image.uuid
+        for step_data in training_data.steps:
+            step = await self._create_training_step(step_data)
+            step.training_id = training.id
+            training.steps.append(step)
+        created_training = await self.repo.create(training)
+        if created_training:
+            return True
+        return False
 
+
+
+    async def _create_training_step(
+        self, step_data: TrainingStepCreate
+    ) -> TrainingStep:
+        action_type = await self._get_action_type(step_data.action_type_id)
         image = await self._get_image(step_data.image_uuid)
-
-        # Создаем шаг
         step_dict = step_data.model_dump(exclude={"image_uuid", "action_type_id"})
         return TrainingStep(
             **step_dict,
@@ -66,47 +53,78 @@ class TrainingsService:
         )
 
     async def _get_image(self, image_uuid: str) -> Image:
-        image = await self.session.get(Image, image_uuid)
+        image = await self.repo.get_image(image_uuid)
         if not image:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Изображение с UUID {image_uuid} не найдено"
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Image with UUID {image_uuid} not found"
             )
         return image
 
-    async def get_training(self, Training_id: int) -> TrainingResponse:
-        Training = await self.repo.get_by_id(Training_id)
-        if not Training:
-            return None
-        return TrainingResponse.model_validate(Training)
+    async def _get_action_type(self, action_type_id: int) -> TypesAction:
+        action_type = await self.repo.get_action_type(action_type_id)
+        if not action_type:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Action type with ID {action_type_id} not found"
+            )
+        return action_type
+
+    async def get_training(self, training_id: int) -> TrainingResponse:
+        training = await self.repo.get_by_id(training_id)
+        if not training:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Training not found"
+            )
+        return TrainingResponse.model_validate(training)
 
     async def get_training_with_details(
-        self, Training_id: int
+            self, training_id: int
     ) -> TrainingDetailResponse:
-        Training_data = await self.repo.get_with_type_details(Training_id)
-        if not Training_data:
-            return None
-        Training_response = TrainingResponse.model_validate(Training_data["Training"])
+        training_data = await self.repo.get_with_type_details(training_id)
+        if not training_data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Training not found"
+            )
 
+        training_response = TrainingResponse.model_validate(training_data["training"])
         return TrainingDetailResponse(
-            **Training_response.model_dump(),
-            type_name=Training_data["type_name"],
-            type_data=Training_data["type_data"]
+            **training_response.model_dump(),
+            type_name=training_data["type_name"],
+            type_data=training_data["type_data"],
         )
 
     async def get_trainings(
-        self, skip: int = 0, limit: int = 100
+            self, skip: int = 0, limit: int = 100
     ) -> List[TrainingResponse]:
-        Trainings = await self.repo.get_all(skip, limit)
-        return [TrainingResponse.model_validate(Training) for Training in Trainings]
+        trainings = await self.repo.get_all(skip, limit)
+        return [TrainingResponse.model_validate(t) for t in trainings]
 
     async def update_training(
-        self, Training_id: int, Training_data: TrainingUpdate
+            self, training_id: int, training_data: TrainingUpdate
     ) -> TrainingResponse:
-        Training = await self.repo.update(Training_id, Training_data)
-        if not Training:
-            return None
-        return TrainingResponse.model_validate(Training)
+        try:
+            training = await self.repo.update(training_id, training_data)
+            if not training:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Training not found"
+                )
+            return TrainingResponse.model_validate(training)
+        except IntegrityError as e:
+            await self.session.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Update error: {str(e)}"
+            )
 
-    async def delete_training(self, Training_id: int) -> bool:
-        return await self.repo.delete(Training_id)
+    async def delete_training(self, training_id: int) -> bool:
+        success = await self.repo.delete(training_id)
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Training not found"
+            )
+        return True

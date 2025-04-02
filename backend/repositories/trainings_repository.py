@@ -1,5 +1,10 @@
+from typing import Optional
+
+from pydantic import UUID4
+from sqlalchemy.orm import selectinload
+
 from schemas.trainings import TrainingCreate, TrainingUpdate
-from models.trainings import Training
+from models.trainings import Training, Image, TypesAction, TrainingStep
 from sqlalchemy import select, delete, update
 
 
@@ -7,14 +12,24 @@ class TrainingRepository:
     def __init__(self, session) -> None:
         self.session = session
 
-    async def create(self, event_data: TrainingCreate) -> bool:
-        new_event = Training(**event_data.model_dump(exclude_unset=True))
-        self.session.add(new_event)
+    async def create(self, training: Training) -> Training:
+        self.session.add(training)
         await self.session.commit()
-        return True
+        await self.session.refresh(training, attribute_names=["steps", "cover_image"])
+        return training
 
-    async def get_by_id(self, Training_id: int) -> Training:
-        query = select(Training).where(Training.id == Training_id)
+
+    async def get_by_id(self, training_id: int) -> Optional[Training]:
+        query = (
+            select(Training)
+            .options(
+                selectinload(Training.steps)
+                .selectinload(TrainingStep.action_type),
+                selectinload(Training.steps)
+                .selectinload(TrainingStep.image)
+            )
+            .where(Training.id == training_id)
+        )
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
@@ -24,9 +39,8 @@ class TrainingRepository:
         return result.scalars().all()
 
     async def update(self, event_id: int, training_data: TrainingUpdate) -> Training:
-        update_data = training_data.dict(exclude_unset=True)
+        update_data = training_data.model_dump(exclude_unset=True)
         if not update_data:
-            # Если нет данных для обновления, просто возвращаем существующее событие
             return await self.get_by_id(event_id)
 
         query = (
@@ -44,3 +58,12 @@ class TrainingRepository:
         result = await self.session.execute(query)
         await self.session.commit()
         return result.rowcount > 0
+
+
+    async def get_image(self, image_uuid: UUID4) -> Image:
+        return await self.session.get(Image, image_uuid)
+
+
+    async def get_action_type(self, action_type_id: int) -> TypesAction:
+        return await self.session.get(TypesAction, action_type_id)
+

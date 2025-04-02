@@ -6,9 +6,6 @@ from pydantic import BaseModel, EmailStr, Field, validator, field_validator
 import re
 
 
-
-
-
 class User(BaseModel):
     email: EmailStr = Field(..., description="Электронная почта")
     phone_number: str = Field(

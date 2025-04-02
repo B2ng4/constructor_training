@@ -6,15 +6,13 @@ import os
 
 class Configs(BaseSettings):
 
-
     # ------------ Настройки проекта ------------
     PROJECT_NAME: str = "Конструктор Тренингов"
     PROJECT_DESCRIPTION: str = "веб-сервис Конструктор тренингов."
 
-
     # ------------ Веб-сервер ------------
-    HOST:str = "localhost"
-    PORT:int = 8002
+    HOST: str = "localhost"
+    PORT: int = 8002
 
     # ------------ Аутентификация ------------
     SECRET_KEY: str = Field(
@@ -49,7 +47,6 @@ class Configs(BaseSettings):
 
     # Настройки OAUTH2
 
-
     # ------------ S3 хранилище ------------
     AWS_ACCESS_KEY_ID: Optional[str] = Field(
         default="ASBZAQIUA7VOLQU0DDTD", env="AWS_ACCESS_KEY_ID"
@@ -82,5 +79,3 @@ def get_db_url():
 
 def get_auth_data():
     return {"secret_key": configs.SECRET_KEY, "algorithm": configs.ALGORITHM}
-
-

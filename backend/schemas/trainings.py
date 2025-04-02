@@ -4,24 +4,19 @@ from pydantic import BaseModel, UUID4, Field
 from uuid import UUID
 
 
-class TypesActionBase(BaseModel):
-    name: Optional[str] = None
 
 
-class TypesActionResponse(TypesActionBase):
+class ActionTypeResponse(BaseModel):
     id: int
-
+    name: str
     class Config:
         from_attributes = True
 
 
-class ImageBase(BaseModel):
-    url: str
 
-
-class ImageResponse(ImageBase):
+class ImageResponse(BaseModel):
     uuid: UUID4
-
+    url: str
     class Config:
         from_attributes = True
 
@@ -29,10 +24,11 @@ class ImageResponse(ImageBase):
 class TrainingStepBase(BaseModel):
     step_number: int
     action_type_id: Optional[int] = None
+    training_id: Optional[int] = None
     area: Optional[Dict[str, int]] = None
     meta: Optional[Dict[str, Any]] = None
     annotation: Optional[str] = None
-    image: Optional[UUID4] = None
+    image_uuid: Optional[UUID4] = None
 
 
 class TrainingStepCreate(TrainingStepBase):
@@ -40,20 +36,18 @@ class TrainingStepCreate(TrainingStepBase):
 
 
 class TrainingStepResponse(TrainingStepBase):
-    id: int
-    training_id: int
-    action_type: Optional[TypesActionResponse] = None
-    image_details: Optional[ImageResponse] = None
-
+    action_type: ActionTypeResponse
+    image: ImageResponse
     class Config:
         from_attributes = True
+        exclude = {"action_type_id", "image_uuid"}
 
 
 class TrainingBase(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     created_at: Optional[datetime] = None
-    cover_image_uuid: Optional[UUID4] = None
+    cover_image: Optional[UUID4] = None
 
 
 class TrainingCreate(TrainingBase):
@@ -83,15 +77,18 @@ class TrainingAssignmentResponse(BaseModel):
         from_attributes = True
 
 
-class TrainingResponse(TrainingBase):
+class TrainingResponse(BaseModel):
     id: int
+    title: str
+    description: Optional[str] = None
     creator_id: int
     created_at: datetime
-    type_id: Optional[int] = None
-    steps: List[TrainingStepResponse] = []
+    cover_image: Optional[UUID4] = None
+    steps: List[TrainingStepResponse]
 
     class Config:
         from_attributes = True
+
 
 
 class TrainingDetailResponse(TrainingResponse):

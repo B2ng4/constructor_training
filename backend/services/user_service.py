@@ -66,4 +66,3 @@ class UserService:
         if user is None:
             return None
         return User.model_validate(user)
-
