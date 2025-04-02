@@ -31,7 +31,7 @@
 
 <script>
 import axios from 'axios'
-import BaseCard from '../../BaseComponents/BaseCard.vue';
+import BaseCard from '@components/BaseComponents/BaseCard.vue';
 import vkButton from './vkButton.vue';
 export default {
     name: 'Form',
@@ -50,6 +50,7 @@ export default {
             axios.post(`${__BASE__URL__}/auth/login`, form)
                 .then((response) => {
                     localStorage.setItem('tokenAuth', response.data.access_token)
+                    this.$router.push('/personal')
                 })
                 .catch(() => {
                 }) 

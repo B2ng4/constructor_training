@@ -8,7 +8,6 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to, from, next) => {
-
     if (to.name === 'PersonalPage') { //в личный кабинет можно перейти только с токеном авторизации
 
 		let tokenAuth = localStorage.getItem('tokenAuth')
