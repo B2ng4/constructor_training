@@ -4,7 +4,6 @@ from repositories.trainings_repository import TrainingRepository
 from schemas.trainings import (
     TrainingCreate,
     TrainingResponse,
-    TrainingDetailResponse,
     TrainingUpdate,
     TrainingStepCreate,
 )
@@ -79,22 +78,6 @@ class TrainingsService:
             )
         return TrainingResponse.model_validate(training)
 
-    async def get_training_with_details(
-            self, training_id: int
-    ) -> TrainingDetailResponse:
-        training_data = await self.repo.get_with_type_details(training_id)
-        if not training_data:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Training not found"
-            )
-
-        training_response = TrainingResponse.model_validate(training_data["training"])
-        return TrainingDetailResponse(
-            **training_response.model_dump(),
-            type_name=training_data["type_name"],
-            type_data=training_data["type_data"],
-        )
 
     async def get_trainings(
             self, skip: int = 0, limit: int = 100

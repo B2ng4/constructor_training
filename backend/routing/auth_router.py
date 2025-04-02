@@ -14,7 +14,7 @@ from fastapi.security import OAuth2PasswordBearer
 from starlette import status
 from starlette.requests import Request
 
-from schemas.users import UserRegister
+from schemas.users import UserRegister, UserResponse
 from depends import get_user_service
 from schemas.users import UserRegister, UserLogin, User
 from services.user_service import UserService
@@ -75,6 +75,6 @@ async def login_user(
 async def get_me(
     token: str = Depends(oauth2_scheme),
     user_service: UserService = Depends(get_user_service),
-) -> User:
+) -> UserResponse:
     current_user = await user_service.get_current_user(token)
     return current_user

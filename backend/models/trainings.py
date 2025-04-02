@@ -32,6 +32,7 @@ class Training(Base):
         lazy="joined",
     )
 
+
 class TrainingStep(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     training_id: Mapped[int] = mapped_column(ForeignKey("trainings.id"))

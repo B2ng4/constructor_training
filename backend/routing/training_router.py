@@ -2,12 +2,12 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from fastapi.security import OAuth2PasswordBearer
-from depends import get_trainings_service, get_s3_service
+from depends import get_trainings_service, get_s3_service, get_user_service
 from starlette import status
 from services.trainings_service import TrainingsService
 from services.s3_service import S3Service
 from schemas.trainings import TrainingResponse, TrainingUpdate, TrainingCreate
-
+from services.user_service import UserService
 
 router = APIRouter(prefix="/training", tags=["Тренинги"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
@@ -16,11 +16,13 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 @router.post("/create_training")
 async def create_training(
     ser_data: TrainingCreate,
-    #token: str = Depends(oauth2_scheme),
+    token: str = Depends(oauth2_scheme),
     training_service: TrainingsService = Depends(get_trainings_service),
+    user_service: UserService = Depends(get_user_service)
 ):
     """Создание нового тренинга"""
-    if await training_service.create_training(ser_data, 1):
+    creator_id = await user_service.get_current_user(token)
+    if await training_service.create_training(ser_data, creator_id.id):
         return HTTPException(status.HTTP_200_OK, detail="Тренинг успешно создан")
     else:
         return HTTPException(status_code=404, detail="Тренинг не создан")

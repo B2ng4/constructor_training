@@ -8,7 +8,7 @@ from typing import List, Optional
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from pydantic import EmailStr
-from schemas.users import UserRegister, UserLogin, User
+from schemas.users import UserRegister, UserLogin, User, UserResponse
 from repositories.users_repository import UserRepository
 from utils.security import verify_password, get_password_hash, create_access_token
 from schemas import mail
@@ -58,11 +58,11 @@ class UserService:
         )
         return access_token
 
-    async def get_current_user(self, token: str) -> User:
+    async def get_current_user(self, token: str) -> UserResponse:
         payload = jwt.decode(token, configs.SECRET_KEY, algorithms=[configs.ALGORITHM])
         email: str = payload.get("sub")
 
         user = await self.user_repo.find_one_or_none(email=email)
         if user is None:
             return None
-        return User.model_validate(user)
+        return UserResponse.model_validate(user)

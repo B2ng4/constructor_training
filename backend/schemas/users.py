@@ -38,3 +38,7 @@ class UserRegister(User):
 class UserLogin(BaseModel):
     username: EmailStr
     password: str
+
+
+class UserResponse(User):
+    id: int
