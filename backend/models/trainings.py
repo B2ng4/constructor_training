@@ -12,14 +12,7 @@ import sqlalchemy as sa
 
 
 
-class ActionType(str, Enum):
-    CLICK = "click"
-    DOUBLE_CLICK = "double_click"
-    RIGHT_CLICK = "right_click"
-    HOVER = "hover"
-    DRAG_DROP = "drag_drop"
-    KEY_PRESS = "key_press"
-    SCROLL = "scroll"
+
 
 
 class Training(Base):

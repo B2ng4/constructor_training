@@ -52,13 +52,12 @@ class TrainingStepResponse(TrainingStepBase):
 class TrainingBase(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
-    start_date: Optional[datetime] = None
+    created_at: Optional[datetime] = None
     cover_image_uuid: Optional[UUID4] = None
 
 
 class TrainingCreate(TrainingBase):
     steps: List[TrainingStepCreate] = None
-    type_id: Optional[int] = None
 
 
 class TrainingUpdate(TrainingBase):

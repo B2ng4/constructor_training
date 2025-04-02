@@ -20,7 +20,7 @@ async def create_training(
     event_service: TrainingsService = Depends(get_trainings_service),
 ):
     """Создание нового тренинга (только админы и суперпользователи"""
-    if await event_service.create_training(ser_data):
+    if await event_service.create_training(ser_data, 1):
         return HTTPException(status.HTTP_200_OK, detail="Тренинг успешно создан")
     else:
         return HTTPException(status_code=404, detail="Тренинг не создан")
@@ -75,6 +75,7 @@ async def upload_photos(
             file_content = await file.read()
             file_url = s3_service.upload_file(file_content, object_name)
             uploaded_urls.append(file_url)
+
         except Exception as e:
             raise HTTPException(
                 status_code=500, detail=f"Ошибка загрузки файла: {str(e)}"
