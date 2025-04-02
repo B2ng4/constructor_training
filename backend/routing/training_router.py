@@ -38,12 +38,12 @@ async def get_training(
 
 @router.put("/{training_id}")
 async def update_training(
-    event_id: int,
-    event_data: TrainingUpdate,
+    training_id: int,
+    training_data: TrainingUpdate,
     service: TrainingsService = Depends(get_trainings_service),
 ):
-    event = await service.update_training(event_id, event_data)
-    if not event:
+    training = await service.update_training(training_id, training_data)
+    if not training:
         raise HTTPException(status_code=404, detail="Тренинг не найден")
 
     return HTTPException(status_code=200, detail="Данные тренинга успешно обновлены")
