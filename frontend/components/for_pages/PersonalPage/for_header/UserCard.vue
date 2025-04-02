@@ -5,7 +5,7 @@
         <q-menu fit>
             <q-list style="min-width: 100px">
                 <q-item clickable>
-                <q-item-section>Перейти в профиль</q-item-section>
+                    <q-item-section>Перейти в профиль</q-item-section>
                 </q-item>
             </q-list>
         </q-menu>
