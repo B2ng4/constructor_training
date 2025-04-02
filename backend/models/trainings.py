@@ -1,44 +1,60 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import text, ForeignKey, JSON
+from typing import Optional, List, Dict
+
+from pydantic import UUID4
+from sqlalchemy import ForeignKey, JSON, Enum
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from core.database import *
+from core.database import Base
 import sqlalchemy as sa
 
-from models.users import User
+
+
+
+class ActionType(str, Enum):
+    CLICK = "click"
+    DOUBLE_CLICK = "double_click"
+    RIGHT_CLICK = "right_click"
+    HOVER = "hover"
+    DRAG_DROP = "drag_drop"
+    KEY_PRESS = "key_press"
+    SCROLL = "scroll"
 
 
 class Training(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
-    title: Mapped[str] = mapped_column(index=True)
-    description: Mapped[str]
-    creator_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
+    title: Mapped[Optional[str]] = mapped_column(sa.String(100))
+    description: Mapped[Optional[str]] = mapped_column(sa.Text)
+    creator_id: Mapped[int] = mapped_column(ForeignKey("Users.id"))
+    created_at: Mapped[Optional[datetime]] = mapped_column(sa.DateTime)
     creator: Mapped["User"] = relationship(back_populates="created_trainings")
-    steps: Mapped[list["TrainingStep"]] = relationship(
-        back_populates="training", order_by="TrainingStep.step_number"
-    )
-    assignments: Mapped[list["TrainingAssignment"]] = relationship(
-        back_populates="training"
-    )
+    steps: Mapped[List["TrainingStep"]] = relationship(back_populates="training")
 
 
 class TrainingStep(Base):
-    id: Mapped[int] = mapped_column(primary_key=True)
-    training_id: Mapped[int] = mapped_column(ForeignKey("trainings.id"))
-    step_number: Mapped[int]
-    image_url: Mapped[str]
-    area: Mapped[dict] = mapped_column(JSON)
-    description: Mapped[str]
+    id: Mapped[int] = mapped_column( primary_key=True)
+    training_id: Mapped[int] = mapped_column(ForeignKey("Trainings.id"))
+    action_type_id: Mapped[Optional[int]] = mapped_column(ForeignKey("TypesAction.id"))
+    area: Mapped[Optional[Dict]] = mapped_column(JSONB)
+    meta: Mapped[Optional[Dict]] = mapped_column(JSONB)
+    annotation: Mapped[Optional[str]] = mapped_column(sa.Text)
+    image_uuid: Mapped[Optional[UUID4]] = mapped_column(UUID, ForeignKey("images.uuid"))
+
     training: Mapped["Training"] = relationship(back_populates="steps")
+    action_type: Mapped["TypesAction"] = relationship(back_populates="steps")
+    image: Mapped["Image"] = relationship(back_populates="steps")
 
 
-class TrainingAssignment(Base):
+class TypesAction(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
-    training_id: Mapped[int] = mapped_column(ForeignKey("trainings.id"))
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    assigned_at: Mapped[datetime] = mapped_column(default=datetime.utcnow)
-    completed_at: Mapped[datetime] = mapped_column(nullable=True)
-    training: Mapped["Training"] = relationship(back_populates="assignments")
-    user: Mapped["User"] = relationship(back_populates="assigned_trainings")
+    name: Mapped[Optional[str]] = mapped_column(sa.String)
+    steps: Mapped[List["TrainingStep"]] = relationship(back_populates="action_type")
+
+
+class Image(Base):
+    uuid: Mapped[UUID4] = mapped_column(UUID, primary_key=True)
+    url: Mapped[str] = mapped_column(sa.String(50), unique=True)
+    steps: Mapped[List["TrainingStep"]] = relationship(back_populates="image")
+
+

@@ -1,74 +1,77 @@
 from datetime import datetime
 from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, UUID4
+from pydantic import BaseModel, UUID4, Field
 from uuid import UUID
 
 
-class TrainingBase(BaseModel):
-    """Базовый тренинг"""
+class TypesActionBase(BaseModel):
+    name: Optional[str] = None
 
-    title: str
-    description: str
-    start_date: Optional[datetime] = None
-    end_date: Optional[datetime] = None
-    cover_image_uuid: Optional[UUID4] = None
+
+class TypesActionResponse(TypesActionBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+
+class ImageBase(BaseModel):
+    url: str
+
+
+class ImageResponse(ImageBase):
+    uuid: UUID4
+
+    class Config:
+        from_attributes = True
 
 
 class TrainingStepBase(BaseModel):
-    """Шаг Тренинга"""
     step_number: int
-    image_url: str
-    area: Dict[str, int]
-    description: str
+    action_type_id: Optional[int] = None
+    area: Optional[Dict[str, int]] = None
+    meta: Optional[Dict[str, Any]] = None
+    annotation: Optional[str] = None
+    image: Optional[UUID4] = None
 
 
 class TrainingStepCreate(TrainingStepBase):
     pass
 
 
-class TrainingCreate(TrainingBase):
-    """Создание тренига (добавление шагов и типа тренинга)"""
-
-    steps: List[TrainingStepCreate]
-    type_id: Optional[int] = None
-
-
-class TrainingUpdate(BaseModel):
-    """Обновление тренига (Обновление  шагов и типа тренинга)"""
-
-    title: Optional[str] = None
-    description: Optional[str] = None
-    start_date: Optional[datetime] = None
-    end_date: Optional[datetime] = None
-    cover_image_uuid: Optional[UUID4] = None
-    type_id: Optional[int] = None
-
-
 class TrainingStepResponse(TrainingStepBase):
     id: int
     training_id: int
+    action_type: Optional[TypesActionResponse] = None
+    image_details: Optional[ImageResponse] = None
+
     class Config:
         from_attributes = True
 
 
-# Модели для назначения тренингов
+class TrainingBase(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    start_date: Optional[datetime] = None
+    cover_image_uuid: Optional[UUID4] = None
+
+
+class TrainingCreate(TrainingBase):
+    steps: List[TrainingStepCreate] = None
+    type_id: Optional[int] = None
+
+
+class TrainingUpdate(TrainingBase):
+    end_date: Optional[datetime] = None
+    type_id: Optional[int] = None
+
+
 class TrainingAssignmentCreate(BaseModel):
-    user_ids: List[int]
+    user_ids: List[int] = Field(..., min_items=1)
 
 
 class TrainingAssignmentUpdate(BaseModel):
     completed: bool
-
-
-class TrainingResponse(TrainingBase):
-    id: int
-    creator_id: int
-    created_at: datetime
-    type_id: Optional[int] = None
-    steps: List[TrainingStepResponse]
-
-    class Config:
-        from_attributes = True
 
 
 class TrainingAssignmentResponse(BaseModel):
@@ -81,7 +84,18 @@ class TrainingAssignmentResponse(BaseModel):
         from_attributes = True
 
 
+class TrainingResponse(TrainingBase):
+    id: int
+    creator_id: int
+    created_at: datetime
+    type_id: Optional[int] = None
+    steps: List[TrainingStepResponse] = []
+
+    class Config:
+        from_attributes = True
+
+
 class TrainingDetailResponse(TrainingResponse):
-    assignments: List[TrainingAssignmentResponse]
+    assignments: List[TrainingAssignmentResponse] = []
     type_name: Optional[str] = None
     type_data: Optional[Dict[str, Any]] = None

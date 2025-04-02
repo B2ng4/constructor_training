@@ -62,6 +62,7 @@ async def delete_training(
 # TODO: Добавить доступ к апихам по ролям, добавить ручки для получения тренингов по типу(фильтрация)
 
 
+
 @router.post("/upload-photos/")
 async def upload_photos(
     files: List[UploadFile] = File(..., description="Загрузка фото"),
