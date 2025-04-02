@@ -59,24 +59,6 @@ class TrainingUpdate(TrainingBase):
     type_id: Optional[int] = None
 
 
-class TrainingAssignmentCreate(BaseModel):
-    user_ids: List[int] = Field(..., min_items=1)
-
-
-class TrainingAssignmentUpdate(BaseModel):
-    completed: bool
-
-
-class TrainingAssignmentResponse(BaseModel):
-    id: int
-    user_id: int
-    assigned_at: datetime
-    completed_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
-
-
 class TrainingResponse(BaseModel):
     id: int
     title: str
@@ -91,7 +73,4 @@ class TrainingResponse(BaseModel):
 
 
 
-class TrainingDetailResponse(TrainingResponse):
-    assignments: List[TrainingAssignmentResponse] = []
-    type_name: Optional[str] = None
-    type_data: Optional[Dict[str, Any]] = None
+
