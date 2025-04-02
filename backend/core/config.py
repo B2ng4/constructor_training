@@ -5,11 +5,18 @@ import os
 
 
 class Configs(BaseSettings):
-    # Для инициализации проекта#
-    PROJECT_NAME: str = "TrainingKnastu"
-    PROJECT_DESCRIPTION: str = "веб-сервис Коснтруктор тренингов"
 
-    # Для аутенфикации
+
+    # ------------ Настройки проекта ------------
+    PROJECT_NAME: str = "Конструктор Тренингов"
+    PROJECT_DESCRIPTION: str = "веб-сервис Конструктор тренингов."
+
+
+    # ------------ Веб-сервер ------------
+    HOST:str = "localhost"
+    PORT:int = 8002
+
+    # ------------ Аутентификация ------------
     SECRET_KEY: str = Field(
         default="your-secret-key", env="SECRET_KEY"
     )  # Секретный ключ для JWT и шифрования
@@ -20,14 +27,14 @@ class Configs(BaseSettings):
         default=60, env="ACCESS_TOKEN_EXPIRE_MINUTES"
     )  # Время жизни токена
 
-    # Настройки БД
+    # ------------ БД ------------
     DB_HOST: Optional[str] = Field(default="localhost", env="DB_HOST")
     DB_PORT: Optional[int] = Field(default=5432, env="DB_PORT")
     DB_USER: Optional[str] = Field(default="postgres", env="DB_USER")
     DB_NAME: Optional[str] = Field(default="postgres", env="DB_NAME")
     DB_PASS: Optional[str] = Field(default="admin", env="DB_PASS")
 
-    # Настройки почты
+    # ------------ Почта (оповещение) ------------
     MAIL_USERNAME: Optional[str] = Field(
         default="timsidorin@gmail.com", env="MAIL_USERNAME"
     )
@@ -43,7 +50,7 @@ class Configs(BaseSettings):
     # Настройки OAUTH2
 
 
-    # Настройки S3
+    # ------------ S3 хранилище ------------
     AWS_ACCESS_KEY_ID: Optional[str] = Field(
         default="ASBZAQIUA7VOLQU0DDTD", env="AWS_ACCESS_KEY_ID"
     )
@@ -75,3 +82,5 @@ def get_db_url():
 
 def get_auth_data():
     return {"secret_key": configs.SECRET_KEY, "algorithm": configs.ALGORITHM}
+
+
