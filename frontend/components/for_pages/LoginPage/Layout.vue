@@ -10,18 +10,27 @@
             <h6 class="text-blue-grey-1">У вас нет аккаунта?</h6>
                 <q-btn 
                     outline 
-                    rounded 
+                    rounded
+                    @click="show = true"
                     color="blue-grey-1" 
                     label="Регистрация" 
                     class="q-btn--large"
                 />
         </div>
     </div>
+    <RegistrationModal :show="show" @close="show = false"/>
 </template>
 
 <script>
+import RegistrationModal from '@components/for_pages/loginPage/RegistrationModal.vue';
 export default {
     name: 'Layout',
+    components: {RegistrationModal},
+    data() {
+        return {
+            show: false,
+        }
+    }
 }
 </script>
 
