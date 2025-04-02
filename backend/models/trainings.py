@@ -26,21 +26,25 @@ class Training(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[Optional[str]] = mapped_column(sa.String(100))
     description: Mapped[Optional[str]] = mapped_column(sa.Text)
-    creator_id: Mapped[int] = mapped_column(ForeignKey("Users.id"))
-    created_at: Mapped[Optional[datetime]] = mapped_column(sa.DateTime)
+    creator_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[Optional[datetime]] = mapped_column(sa.DateTime, default=datetime.now())
     creator: Mapped["User"] = relationship(back_populates="created_trainings")
-    steps: Mapped[List["TrainingStep"]] = relationship(back_populates="training")
+    steps: Mapped[List["TrainingStep"]] = relationship(
+    back_populates = "training",
+    order_by = "TrainingStep.id",
+    cascade = "all, delete-orphan",
+    lazy = "joined"
+)
 
 
 class TrainingStep(Base):
     id: Mapped[int] = mapped_column( primary_key=True)
-    training_id: Mapped[int] = mapped_column(ForeignKey("Trainings.id"))
-    action_type_id: Mapped[Optional[int]] = mapped_column(ForeignKey("TypesAction.id"))
+    training_id: Mapped[int] = mapped_column(ForeignKey("trainings.id"))
+    action_type_id: Mapped[Optional[int]] = mapped_column(ForeignKey("typesactions.id"))
     area: Mapped[Optional[Dict]] = mapped_column(JSONB)
     meta: Mapped[Optional[Dict]] = mapped_column(JSONB)
     annotation: Mapped[Optional[str]] = mapped_column(sa.Text)
     image_uuid: Mapped[Optional[UUID4]] = mapped_column(UUID, ForeignKey("images.uuid"))
-
     training: Mapped["Training"] = relationship(back_populates="steps")
     action_type: Mapped["TypesAction"] = relationship(back_populates="steps")
     image: Mapped["Image"] = relationship(back_populates="steps")
