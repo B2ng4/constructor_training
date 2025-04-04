@@ -12,7 +12,7 @@
                     outline 
                     rounded
                     @click="show = true"
-                    color="blue-grey-1" 
+                    color="blue-grey-1"
                     label="Регистрация" 
                     class="q-btn--large"
                 />

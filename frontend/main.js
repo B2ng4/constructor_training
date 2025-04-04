@@ -5,5 +5,6 @@ import { Quasar } from "quasar";
 import quasarLang from "quasar/lang/ru";
 import "quasar/src/css/index.sass";
 import "@quasar/extras/material-icons/material-icons.css";
+import "./assets/styles/index.css"
 
 createApp(App).use(router).use(Quasar, { config: quasarLang }).mount("#app");
