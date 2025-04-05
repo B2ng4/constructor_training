@@ -84,7 +84,7 @@ export default {
             first_name: this.user.name,
             last_name: this.user.surname,
             password: this.user.password,
-          })
+          });
         }
     }
 }

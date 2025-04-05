@@ -17,7 +17,7 @@ export default {
             default: '250px'
         }
     }
-};
+}
 </script>
 
 <style scoped>

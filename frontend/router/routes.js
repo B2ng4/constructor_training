@@ -1,6 +1,6 @@
 import LoginPage from "@pages/LoginPage.vue";
 import PersonalPage from "@pages/PersonalPage.vue";
-import Page403 from "@pages/Page403.vue"
+import Page403 from "@pages/Page403.vue";
 
 export const routes = [
 	{ path: "/login", component: LoginPage, name: 'LoginPage' },

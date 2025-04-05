@@ -5,7 +5,6 @@
         <q-card-section>
             <slot name="header"></slot>
         </q-card-section>
-
         <q-card-section class="q-pt-none">
             <slot name="body"></slot>
         </q-card-section>

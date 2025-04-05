@@ -30,12 +30,11 @@
 </template>
 
 <script>
-import axios from 'axios'
+import axios from 'axios';
 import BaseCard from '@components/BaseComponents/BaseCard.vue';
-import vkButton from './vkButton.vue';
 export default {
     name: 'Form',
-    components: {BaseCard, vkButton},
+    components: {BaseCard},
     data() {
         return {
             email: '',
@@ -44,16 +43,16 @@ export default {
     },
     methods: {
         async login() {
-            let form = new FormData()
-            form.set('username', this.email)
-            form.set('password', this.password)
+            let form = new FormData();
+            form.set('username', this.email);
+            form.set('password', this.password);
             axios.post(`${__BASE__URL__}/auth/login`, form)
                 .then((response) => {
-                    localStorage.setItem('tokenAuth', response.data.access_token)
-                    this.$router.push('/personal')
+                    localStorage.setItem('tokenAuth', response.data.access_token);
+                    this.$router.push('/personal');
                 })
                 .catch(() => {
-                }) 
+                });
         }
     }
 }
@@ -74,5 +73,4 @@ export default {
 	left: 50%;
 	transform: translateX(-50%);
 }
-
 </style>

@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import { quasar } from '@quasar/vite-plugin'
-import path from 'path'
+import { quasar } from '@quasar/vite-plugin';
+import path from 'path';
 
 export default defineConfig({
   plugins: [
@@ -17,5 +17,5 @@ export default defineConfig({
       '@components': path.join(__dirname, '/frontend/components'),
       '@pages': path.join(__dirname, '/frontend/pages')
     }
-  }
+  },
 });

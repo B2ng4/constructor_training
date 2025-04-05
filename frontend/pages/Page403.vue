@@ -6,5 +6,4 @@
 export default {
     name: 'Page403'
 }
-
 </script>

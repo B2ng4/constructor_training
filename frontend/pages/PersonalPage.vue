@@ -8,5 +8,4 @@ export default {
     name: 'PersonalPage',
     components: {Layout}
 }
-
 </script>
