@@ -1,10 +1,19 @@
 <template>
     <div class="container">
-        <BaseCard class="card text-blue-grey-8" width="400px" title="Вход">
+        <BaseCard class="card text-blue-grey-8" width="400px">
+            <template v-slot:title>
+                <div class="text-white column content-center items-center">
+                    <h5 class="q-mb-xs">Добро пожаловать</h5>
+                    <div>Вход</div>
+                    <div>Нет аккаунта? <router-link class="text-white" to="/registration">Регистрация</router-link></div>
+                </div>
+            </template>
             <template v-slot:body>
                 <div class="column justify-center items-center content-center">
                     <q-input
                         filled
+                        label-color="white"
+                        color="white"
                         v-model="email"
                         label="Логин *"
                         lazy-rules
@@ -14,6 +23,8 @@
                     <q-input
                         filled
                         type="password"
+                        label-color="white"
+                        color="white"
                         v-model="password"
                         label="Пароль *"
                         lazy-rules
@@ -22,7 +33,14 @@
                         val => val !== null && val !== '' || 'Введите пароль',
                         ]"
                     />
-                        <q-btn label="Войти" class="q-mt-lg full-width" color="primary" @click="login()"/>
+                        <q-btn 
+                            label="Войти" 
+                            outline 
+                            rounded
+                            class="q-mt-lg full-width" 
+                            color="white" 
+                            @click="login()"
+                            />
                 </div>
             </template>
         </BaseCard> 
@@ -65,6 +83,11 @@ export default {
     display: flex;
     justify-content: center; 
     align-items: center; 
+}
+
+.my-card {
+    background-color: #6274F8;
+    border-radius: 5%;
 }
 
 .my-card :deep(.text-h6) {

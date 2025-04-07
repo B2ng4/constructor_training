@@ -1,7 +1,7 @@
 <template>
     <q-card class="my-card shadow-1" :style="{ maxWidth: width }">
       <q-card-section>
-        <div class="text-h6">{{ title }}</div>
+        <slot name="title"></slot>
       </q-card-section>
       <q-card-section>
         <slot name="body"></slot>
@@ -12,7 +12,6 @@
 export default {
 	name: "BaseCard",
     props: {
-        title: null,
         width: {
             default: '250px'
         }
