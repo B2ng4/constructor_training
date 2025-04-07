@@ -6,5 +6,6 @@ import quasarLang from "quasar/lang/ru";
 import "quasar/src/css/index.sass";
 import "@quasar/extras/material-icons/material-icons.css";
 import "./assets/styles/index.css";
+import { Notify } from "quasar";
 
-createApp(App).use(router).use(Quasar, { config: quasarLang }).mount("#app");
+createApp(App).use(router).use(Quasar, { plugins: {Notify}, lang: quasarLang }).mount("#app");

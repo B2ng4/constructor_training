@@ -1,13 +1,13 @@
 <template>
   <div class="row justify-center">
-    <Form/>
+    <LoginForm/>
   </div>
 </template>
 
 <script>
-import Form from '@components/for_pages/LoginPage/Form.vue';
+import LoginForm from '@components/for_pages/LoginPage/LoginForm.vue';
 export default {
   name: "LoginPage",
-  components: { Form },
+  components: { LoginForm },
 }
 </script>

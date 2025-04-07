@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-        <BaseCard class="card text-blue-grey-8" width="400px">
+        <BaseCard class="card text-blue-grey-8 shadow-24" width="400px">
             <template v-slot:title>
                 <div class="text-white column content-center items-center">
                     <h5 class="q-mb-xs">Добро пожаловать</h5>
@@ -18,7 +18,7 @@
                         label="Логин *"
                         lazy-rules
                         class="full-width"
-                        :rules="[ val => val && val.length > 0 || 'Введите логин']"
+                        input-style='color: white'
                     />
                     <q-input
                         filled
@@ -29,18 +29,22 @@
                         label="Пароль *"
                         lazy-rules
                         class="full-width q-mt-lg"
-                        :rules="[
-                        val => val !== null && val !== '' || 'Введите пароль',
-                        ]"
+                        input-style='color: white'
                     />
                         <q-btn 
-                            label="Войти" 
                             outline 
                             rounded
                             class="q-mt-lg full-width" 
                             color="white" 
                             @click="login()"
-                            />
+                            >
+                            <q-spinner-bars
+                                v-if="loader === true"
+                                color="white"
+                                size="2em"
+                             />
+                             <span v-else>Войти</span>
+                        </q-btn>
                 </div>
             </template>
         </BaseCard> 
@@ -51,16 +55,18 @@
 import axios from 'axios';
 import BaseCard from '@components/BaseComponents/BaseCard.vue';
 export default {
-    name: 'Form',
+    name: 'LoginForm',
     components: {BaseCard},
     data() {
         return {
             email: '',
-            password: ''
+            password: '',
+            loader: false,
         }
     },
     methods: {
         async login() {
+            this.loader = true;
             let form = new FormData();
             form.set('username', this.email);
             form.set('password', this.password);
@@ -70,6 +76,10 @@ export default {
                     this.$router.push('/personal');
                 })
                 .catch(() => {
+                    this.$q.notify({ position: 'top', type: 'negative', message: 'Произошла ошибка!' });
+                })
+                .finally(() => {
+                    this.loader = false;
                 });
         }
     }
@@ -88,7 +98,6 @@ export default {
 .my-card {
     background-color: #6274F8;
     border-radius: 5%;
-    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
 }
 
 .my-card :deep(.text-h6) {

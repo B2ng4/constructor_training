@@ -9,7 +9,7 @@ export default defineConfig({
     quasar()
   ],
   define: {
-    __BASE__URL__: JSON.stringify('http://localhost:8002'),
+    __BASE__URL__: JSON.stringify('https://osprey-correct-nearly.ngrok-free.app'),
   },
   resolve: {
     alias: {
