@@ -88,6 +88,7 @@ export default {
 .my-card {
     background-color: #6274F8;
     border-radius: 5%;
+    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
 }
 
 .my-card :deep(.text-h6) {
