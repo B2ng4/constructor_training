@@ -1,5 +1,7 @@
 <template>
-    <RegistrationForm/>
+    <div class="row justify-center">
+        <RegistrationForm/>
+    </div>
 </template>
   
 <script>
@@ -9,6 +11,3 @@ export default {
     components: {RegistrationForm}
 }
 </script>
-  
-  <style scoped>
-  </style>

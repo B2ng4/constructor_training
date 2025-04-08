@@ -1,4 +1,8 @@
 body {
     font-family: "Inter", sans-serif !important ;
     background-color: #F8F9FB;
-  }
+}
+
+.size-button-70 {
+  width: 70%;
+}

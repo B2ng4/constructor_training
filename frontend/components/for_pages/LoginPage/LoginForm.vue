@@ -1,6 +1,6 @@
 <template>
     <div class="container">
-        <BaseCard class="card text-blue-grey-8 shadow-24" width="400px">
+        <BaseCard class="card text-blue-grey-8 shadow-24" width="500px">
             <template v-slot:title>
                 <div class="text-white column content-center items-center">
                     <h5 class="q-mb-xs">Добро пожаловать</h5>
@@ -22,7 +22,7 @@
                     />
                     <q-input
                         filled
-                        type="password"
+                        :type="isPwd ? 'password' : 'text'"
                         label-color="white"
                         color="white"
                         v-model="password"
@@ -30,11 +30,19 @@
                         lazy-rules
                         class="full-width q-mt-lg"
                         input-style='color: white'
-                    />
+                    >
+                        <template v-slot:append>
+                            <q-icon
+                                :name="isPwd ? 'visibility_off' : 'visibility'"
+                                class="cursor-pointer text-white"
+                                @click="isPwd = !isPwd"
+                            />
+                        </template>
+                    </q-input>
                         <q-btn 
                             outline 
                             rounded
-                            class="q-mt-lg full-width" 
+                            class="q-mt-lg size-button-70" 
                             color="white" 
                             @click="login()"
                             >
@@ -61,7 +69,9 @@ export default {
         return {
             email: '',
             password: '',
+
             loader: false,
+            isPwd: true,
         }
     },
     methods: {
