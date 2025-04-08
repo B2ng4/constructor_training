@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.config import configs
 from schemas.mail import mail_send
 from services.mail_service import EmailService
-from utils.security import create_access_token
+from utils.security import create_access_token, decode_access_token
 
 
 class UserService:
@@ -59,7 +59,7 @@ class UserService:
         return access_token
 
     async def get_current_user(self, token: str) -> UserResponse:
-        payload = jwt.decode(token, configs.SECRET_KEY, algorithms=[configs.ALGORITHM])
+        payload = decode_access_token(token=token)
         email: str = payload.get("sub")
 
         user = await self.user_repo.find_one_or_none(email=email)
