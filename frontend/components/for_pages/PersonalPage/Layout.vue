@@ -8,16 +8,17 @@
         </q-header>
         <!-- Левая панель -->
         <q-drawer show-if-above side="left" bordered>
-            <div class="group_button_layout column">
-                <q-btn
-                    flat 
-                    v-for="nav in buttonLeftPanel"
-                    :key="nav.name"
-                    class="q-pa-md row items-start"
-                >
-                    <q-icon :name="nav.icon" class="q-ml-lg"/>
-                    <span class="q-ml-md">{{ nav.name }}</span>
-                </q-btn>
+            <div class="group_button_layout">
+                <router-link class="custom-nav-link column" v-for="nav in buttonLeftPanel"  :to="nav.url" active-class="active-nav-link">
+                    <q-btn
+                        flat
+                        :key="nav.name"
+                        class="q-pa-md row items-start full-width"
+                    >
+                        <q-icon :name="nav.icon" class="q-ml-lg"/>
+                        <span class="q-ml-md">{{ nav.name }}</span>
+                    </q-btn>
+                </router-link>
             </div>
         </q-drawer>
         <!-- Контейнер в котором отрисовка страницы -->
@@ -37,23 +38,27 @@ export default {
             buttonLeftPanel: [
                 {
                     'name': 'Главная',
-                    'icon': 'home_outline'
+                    'icon': 'home_outline',
+                    'url': '/personal/home'
                 },
                 {
                     'name': 'Библиотека',
-                    'icon': 'language'
+                    'icon': 'language',
+                    'url': '/personal/library'
                 },
                 {
                     'name': 'Тренинги',
-                    'icon': 'list_alt'
+                    'icon': 'list_alt',
+                    'url': '/personal/traning'
                 },
                 {
                     'name': 'Поддержка',
-                    'icon': 'info'
+                    'icon': 'info',
+                    'url': '/personal/help'
                 }
             ]
         }
-    }
+    },
 }
 </script>
 
@@ -65,6 +70,17 @@ export default {
 .group_button_layout {
     margin-top: 25%;
     color: #808080;
+}
+
+.custom-nav-link {
+    color: #808080;
+    text-decoration: none;
+}
+
+.active-nav-link {
+    background-color: #FAFAFC;
+    color: #5064F7;
+    border-left: 5px solid #5064F7;
 }
 </style>
 
