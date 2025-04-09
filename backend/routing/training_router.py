@@ -71,6 +71,7 @@ async def delete_training(
 async def upload_photos(
     files: List[UploadFile] = File(..., description="Загрузка фото"),
     s3_service: S3Service = Depends(get_s3_service),
+    token: str = Depends(oauth2_scheme),
 ):
     uploaded_urls = []
     for file in files:
