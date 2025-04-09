@@ -44,14 +44,14 @@ class TrainingStepResponse(TrainingStepBase):
 
 
 class TrainingBase(BaseModel):
-    title: Optional[str] = None
-    description: Optional[str] = None
+    title: str
+    description: str
     created_at: Optional[datetime] = None
     cover_image: Optional[UUID4] = None
 
 
 class TrainingCreate(TrainingBase):
-    steps: List[TrainingStepCreate] = None
+    steps: Optional[List[TrainingStepCreate]] = Field(default_factory=list)
 
 
 class TrainingUpdate(TrainingBase):
@@ -62,7 +62,7 @@ class TrainingUpdate(TrainingBase):
 class TrainingResponse(BaseModel):
     id: int
     title: str
-    description: Optional[str] = None
+    description: str
     creator_id: int
     created_at: datetime
     cover_image: Optional[UUID4] = None

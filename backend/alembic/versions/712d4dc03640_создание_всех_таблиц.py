@@ -1,8 +1,8 @@
 """Создание всех таблиц
 
-Revision ID: 178015be66ec
+Revision ID: 712d4dc03640
 Revises: 
-Create Date: 2025-04-09 15:39:10.742996
+Create Date: 2025-04-09 16:06:08.463885
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '178015be66ec'
+revision: str = '712d4dc03640'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -46,9 +46,9 @@ def upgrade() -> None:
     )
     op.create_table('trainings',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('title', sa.String(length=100), nullable=True),
+    sa.Column('title', sa.String(length=100), nullable=False),
     sa.Column('cover_image', sa.UUID(), nullable=True),
-    sa.Column('description', sa.Text(), nullable=True),
+    sa.Column('description', sa.Text(), nullable=False),
     sa.Column('creator_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['cover_image'], ['images.uuid'], ),

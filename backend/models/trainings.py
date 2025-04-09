@@ -12,17 +12,18 @@ import sqlalchemy as sa
 
 class Training(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
-    title: Mapped[Optional[str]] = mapped_column(sa.String(100))
+    title: Mapped[str] = mapped_column(sa.String(100), nullable=False)
     cover_image: Mapped[Optional[UUID]] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("images.uuid"),
-        name="cover_image"
+        name="cover_image",
+        nullable=True
     )
     image: Mapped["Image"] = relationship()
-    description: Mapped[Optional[str]] = mapped_column(sa.Text)
+    description: Mapped[str] = mapped_column(sa.Text, nullable=False)
     creator_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[Optional[datetime]] = mapped_column(
-        sa.DateTime, default=datetime.now()
+        sa.DateTime, default=datetime.now(), nullable=True,
     )
     creator: Mapped["User"] = relationship(back_populates="created_trainings")
     steps: Mapped[List["TrainingStep"]] = relationship(

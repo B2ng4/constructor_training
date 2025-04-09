@@ -72,7 +72,7 @@ async def login_user(
 
 
 @router.get("/me/")
-async def get_me(
+async def get_user(
     token: str = Depends(oauth2_scheme),
     user_service: UserService = Depends(get_user_service),
 ) -> UserResponse:
