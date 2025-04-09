@@ -20,5 +20,5 @@ class User(Base):
     registration_at: Mapped[Optional[datetime]] = mapped_column(
         sa.DateTime, default=datetime.now()
     )
-    photo: Mapped[Optional[str]] = mapped_column(sa.String)
+    photo: Mapped[Optional[str]] = mapped_column(sa.String, nullable=True)
     created_trainings: Mapped[List["Training"]] = relationship(back_populates="creator")
