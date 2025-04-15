@@ -9,7 +9,13 @@
         <!-- Левая панель -->
         <q-drawer show-if-above side="left" bordered>
             <div class="group_button_layout">
-                <router-link class="custom-nav-link column" v-for="nav in buttonLeftPanel"  :to="nav.url" active-class="active-nav-link">
+                <router-link 
+                    class="custom-nav-link column" 
+                    v-for="nav in buttonLeftPanel"  
+                    :to="nav.url" 
+                    active-class="active-nav-link"
+                    :key="nav.url"
+                    >
                     <q-btn
                         flat
                         :key="nav.name"

@@ -8,4 +8,4 @@ import "@quasar/extras/material-icons/material-icons.css";
 import "./assets/styles/index.css";
 import { Notify } from "quasar";
 
-createApp(App).use(router).use(Quasar, { plugins: {Notify}, lang: quasarLang }).mount("#app");
+createApp(App).use(router).use(Quasar, { plugins: {Notify}, lang: quasarLang, config: { brand: {secondary: '#6274F8'} } }).mount("#app");
