@@ -7,6 +7,7 @@ from uuid import UUID
 
 
 class ActionTypeResponse(BaseModel):
+
     id: int
     name: str
     class Config:

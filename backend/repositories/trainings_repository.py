@@ -34,10 +34,19 @@ class TrainingRepository:
         return result.scalar_one_or_none()
 
 
-    async def get_by_user_id(self, user_id: int) -> list[Training]:
-
-
-        ...
+    async def get_by_user_id(self, user_id: int) -> Optional[Training]:
+        query = (
+            select(Training)
+            .options(
+                selectinload(Training.steps)
+                .selectinload(TrainingStep.action_type),
+                selectinload(Training.steps)
+                .selectinload(TrainingStep.image)
+            )
+            .where(Training.creator_id == user_id)
+        )
+        result = await self.session.execute(query)
+        return result.scalars().all()
 
 
 

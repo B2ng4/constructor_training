@@ -92,7 +92,7 @@ class TrainingsService:
             self, user_id:int
     ) -> List[TrainingResponse]:
         trainings = await self.repo.get_by_user_id(user_id)
-        return [TrainingResponse.model_validate(t) for t in trainings]
+        return [TrainingResponse.model_validate(training) for training in trainings]
 
 
 
