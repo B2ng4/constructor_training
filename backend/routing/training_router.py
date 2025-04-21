@@ -22,6 +22,7 @@ async def create_training(
 ):
     """Создание нового тренинга"""
     creator_id = await user_service.get_current_user(token)
+    print(creator_id)
     if await training_service.create_training(ser_data, creator_id.id):
         return HTTPException(status.HTTP_200_OK, detail="Тренинг успешно создан")
     else:
@@ -38,6 +39,18 @@ async def get_training(
     if not training:
         raise HTTPException(status_code=404, detail="Тренинг не найден")
     return training
+
+
+
+@router.get("my_trainings", response_model=TrainingResponse)
+async def get_my_trainings(token: str = Depends(oauth2_scheme),
+                           user_service: UserService = Depends(get_user_service),
+                           training_service:TrainingsService = Depends(get_trainings_service)):
+    user_id = await user_service.get_current_user(token)
+    training_service.
+    ...
+
+
 
 
 @router.put("/{training_id}")

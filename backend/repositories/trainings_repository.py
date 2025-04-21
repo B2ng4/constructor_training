@@ -33,6 +33,15 @@ class TrainingRepository:
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
+
+    async def get_by_user_id(self, user_id: int) -> list[Training]:
+
+
+        ...
+
+
+
+
     async def get_all(self, skip: int = 0, limit: int = 100) -> list[Training]:
         query = select(Training).offset(skip).limit(limit)
         result = await self.session.execute(query)

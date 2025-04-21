@@ -19,7 +19,7 @@ class TrainingsService:
 
     async def create_training(
             self, training_data: TrainingCreate, creator_id: int
-    ) -> TrainingResponse:
+    ):
         training_dict = training_data.model_dump(
             exclude={"steps", "cover_image"}
             )
@@ -79,11 +79,24 @@ class TrainingsService:
         return TrainingResponse.model_validate(training)
 
 
-    async def get_trainings(
+    async def get_trainings_by_params(
             self, skip: int = 0, limit: int = 100
     ) -> List[TrainingResponse]:
         trainings = await self.repo.get_all(skip, limit)
         return [TrainingResponse.model_validate(t) for t in trainings]
+
+
+
+
+    async def get_trainings_by_user_id(
+            self, user_id:int
+    ) -> List[TrainingResponse]:
+        trainings = await self.repo.get_by_user_id(user_id)
+        return [TrainingResponse.model_validate(t) for t in trainings]
+
+
+
+
 
     async def update_training(
             self, training_id: int, training_data: TrainingUpdate
