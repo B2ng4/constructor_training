@@ -7,5 +7,11 @@ import "quasar/src/css/index.sass";
 import "@quasar/extras/material-icons/material-icons.css";
 import "./assets/styles/index.css";
 import { Notify } from "quasar";
+import { createPinia } from 'pinia';
 
-createApp(App).use(router).use(Quasar, { plugins: {Notify}, lang: quasarLang, config: { brand: {secondary: '#6274F8'} } }).mount("#app");
+const pinia = createPinia();
+createApp(App)
+    .use(router)
+    .use(Quasar, { plugins: {Notify}, lang: quasarLang, config: { brand: {secondary: '#6274F8'} } })
+    .use(pinia)
+    .mount("#app");

@@ -1,7 +1,7 @@
 <template>
     <q-btn rounded color="white text-black" style="width: auto;">
         <q-icon class="q-mr-xs" name="person" />
-        Имя юзера
+        {{ first_name }}
         <q-menu fit>
             <q-list style="min-width: 100px">
                 <q-item clickable>
@@ -13,8 +13,17 @@
 </template>
 
 <script>
+import { useUserStore } from '../../../../store/userData';
 export default {
-    name: 'UserCard'
+    name: 'UserCard',
+    data() {
+        return {
+            first_name: ''
+        }
+    },
+    mounted() {
+        this.first_name = useUserStore().getName;
+    }
 }
 </script>
 

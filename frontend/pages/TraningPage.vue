@@ -1,7 +1,5 @@
 <template>
-    <div class="row justify-center q-mt-xl">
-        <ButtonCreateTraning/>
-    </div>
+    <ButtonCreateTraning/>
     <TraningGroupTranings/>
 </template>
 

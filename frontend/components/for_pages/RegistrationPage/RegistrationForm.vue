@@ -111,24 +111,24 @@ export default {
     },
     methods: {
         async onSubmit() {
-        this.loader = true;
-        axios.post(`${__BASE__URL__}/auth/register`, {
-            email: this.user.email,
-            phone_number: this.user.phone,
-            first_name: this.user.name,
-            last_name: this.user.surname,
-            password: this.user.password,
-        })
-        .then(() => {
-            this.$q.notify({ position: 'top', type: 'positive', message: 'Успех!' });
-            this.$router.push('/login');
-        })
-        .catch(() =>{
-            this.$q.notify({ position: 'top', type: 'negative', message: 'Произошла ошибка!' });
-        })
-        .finally(() => {
-            this.loader = false;
-        });
+            this.loader = true;
+            axios.post(`${__BASE__URL__}/auth/register`, {
+                email: this.user.email,
+                phone_number: this.user.phone,
+                first_name: this.user.name,
+                last_name: this.user.surname,
+                password: this.user.password,
+            })
+            .then(() => {
+                this.$q.notify({ position: 'top', type: 'positive', message: 'Успех!' });
+                this.$router.push('/login');
+            })
+            .catch(() =>{
+                this.$q.notify({ position: 'top', type: 'negative', message: 'Произошла ошибка!' });
+            })
+            .finally(() => {
+                this.loader = false;
+            });
         }
     }
 }
