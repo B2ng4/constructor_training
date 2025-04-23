@@ -1,5 +1,7 @@
 <template>
-    <TraningModal></TraningModal>
+	<div class="row justify-center q-mt-sm">
+		<TraningModal/>
+	</div>
 </template>
 
 <script>

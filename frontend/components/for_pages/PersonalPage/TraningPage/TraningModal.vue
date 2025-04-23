@@ -1,12 +1,12 @@
 <template>
-    <q-dialog 
-        :model-value="showModal" 
-        >
-      <q-card>
-        <q-card-section>
+		<!--Модалка-->
+    <q-dialog ref="dialog" v-model="showModal" persistent transition-show="scale" transition-hide="scale">
+      <q-card style="width: 700px; max-width: 80vw;">
+        <q-card-section class="row">
           <div class="text-h6">Создание тренинга</div>
+					<q-space />
+					<q-btn icon="close" flat round dense v-close-popup />
         </q-card-section>
-  
         <q-card-section>
             <q-input color="secondary" filled v-model="titleTraning" label="Название" />
             <q-input
@@ -18,17 +18,17 @@
                 color="secondary"
             />
         </q-card-section>
-  
-        <q-card-actions align="right">
-          <q-btn flat label="Создать" color="secondary" @click="createTraning()"/>
+        <q-card-actions align="right" class="row justify-center">
+          <q-btn flat class="fit" label="Создать" color="secondary" @click="createTraning()"/>
         </q-card-actions>
       </q-card>
     </q-dialog>
-    <q-btn 
-            color="secondary" 
-            text-color="white" 
-            class="q-ml-auto q-mr-xl" 
-            label="Создать" 
+		<!--Кнопка создания-->
+    <q-btn
+            color="secondary"
+            text-color="white"
+						class="size-button-50"
+            label="Создать"
             @click="showModal = true"
         />
 </template>
@@ -49,10 +49,20 @@ export default {
       async createTraning() {
         axios.post(`${__BASE__URL__}/training/create_training`,
         {title: this.titleTraning, description: this.descriptionTraning},
-        {headers: {Authorization: `Bearer ${localStorage.getItem('tokenAuth')}`}, },
+					{headers:
+							{Authorization:
+									`Bearer ${localStorage.getItem('tokenAuth')}`
+							},
+						},
         )
         .then(() => {
-        });
+        })
+				.catch(() => {
+					this.$q.notify({ message: 'Произошла ошибка', position: 'top', type: 'negative' });
+				})
+					.finally(() => {
+						this.$refs.dialog.hide();
+					});
       }
     },
 }
