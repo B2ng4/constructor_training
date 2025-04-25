@@ -19,7 +19,7 @@ class TrainingRepository:
         return training
 
 
-    async def get_by_id(self, training_id: int) -> Optional[Training]:
+    async def get_by_uuid(self, training_uuid: UUID4) -> Optional[Training]:
         query = (
             select(Training)
             .options(
@@ -28,7 +28,7 @@ class TrainingRepository:
                 selectinload(Training.steps)
                 .selectinload(TrainingStep.image)
             )
-            .where(Training.id == training_id)
+            .where(Training.uuid == training_uuid)
         )
         result = await self.session.execute(query)
         return result.scalar_one_or_none()

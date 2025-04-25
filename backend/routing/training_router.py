@@ -2,6 +2,8 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from fastapi.security import OAuth2PasswordBearer
+from pydantic import UUID4
+
 from depends import get_trainings_service, get_s3_service, get_user_service
 from starlette import status
 from services.trainings_service import TrainingsService
@@ -32,10 +34,10 @@ async def create_training(
 
 
 @router.get("/{training_id}", response_model=TrainingResponse)
-async def get_training(
-    training_id: int, service: TrainingsService = Depends(get_trainings_service)
-):
-    training = await service.get_training(training_id)
+
+async def get_training(training_uuid: UUID4, service: TrainingsService = Depends(get_trainings_service)):
+
+    training = await service.get_training(training_uuid)
     if not training:
         raise HTTPException(status_code=404, detail="Тренинг не найден")
     return training
