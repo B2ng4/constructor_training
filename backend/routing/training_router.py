@@ -15,20 +15,26 @@ router = APIRouter(prefix="/training", tags=["Тренинги"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 
+from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi.responses import JSONResponse
+
 @router.post("/create_training")
 async def create_training(
     ser_data: TrainingCreate,
     token: str = Depends(oauth2_scheme),
     training_service: TrainingsService = Depends(get_trainings_service),
-    user_service: UserService = Depends(get_user_service)
+    user_service: UserService = Depends(get_user_service),
 ):
     """Создание нового тренинга"""
     creator_id = await user_service.get_current_user(token)
-    print(creator_id)
-    if await training_service.create_training(ser_data, creator_id.id):
-        return HTTPException(status.HTTP_200_OK, detail="Тренинг успешно создан")
+    created_training = await training_service.create_training(ser_data, creator_id.id)
+
+    if created_training:
+        return {"status": status.HTTP_201_CREATED,
+                "data": created_training.dict()}
     else:
-        return HTTPException(status_code=404, detail="Тренинг не создан")
+        raise HTTPException(status_code=404, detail="Тренинг не создан")
+
 
 
 

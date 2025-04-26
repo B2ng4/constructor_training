@@ -36,7 +36,7 @@ class TrainingsService:
             training.steps.append(step)
         created_training = await self.repo.create(training)
         if created_training:
-            return True
+            return TrainingResponse.model_validate(created_training)
         return False
 
 

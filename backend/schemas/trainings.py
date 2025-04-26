@@ -61,7 +61,7 @@ class TrainingUpdate(TrainingBase):
 
 
 class TrainingResponse(BaseModel):
-    uuid: UUID
+    uuid: UUID4
     title: str
     description: str
     creator_id: int
