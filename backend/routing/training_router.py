@@ -76,11 +76,11 @@ async def update_training(
 
 
 
-@router.delete("/{training_id}")
+@router.delete("/{training_uuid}")
 async def delete_training(
-    training_id: int, service: TrainingsService = Depends(get_trainings_service)
+    training_uuid: UUID4, service: TrainingsService = Depends(get_trainings_service)
 ):
-    if await service.delete_training(training_id):
+    if await service.delete_training(training_uuid):
         return HTTPException(status.HTTP_200_OK, detail="Тренинг успешно удален")
     else:
         raise HTTPException(status_code=404, detail="Тренинг не найден")

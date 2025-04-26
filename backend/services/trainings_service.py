@@ -118,8 +118,8 @@ class TrainingsService:
                 detail=f"Update error: {str(e)}"
             )
 
-    async def delete_training(self, training_id: int) -> bool:
-        success = await self.repo.delete(training_id)
+    async def delete_training(self, training_uuid: UUID4) -> bool:
+        success = await self.repo.delete(training_uuid)
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

@@ -71,8 +71,8 @@ class TrainingRepository:
         await self.session.commit()
         return result.scalar_one()
 
-    async def delete(self, event_id: int) -> bool:
-        query = delete(Training).where(Training.id == event_id)
+    async def delete(self, training_uuid: UUID4) -> bool:
+        query = delete(Training).where(Training.uuid == training_uuid)
         result = await self.session.execute(query)
         await self.session.commit()
         return result.rowcount > 0
