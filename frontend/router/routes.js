@@ -6,6 +6,7 @@ import HomePage from "@pages/HomePage.vue";
 import LibraryPage from "@pages/LibraryPage.vue";
 import TraningPage from "@pages/TraningPage.vue";
 import HelpPage from "@pages/HelpPage.vue";
+import EditPage from "@pages/EditPage.vue";
 
 export const routes = [
 	{ path: "/login", component: LoginPage, name: 'LoginPage' },
@@ -35,4 +36,5 @@ export const routes = [
 		]
 	},
 	{ path: "/403", component: Page403, name: '403' },
+	{path: "/training/edit/:uuid", component: EditPage, name: 'edit' },
 ];

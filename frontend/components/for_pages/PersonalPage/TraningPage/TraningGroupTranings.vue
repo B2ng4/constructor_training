@@ -10,15 +10,18 @@
 			@mouseleave="training.hiddenStatus = true"
 		>
 			<q-card-section>
+
 				<div class="fixed-center column q-gutter-xs">
-					<q-btn
-						class="button-edit"
-						:class="{ hidden: training.hiddenStatus }"
-						color="secondary"
-						size="14px"
-						round
-						icon="edit"
-					/>
+					<router-link :to="{ name: 'edit', params: { uuid: training.uuid } }" >
+						<q-btn
+							class="button-edit"
+							:class="{ hidden: training.hiddenStatus }"
+							color="secondary"
+							size="14px"
+							round
+							icon="edit"
+						/>
+					</router-link>
 					<q-btn
 						class="button-edit"
 						:class="{ hidden: training.hiddenStatus }"
@@ -40,50 +43,30 @@
 </template>
 
 <script>
-import axios from "axios";
+import { computed } from 'vue';
 import { useTrainingStore } from "../../../../store/trainingStore";
+import axios from "axios";
 
 export default {
-	data() {
+	setup() {
+		const store = useTrainingStore();
 		return {
-			trainings: [],
+			trainings: computed(() => store.getTrainings),
+			store,
 		};
 	},
 	methods: {
-		//Получаем статус
-		async getTrainings() {
-			this.trainings = [];
-			const store = useTrainingStore();
-			axios
-				.get(`${__BASE__URL__}/training/my_trainings/`, {
-					headers: {
-						Authorization: `Bearer ${localStorage.getItem("tokenAuth")}`,
-					},
-				})
-				.then((response) => {
-					response.data.forEach((element) => {
-						//статус для отображения кнопки редактировать и удалить
-						element.hiddenStatus = true;
-						this.trainings.push(element);
-					});
-					store.setTrainings(this.trainings);
-				});
-		},
 		async deleteTraining(uuid) {
-			axios.delete(`${__BASE__URL__}/training/` + uuid,
-			)
-				.then((response) => {
-					console.log(response);
-				})
-		}
+			try {
+				await axios.delete(`${__BASE__URL__}/training/${uuid}`);
+				this.store.deleteTraining(uuid); // Удаляем из хранилища
+			} catch (error) {
+				console.error("Ошибка при удалении:", error);
+			}
+		},
 	},
-	mounted() {
-		const store = useTrainingStore();
-		if (store.getTrainings.length > 0) {
-			this.trainings = store.getTrainings;
-		} else {
-			this.getTrainings();
-		}
+	async mounted() {
+		await this.store.getAllTrainigs();
 	},
 };
 </script>

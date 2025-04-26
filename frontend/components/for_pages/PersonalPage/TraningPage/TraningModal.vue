@@ -32,45 +32,53 @@
             @click="showModal = true"
         />
 </template>
-  
+
 <script>
 import axios from 'axios';
 import { useTrainingStore } from "../../../../store/trainingStore.js";
 
 export default {
-    data() {
-      return {
-        titleTraning: '',
-        descriptionTraning: '',
-
-        showModal: false,
-      }
-    },
-    methods: {
-      async createTraning() {
-				const store = useTrainingStore();
-        axios.post(`${__BASE__URL__}/training/create_training`,
-        {title: this.titleTraning, description: this.descriptionTraning},
-					{headers:
-							{Authorization:
-									`Bearer ${localStorage.getItem('tokenAuth')}`
-							},
+	data() {
+		return {
+			titleTraning: '',
+			descriptionTraning: '',
+			showModal: false,
+		}
+	},
+	setup() {
+		const store = useTrainingStore();
+		return { store };
+	},
+	methods: {
+		async createTraning() {
+			try {
+				await axios.post(`${__BASE__URL__}/training/create_training`,
+					{title: this.titleTraning, description: this.descriptionTraning},
+					{
+						headers: {
+							Authorization: `Bearer ${localStorage.getItem('tokenAuth')}`
 						},
-        )
-        .then(() => {
-					store.addTraining(
-						{title: this.titleTraning, description: this.descriptionTraning, hiddenStatus: true}
-					);
-					this.titleTraning = '';
-					this.descriptionTraning = '';
-        })
-				.catch(() => {
-					this.$q.notify({ message: 'Произошла ошибка', position: 'top', type: 'negative' });
-				})
-					.finally(() => {
-						this.$refs.dialog.hide();
-					});
-      }
-    },
+					}
+				);
+
+				await this.store.getAllTrainigs();
+				this.titleTraning = '';
+				this.descriptionTraning = '';
+				this.showModal = false;
+
+				this.$q.notify({
+					message: 'Тренинг успешно создан',
+					position: 'top',
+					type: 'positive'
+				});
+			} catch (error) {
+				this.$q.notify({
+					message: 'Произошла ошибка',
+					position: 'top',
+					type: 'negative'
+				});
+			}
+		}
+	},
 }
 </script>
