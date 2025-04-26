@@ -28,7 +28,7 @@ async def create_training(
     """Создание нового тренинга"""
     creator_id = await user_service.get_current_user(token)
     created_training = await training_service.create_training(ser_data, creator_id.id)
-    print(created_training)
+
     if created_training:
         return {"status": status.HTTP_201_CREATED,
                 "data": created_training.dict()}
