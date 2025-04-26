@@ -39,7 +39,7 @@ async def create_training(
 
 
 
-@router.get("/{training_id}", response_model=TrainingResponse)
+@router.get("/{training_uuid}", response_model=TrainingResponse)
 
 async def get_training(training_uuid: UUID4, service: TrainingsService = Depends(get_trainings_service)):
 
