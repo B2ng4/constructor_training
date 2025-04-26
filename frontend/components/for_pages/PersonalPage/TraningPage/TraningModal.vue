@@ -35,6 +35,7 @@
   
 <script>
 import axios from 'axios';
+import { useTrainingStore } from "../../../../store/trainingStore.js";
 
 export default {
     data() {
@@ -47,6 +48,7 @@ export default {
     },
     methods: {
       async createTraning() {
+				const store = useTrainingStore();
         axios.post(`${__BASE__URL__}/training/create_training`,
         {title: this.titleTraning, description: this.descriptionTraning},
 					{headers:
@@ -56,6 +58,9 @@ export default {
 						},
         )
         .then(() => {
+					store.addTraining(
+						{title: this.titleTraning, description: this.descriptionTraning}
+					)
         })
 				.catch(() => {
 					this.$q.notify({ message: 'Произошла ошибка', position: 'top', type: 'negative' });
