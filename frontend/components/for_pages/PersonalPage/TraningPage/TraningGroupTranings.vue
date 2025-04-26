@@ -6,8 +6,29 @@
 			bordered
 			v-for="training in trainings"
 			:key="training.id"
+			@mouseover="training.hiddenStatus = false"
+			@mouseleave="training.hiddenStatus = true"
 		>
 			<q-card-section>
+				<div class="fixed-center column q-gutter-xs">
+					<q-btn
+						class="button-edit"
+						:class="{ hidden: training.hiddenStatus }"
+						color="secondary"
+						size="14px"
+						round
+						icon="edit"
+					/>
+					<q-btn
+						class="button-edit"
+						:class="{ hidden: training.hiddenStatus }"
+						color="negative"
+						size="14px"
+						round
+						icon="delete"
+						@click="deleteTraining(training.uuid)"
+					/>
+				</div>
 				<div class="text-overline text-orange-9">Какая-то надпись</div>
 				<div class="text-h5 q-mt-sm q-mb-xs">{{ training.title }}</div>
 				<div class="text-caption text-grey">
@@ -29,6 +50,7 @@ export default {
 		};
 	},
 	methods: {
+		//Получаем статус
 		async getTrainings() {
 			this.trainings = [];
 			const store = useTrainingStore();
@@ -40,18 +62,26 @@ export default {
 				})
 				.then((response) => {
 					response.data.forEach((element) => {
+						//статус для отображения кнопки редактировать и удалить
+						element.hiddenStatus = true;
 						this.trainings.push(element);
 					});
-					store.setTrainings(this.trainings)
+					store.setTrainings(this.trainings);
 				});
 		},
+		async deleteTraining(uuid) {
+			axios.delete(`${__BASE__URL__}/training/` + uuid,
+			)
+				.then((response) => {
+					console.log(response);
+				})
+		}
 	},
 	mounted() {
 		const store = useTrainingStore();
 		if (store.getTrainings.length > 0) {
 			this.trainings = store.getTrainings;
-		}
-		else {
+		} else {
 			this.getTrainings();
 		}
 	},
@@ -63,13 +93,22 @@ export default {
 	width: 100%;
 	max-width: 350px;
 	word-break: break-all;
-	border-radius: 5%;
+	border-radius: 25px;
 }
 
 .my-card:hover {
-	background-color: rgba(0, 0, 0, 0.095);
+	background-color: rgba(0, 0, 0, 0.4);
 	transition: all 0.1s ease-out;
 	transform: scale(1.02);
+}
+
+.my-card:hover .text-overline,
+.my-card:hover .text-h5,
+.my-card:hover .text-caption {
+	color: rgba(0, 0, 0, 0.10) !important;
+}
+
+.button-edit {
 	cursor: pointer;
 }
 </style>
