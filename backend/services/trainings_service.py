@@ -1,4 +1,6 @@
 from typing import List, Optional
+
+from pydantic import UUID4
 from sqlalchemy.ext.asyncio import AsyncSession
 from repositories.trainings_repository import TrainingRepository
 from schemas.trainings import (
@@ -69,8 +71,8 @@ class TrainingsService:
             )
         return action_type
 
-    async def get_training(self, training_id: int) -> TrainingResponse:
-        training = await self.repo.get_by_id(training_id)
+    async def get_training(self, training_uuid: UUID4) -> TrainingResponse:
+        training = await self.repo.get_by_uuid(training_uuid)
         if not training:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,

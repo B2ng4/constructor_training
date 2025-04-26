@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional, List, Dict
 
 from pydantic import UUID4
-from sqlalchemy import ForeignKey, JSON, Enum, text
+from sqlalchemy import ForeignKey, JSON, Enum, text, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from core.database import Base
@@ -12,7 +12,11 @@ import sqlalchemy as sa
 
 class Training(Base):
     __tablename__ = "trainings"
-    id: Mapped[int] = mapped_column(primary_key=True)
+    uuid: Mapped[UUID4] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        server_default=func.gen_random_uuid()
+    )
     title: Mapped[str] = mapped_column(sa.String(100), nullable=False)
     cover_image: Mapped[Optional[UUID4]] = mapped_column(
         UUID(as_uuid=True),
@@ -38,8 +42,10 @@ class Training(Base):
 class TrainingStep(Base):
     __tablename__ = "training_steps"
     id: Mapped[int] = mapped_column(primary_key=True)
-    training_id: Mapped[int] = mapped_column(
-        ForeignKey("trainings.id", ondelete="CASCADE")
+    training_uuid: Mapped[UUID4] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("trainings.uuid", ondelete="CASCADE"),
+        nullable=False
     )
     step_number: Mapped[int] = mapped_column(sa.Integer)
     action_type_id: Mapped[Optional[int]] = mapped_column(
