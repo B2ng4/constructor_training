@@ -59,8 +59,10 @@ export default {
         )
         .then(() => {
 					store.addTraining(
-						{title: this.titleTraning, description: this.descriptionTraning}
-					)
+						{title: this.titleTraning, description: this.descriptionTraning, hiddenStatus: true}
+					);
+					this.titleTraning = '';
+					this.descriptionTraning = '';
         })
 				.catch(() => {
 					this.$q.notify({ message: 'Произошла ошибка', position: 'top', type: 'negative' });
