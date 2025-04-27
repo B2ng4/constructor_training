@@ -89,11 +89,12 @@ async def delete_training(
 # TODO: Добавить доступ к апихам по ролям, добавить ручки для получения тренингов по типу(фильтрация)
 
 
-@router.post("/upload-photos/")
+@router.post("/upload-photos/{training_uuid}")
 async def upload_photos(
     files: List[UploadFile] = File(..., description="Загрузка фото"),
     s3_service: S3Service = Depends(get_s3_service),
     token: str = Depends(oauth2_scheme),
+    training_uuid = UUID4
 ):
     uploaded_urls = []
     for file in files:
