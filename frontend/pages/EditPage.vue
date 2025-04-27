@@ -1,32 +1,30 @@
 <template>
-	<q-card class="my-card top-left-card q-ml-md q-mt-md row">
-		<q-card-section>
-			<q-btn color="secondary" label="Меню">
-				<q-menu>
-					<q-list style="min-width: 100px">
-						<q-item clickable v-close-popup>
-							<q-item-section>New tab</q-item-section>
-						</q-item>
-					</q-list>
-				</q-menu>
-			</q-btn>
-		</q-card-section>
-	</q-card>
-	<q-card class="my-card q-ml-md q-mt-md row left-card">
-		<q-card-section>
+	<q-layout view="hHh lpR fFf">
 
-		</q-card-section>
-	</q-card>
+		<q-drawer width="250" show-if-above side="left" bordered>
+			<!-- drawer content -->
+		</q-drawer>
+
+		<q-drawer width="250" show-if-above side="right" bordered>
+			<!-- drawer content -->
+		</q-drawer>
+
+		<q-page-container>
+			<EditPageUploadPhoto/>
+		</q-page-container>
+
+	</q-layout>
 </template>
 
 <script>
 
 import axios from "axios";
-
+import EditPageUploadPhoto from "@components/for_pages/EditPage/EditPageUploadPhoto.vue";
 export default {
+	components: {EditPageUploadPhoto},
 	data() {
 		return {
-			traininData: []
+			traininData: [],
 		}
 	},
 	methods: {
@@ -44,16 +42,4 @@ export default {
 </script>
 
 <style scoped>
-.top-left-card{
-	width: 100%;
-	max-width: 300px;
-	border-radius: 10px;
-}
-
-.left-card {
-	width: 100%;
-	max-width: 40px;
-	height: 500px;
-	border-radius: 10px;
-}
 </style>
