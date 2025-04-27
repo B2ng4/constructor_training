@@ -32,7 +32,13 @@
 						@click="deleteTraining(training.uuid)"
 					/>
 				</div>
-				<div class="text-overline text-orange-9">Какая-то надпись</div>
+				<div class="text-overline text-orange-9">
+  			{{ new Date(training.created_at).toLocaleString('ru-RU', { year: 'numeric',
+					month: 'long',
+					day: 'numeric',
+					hour: '2-digit',
+					minute: '2-digit' })}}
+				</div>
 				<div class="text-h5 q-mt-sm q-mb-xs">{{ training.title }}</div>
 				<div class="text-caption text-grey">
 					{{ training.description }}
