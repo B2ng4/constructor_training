@@ -9,12 +9,26 @@ from contextlib import asynccontextmanager
 
 from starlette.responses import HTMLResponse
 
+from core.database import get_async_session
+from repositories.users_repository import UserRepository
+from scripts.create_user import create_test_user
+
+
+async def create_initial_user():
+    """Создаёт тестового пользователя при первом запуске"""
+    async for session in get_async_session():
+        repo = UserRepository(session)
+        if await repo.count_users() == 0:
+            await create_test_user()
+
+
 
 def create_base_app(configs):
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator[dict, None]:
         """Управление жизненным циклом приложения."""
         logger.info("Инициализация приложения...")
+        await create_initial_user()
         yield
         logger.info("Завершение работы приложения...")
 
