@@ -5,10 +5,6 @@
 			<!-- drawer content -->
 		</q-drawer>
 
-		<q-drawer width="250" show-if-above side="right" bordered>
-			<!-- drawer content -->
-		</q-drawer>
-
 		<q-page-container>
 			<EditPageUploadPhoto/>
 		</q-page-container>
