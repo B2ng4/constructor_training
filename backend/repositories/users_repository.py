@@ -1,3 +1,5 @@
+from sqlalchemy import func
+
 from models.users import User
 from schemas.users import UserRegister
 from utils.security import get_password_hash
@@ -30,3 +32,8 @@ class UserRepository:
         self.session.add(db_user)
         await self.session.commit()
         return True
+
+    async def count_users(self) -> int:
+        query = select(func.count()).select_from(User)
+        result = await self.session.execute(query)
+        return result.scalar()
