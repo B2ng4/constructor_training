@@ -47,7 +47,7 @@ class Configs(BaseSettings):
 
     # Настройки OAUTH2
 
-    # ------------ S3 хранилище ------------
+    # ------------ S3 хранилище ----------------------------------------
     AWS_ACCESS_KEY_ID: Optional[str] = Field(
         default="ASBZAQIUA7VOLQU0DDTD", env="AWS_ACCESS_KEY_ID"
     )
@@ -62,9 +62,32 @@ class Configs(BaseSettings):
     )
     S3_REGION_NAME: Optional[str] = Field(default="ru-1", env="S3_REGION_NAME")
 
+    
+     #------------------- REDIS --------------------------------------------
+    
+    
+    REDIS_URL:Optional[str] = Fiels()
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
     )
+
+   
+
+
+
+
 
 
 configs = Configs()
