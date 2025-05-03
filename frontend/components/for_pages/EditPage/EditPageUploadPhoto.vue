@@ -1,15 +1,20 @@
 <template>
 	<div class="container fixed-center">
 		<div class="header">
-			<img style="width: 100px" src="@assets/img/cloud.svg">
+			<img style="width: 100px" src="@assets/img/cloud.svg" alt="нет изображения">
  			<p>Выберите файл для загрузки!</p>
 		</div>
 		<label for="file" class="footer">
-			<img src="@assets/img/file.svg">
+			<img src="@assets/img/file.svg" alt="нет изображения">
 			<p>Файлы не выбраны</p>
-			<img style="width: 30px" src="@assets/img/trash.svg">
+			<img style="width: 30px" src="@assets/img/trash.svg" alt="нет изображения">
 		</label>
 		<input id="file" type="file" @change="previewFiles" multiple>
+		<div>
+			<q-chip size="18px" icon="bookmark">
+				Bookmark
+			</q-chip>
+		</div>
 	</div>
 </template>
 
@@ -24,8 +29,13 @@ export default {
 	},
 	methods: {
 		previewFiles(event) {
-				const imageURL = URL.createObjectURL(event.target.files[0]);
-				this.photos = imageURL
+			let photos = event.target.files;
+			for (let photo in photos) {
+				if (photo === 'length') {
+					break;
+				}
+				this.photos.push(URL.createObjectURL(event.target.files[photo]));
+			}
 		}
 	}
 };
