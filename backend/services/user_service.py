@@ -15,7 +15,7 @@ from schemas import mail
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.config import configs
 from schemas.mail import mail_send
-from services.mail_service import EmailService
+from services.external_services.mail_service import EmailService
 from utils.security import create_access_token, decode_access_token
 
 

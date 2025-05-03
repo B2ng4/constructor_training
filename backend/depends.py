@@ -7,12 +7,12 @@ from models.users import User
 from repositories.users_repository import UserRepository
 from repositories.trainings_repository import TrainingRepository
 from services.user_service import UserService
-from services.mail_service import EmailService
-from services.redis_service import RedisService
+from services.external_services.mail_service import EmailService
+# from services.external_services.redis_service import RedisService
 from services.trainings_service import TrainingsService
 from core.config import configs, Configs
-from services.s3_service import S3Service
-import aioredis
+from services.external_services.s3_service import S3Service
+# import aioredis
 """
 Файл внедрения зависимостей
 """
@@ -36,8 +36,8 @@ async def get_trainings_service(
 def get_s3_service() -> S3Service:
     return S3Service()
 
-
-async def get_redis_service() -> aioredis.Redis:
-    return await RedisService.connect()
+#
+# async def get_redis_service() -> aioredis.Redis:
+#     return await RedisService.connect()
 
 

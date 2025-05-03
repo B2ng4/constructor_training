@@ -66,7 +66,7 @@ class Configs(BaseSettings):
      #------------------- REDIS --------------------------------------------
     
     
-    REDIS_URL:Optional[str] = Fiels()
+    # REDIS_URL:Optional[str] = Fiels()
     
     
     

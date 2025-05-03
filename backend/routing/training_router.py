@@ -7,7 +7,7 @@ from pydantic import UUID4
 from depends import get_trainings_service, get_s3_service, get_user_service
 from starlette import status
 from services.trainings_service import TrainingsService
-from services.s3_service import S3Service
+from services.external_services.s3_service import S3Service
 from schemas.trainings import TrainingResponse, TrainingUpdate, TrainingCreate
 from services.user_service import UserService
 
