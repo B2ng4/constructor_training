@@ -4,10 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import UUID4
 
-from depends import get_trainings_service, get_s3_service, get_user_service, get_photo_service
+from depends import get_trainings_service, get_s3_service, get_user_service
 from starlette import status
-
-from services.photo_service import PhotoService
 from services.trainings_service import TrainingsService
 from services.external_services.s3_service import S3Service
 from schemas.trainings import TrainingResponse, TrainingUpdate, TrainingCreate
@@ -93,47 +91,36 @@ async def delete_training(
 
 @router.post("/upload-photos/{training_uuid}")
 async def upload_photos_by_training(
-    training_uuid: UUID4,
-    files: List[UploadFile] = File(..., description="Загрузка фото"),
-    s3_service: S3Service = Depends(get_s3_service),
-    token: str = Depends(oauth2_scheme),
+        training_uuid: UUID4,
+        files: List[UploadFile] = File(..., description="Загрузка фото"),
+        s3_service: S3Service = Depends(get_s3_service),
+        trainings_service: TrainingsService = Depends(get_trainings_service),
+        token: str = Depends(oauth2_scheme),
 ):
+    if not files:
+        raise HTTPException(status_code=400, detail="Файлы не предоставлены")
+
     uploaded_urls = []
+
     for file in files:
         try:
             object_name = s3_service.generate_unique_filename(file.filename)
             file_content = await file.read()
-            # Добавляем await здесь
             file_url = await s3_service.upload_file(file_content, object_name, training_uuid)
             uploaded_urls.append(file_url)
         except Exception as e:
             raise HTTPException(
-                status_code=500, detail=f"Ошибка загрузки файла: {str(e)}"
+                status_code=500, detail=f"Ошибка загрузки файла {file.filename}: {str(e)}"
             )
         finally:
             await file.close()
-    return {"uploaded_urls": uploaded_urls}
 
+    created_steps = await trainings_service.create_steps_from_photos(training_uuid, uploaded_urls)
 
-@router.get("/get_photos/{training_uuid}")
-async def get_photos_by_training(
-        training_uuid: UUID4,
-        photo_service: PhotoService = Depends(get_photo_service),
-        token: str = Depends(oauth2_scheme),
-):
-    try:
-        photo_urls = await photo_service.get_all_photos(training_uuid)
-        if not photo_urls:
-            raise HTTPException(
-                status_code=404,
-                detail=f"Фотографии для тренировки с ID {training_uuid} не найдены"
-            )
-        training_photo_urls = {
-            str(i + 1): url for i, url in enumerate(photo_urls)
-        }
-        return {"training_photos": training_photo_urls}
-    except ValueError as e:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Тренировка с ID {training_uuid} не найдена"
-        )
+    return {
+        "success": True,
+        "message": f"Загружено {len(uploaded_urls)} фотографий и создано {len(created_steps)} шагов тренинга",
+        "uploaded_urls": uploaded_urls,
+        "created_steps": created_steps
+    }
+

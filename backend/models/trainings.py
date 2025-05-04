@@ -18,17 +18,11 @@ class Training(Base):
         server_default=func.gen_random_uuid()
     )
     title: Mapped[str] = mapped_column(sa.String(100), nullable=False)
-    cover_image: Mapped[Optional[UUID4]] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("images.uuid", ondelete="SET NULL"),
-        nullable=True
-    )
     description: Mapped[str] = mapped_column(sa.Text, nullable=False)
     creator_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     created_at: Mapped[Optional[datetime]] = mapped_column(
         sa.DateTime, server_default=text("NOW()"),
     )
-    image: Mapped["Image"] = relationship(foreign_keys=[cover_image])
     creator: Mapped["User"] = relationship(back_populates="created_trainings")
     steps: Mapped[List["TrainingStep"]] = relationship(
         back_populates="training",
@@ -54,14 +48,9 @@ class TrainingStep(Base):
     area: Mapped[Optional[Dict]] = mapped_column(JSONB)
     meta: Mapped[Optional[Dict]] = mapped_column(JSONB)
     annotation: Mapped[Optional[str]] = mapped_column(sa.Text)
-    image_uuid: Mapped[Optional[UUID4]] = mapped_column(
-        UUID,
-        ForeignKey("images.uuid", ondelete="SET NULL")
-    )
-
+    image_url: Mapped[Optional[str]] = mapped_column(sa.Text)
     training: Mapped["Training"] = relationship(back_populates="steps")
     action_type: Mapped["TypesAction"] = relationship(back_populates="steps")
-    image: Mapped["Image"] = relationship(back_populates="steps")
 
 
 class TypesAction(Base):
@@ -70,20 +59,6 @@ class TypesAction(Base):
     name: Mapped[Optional[str]] = mapped_column(sa.String(50), unique=True)
     steps: Mapped[List["TrainingStep"]] = relationship(
         back_populates="action_type",
-        cascade="all, delete-orphan",
-        passive_deletes=True
-    )
-
-
-class Image(Base):
-    __tablename__ = "images"
-    uuid: Mapped[UUID4] = mapped_column(UUID, primary_key=True)
-    url: Mapped[str] = mapped_column(sa.String(200), unique=True)
-    training_uuid: Mapped[UUID4] = mapped_column(
-        UUID,
-    )
-    steps: Mapped[List["TrainingStep"]] = relationship(
-        back_populates="image",
         cascade="all, delete-orphan",
         passive_deletes=True
     )

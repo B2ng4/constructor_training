@@ -13,7 +13,6 @@ import mimetypes
 import hashlib
 import base64
 
-from repositories.photo_repository import PhotoRepository
 
 
 class S3Service:
@@ -28,7 +27,7 @@ class S3Service:
 
 
     ):
-        self.repo = PhotoRepository(session)
+
         self.s3_client = boto3.client(
             "s3",
             aws_access_key_id=aws_access_key_id,
@@ -64,8 +63,6 @@ class S3Service:
             file_url = (
                 f"{self.endpoint_url.rstrip('/')}/{self.bucket_name}/{object_name}"
             )
-
-            await self.repo.add_photo(training_uuid, file_url)
 
             return file_url
         except Exception as e:

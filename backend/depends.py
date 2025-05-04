@@ -6,8 +6,6 @@ from core.database import get_async_session
 from models.users import User
 from repositories.users_repository import UserRepository
 from repositories.trainings_repository import TrainingRepository
-from services import photo_service
-from services.photo_service import PhotoService
 from services.user_service import UserService
 from services.external_services.mail_service import EmailService
 # from services.external_services.redis_service import RedisService
@@ -43,8 +41,3 @@ def get_s3_service(session: AsyncSession = Depends(get_async_session),) -> S3Ser
 #     return await RedisService.connect()
 
 
-
-async def get_photo_service(
-    session: AsyncSession = Depends(get_async_session),
-) -> PhotoService:
-    return PhotoService(session)
