@@ -79,6 +79,9 @@ class Image(Base):
     __tablename__ = "images"
     uuid: Mapped[UUID4] = mapped_column(UUID, primary_key=True)
     url: Mapped[str] = mapped_column(sa.String(200), unique=True)
+    training_uuid: Mapped[UUID4] = mapped_column(
+        UUID,
+    )
     steps: Mapped[List["TrainingStep"]] = relationship(
         back_populates="image",
         cascade="all, delete-orphan",
