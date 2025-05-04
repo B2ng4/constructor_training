@@ -92,7 +92,7 @@ async def delete_training(
 
 
 @router.post("/upload-photos/{training_uuid}")
-async def upload_photos(
+async def upload_photos_by_training(
     training_uuid: UUID4,
     files: List[UploadFile] = File(..., description="Загрузка фото"),
     s3_service: S3Service = Depends(get_s3_service),
