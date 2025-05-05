@@ -11,6 +11,10 @@ import sqlalchemy as sa
 
 
 class Training(Base):
+    """
+    Таблица тренинга (базового)
+    """
+
     __tablename__ = "trainings"
     uuid: Mapped[UUID4] = mapped_column(
         UUID(as_uuid=True),
@@ -34,6 +38,10 @@ class Training(Base):
 
 
 class TrainingStep(Base):
+    """
+        Таблица шага тренинга (базового)
+    """
+
     __tablename__ = "training_steps"
     id: Mapped[int] = mapped_column(primary_key=True)
     training_uuid: Mapped[UUID4] = mapped_column(
@@ -54,6 +62,9 @@ class TrainingStep(Base):
 
 
 class TypesAction(Base):
+    """
+            Таблица типов шагогов тренинга
+        """
     __tablename__ = "typesactions"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[Optional[str]] = mapped_column(sa.String(50), unique=True)

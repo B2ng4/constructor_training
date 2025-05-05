@@ -11,10 +11,9 @@ import asyncio
 
 
 DATABASE_URL = get_db_url()
-# Создаем асинхронный движок
 engine = create_async_engine(DATABASE_URL)
-# Создаем фабрику асинхронных сессий
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
 
 
 class Base(AsyncAttrs, DeclarativeBase):
@@ -26,7 +25,6 @@ class Base(AsyncAttrs, DeclarativeBase):
         return f"{cls.__name__.lower()}s"
 
 
-# Зависимость для получения асинхронной сессии
 async def get_async_session() -> AsyncSession:
     async with async_session() as session:
         yield session

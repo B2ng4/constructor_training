@@ -9,16 +9,19 @@ from sqlalchemy.future import select
 
 
 class UserRepository:
+    """Репозиторий пользователей"""
     def __init__(self, session) -> None:
         self.session = session
 
     async def find_one_or_none(self, email: str) -> User:
+        """Поиск пользователя по email"""
         query = select(User).where(User.email == email)
         result = await self.session.execute(query)
 
         return result.scalar_one_or_none()
 
     async def add_user(self, user: UserRegister) -> bool:
+        """Добавление пользователя"""
         existing_user = await self.find_one_or_none(user.email)
         if existing_user:
             return False
@@ -34,6 +37,7 @@ class UserRepository:
         return True
 
     async def count_users(self) -> int:
+        """Количество всех пользователей"""
         query = select(func.count()).select_from(User)
         result = await self.session.execute(query)
         return result.scalar()

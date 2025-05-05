@@ -86,7 +86,6 @@ async def delete_training(
         raise HTTPException(status_code=404, detail="Тренинг не найден")
 
 
-# TODO: Добавить доступ к апихам по ролям, добавить ручки для получения тренингов по типу(фильтрация)
 
 
 @router.post("/upload-photos/{training_uuid}")

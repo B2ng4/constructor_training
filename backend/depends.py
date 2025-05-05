@@ -13,12 +13,13 @@ from services.trainings_service import TrainingsService
 from core.config import configs, Configs
 from services.external_services.s3_service import S3Service
 # import aioredis
+
+
 """
 Файл внедрения зависимостей
 """
 
 
-# Для пользователей (асинхронная версия)
 async def get_user_service(
     session: AsyncSession = Depends(get_async_session),
 ) -> UserService:
@@ -33,7 +34,7 @@ async def get_trainings_service(
     return TrainingsService(session)
 
 
-def get_s3_service(session: AsyncSession = Depends(get_async_session),) -> S3Service:
+async def get_s3_service(session: AsyncSession = Depends(get_async_session),) -> S3Service:
     return S3Service(session)
 
 #

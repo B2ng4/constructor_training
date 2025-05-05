@@ -11,6 +11,9 @@ from models.trainings import Training
 
 
 class User(Base):
+    """
+    Таблица пользователя
+    """
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(sa.String(100), unique=True, nullable=False)
     phone_number: Mapped[Optional[str]] = mapped_column(sa.String(15))
