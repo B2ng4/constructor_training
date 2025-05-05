@@ -1,14 +1,12 @@
 <template>
 	<q-layout view="hHh lpR fFf">
-
 		<q-drawer width="250" show-if-above side="left" bordered>
-			<!-- drawer content -->
+			<EditPageSteps :steps="traininData.steps"/>
 		</q-drawer>
 
 		<q-page-container>
-			<EditPageUploadPhoto/>
+			<EditPageUploadPhoto v-if="traininData.steps && traininData.steps.length === 0" />
 		</q-page-container>
-
 	</q-layout>
 </template>
 
@@ -16,11 +14,12 @@
 
 import axios from "axios";
 import EditPageUploadPhoto from "@components/for_pages/EditPage/EditPageUploadPhoto.vue";
+import EditPageSteps from "@components/for_pages/EditPage/EditPageSteps.vue";
 export default {
-	components: {EditPageUploadPhoto},
+	components: {EditPageUploadPhoto, EditPageSteps},
 	data() {
 		return {
-			traininData: [],
+			traininData: {},
 		}
 	},
 	methods: {
@@ -37,5 +36,4 @@ export default {
 }
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>
