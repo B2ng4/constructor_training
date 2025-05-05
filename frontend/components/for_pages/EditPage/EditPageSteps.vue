@@ -1,11 +1,11 @@
 <template>
 	<div class="q-ma-md column">
-		<BaseCard v-for="step in steps" :key="step">
+		<BaseCard class="q-mb-md" v-for="step in steps" :key="step">
 			<template v-slot:title>
 				Шаг: {{ step.step_number }}
 			</template>
 		</BaseCard>
-		<q-btn class="q-mt-md" flat color="secondary" label="Добавить шаг" />
+		<q-btn flat color="secondary" label="Добавить шаг" />
 	</div>
 </template>
 
@@ -17,16 +17,11 @@ export default {
 	props: {
 		steps: ''
 	},
-	watch: {
-		steps(newVal) {
-			if (newVal) {
-
-			}
-		}
-	}
 };
 </script>
 
 <style scoped>
-
+.my-card :last-child {
+	display: none;
+}
 </style>
