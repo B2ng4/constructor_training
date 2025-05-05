@@ -1,11 +1,6 @@
-import string
-import random
 
-import httpx
 from fastapi import HTTPException, status, BackgroundTasks
-from os import access
-from typing import List, Optional
-from fastapi.security import OAuth2PasswordBearer
+from typing import Optional
 from jose import jwt
 from pydantic import EmailStr
 from schemas.users import UserRegister, UserLogin, User, UserResponse
@@ -35,15 +30,14 @@ class UserService:
         background_tasks.add_task(self.email_service.send_email, mail)
         return await self.user_repo.add_user(user_data)
 
+
     async def authenticate(self, email: EmailStr, password: str):
         user = await self.user_repo.find_one_or_none(email=email)
-        if (
-            not user
-            or verify_password(plain_password=password, hashed_password=user.password)
-            is False
-        ):
+        if not user or not verify_password(plain_password=password, hashed_password=user.password):
             return None
         return user
+
+
 
     async def login(self, credential: UserLogin) -> Optional[str]:
         # Используем authenticate_user для проверки email и пароля

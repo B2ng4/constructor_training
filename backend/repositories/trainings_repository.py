@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from schemas.trainings import TrainingCreate, TrainingUpdate
 from models.trainings import Training, TypesAction, TrainingStep
 from sqlalchemy import select, delete, update, func
+from sqlalchemy import exists
 
 
 class TrainingRepository:
@@ -62,7 +63,7 @@ class TrainingRepository:
 
 
 
-    async def update(self, training_uuid: int, training_data: TrainingUpdate) -> Training:
+    async def update(self, training_uuid: UUID4, training_data: TrainingUpdate) -> Training:
         """ Обновление тренинга"""
 
         update_data = training_data.model_dump(exclude_unset=True)
@@ -145,14 +146,11 @@ class TrainingRepository:
         await self.session.commit()
         return created_steps_info
 
-
     async def check_training_exists(self, training_uuid: UUID4) -> bool:
         """ Проверка существования тренинга по uuid"""
-        query = select(func.count()).select_from(Training).where(
-            Training.uuid == training_uuid
-        )
+        query = select(exists().where(Training.uuid == training_uuid))
         result = await self.session.execute(query)
-        return result.scalar_one() > 0
+        return result.scalar_one()
 
 
     async def update_training_step(self, step_id: int, update_data: Dict) -> Optional[TrainingStep]:

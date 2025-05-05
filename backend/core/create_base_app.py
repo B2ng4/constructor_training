@@ -1,7 +1,5 @@
 from fastapi import FastAPI
-import logging
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from loguru import logger
 from typing import AsyncGenerator
 from contextlib import asynccontextmanager

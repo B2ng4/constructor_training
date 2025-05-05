@@ -116,7 +116,6 @@ class TrainingsService:
 
 
 
-
     async def create_steps_from_photos(self, training_uuid: UUID4, photo_urls: List[str]) -> List[Dict]:
         training_exists = await self.repo.check_training_exists(training_uuid)
         if not training_exists:

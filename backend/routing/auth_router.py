@@ -4,23 +4,15 @@ from fastapi import (
     APIRouter,
     Depends,
     HTTPException,
-    Response,
     Body,
     Form,
     BackgroundTasks,
-    Query,
 )
 from fastapi.security import OAuth2PasswordBearer
 from starlette import status
-from starlette.requests import Request
-
-from schemas.users import UserRegister, UserResponse
+from schemas.users import UserRegister, UserResponse, UserLogin, User
 from depends import get_user_service
-from schemas.users import UserRegister, UserLogin, User
 from services.user_service import UserService
-from utils.security import get_password_hash
-from core.config import configs
-from fastapi.responses import RedirectResponse
 
 
 router = APIRouter(prefix="/auth", tags=["Auth"])

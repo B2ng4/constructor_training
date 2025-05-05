@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, status
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import UUID4
 
@@ -11,12 +11,10 @@ from services.external_services.s3_service import S3Service
 from schemas.trainings import TrainingResponse, TrainingUpdate, TrainingCreate
 from services.user_service import UserService
 
+
+
 router = APIRouter(prefix="/training", tags=["Тренинги"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
-
-
-from fastapi import APIRouter, Depends, status, HTTPException
-from fastapi.responses import JSONResponse
 
 @router.post("/create_training")
 async def create_training(
@@ -34,7 +32,6 @@ async def create_training(
                 "data": created_training.dict()}
     else:
         raise HTTPException(status_code=404, detail="Тренинг не создан")
-
 
 
 
@@ -62,17 +59,17 @@ async def get_my_trainings(token: str = Depends(oauth2_scheme),
 
 
 
-@router.put("/{training_id}")
+@router.put("/{training_uuid}")
 async def update_training(
-    training_id: int,
+    training_uuid: UUID4,
     training_data: TrainingUpdate,
     service: TrainingsService = Depends(get_trainings_service),
 ):
-    training = await service.update_training(training_id, training_data)
+    training = await service.update_training(training_uuid, training_data)
     if not training:
         raise HTTPException(status_code=404, detail="Тренинг не найден")
 
-    return HTTPException(status_code=200, detail="Данные тренинга успешно обновлены")
+    return {"detail": "Данные тренинга успешно обновлены"}
 
 
 
@@ -81,7 +78,7 @@ async def delete_training(
     training_uuid: UUID4, service: TrainingsService = Depends(get_trainings_service)
 ):
     if await service.delete_training(training_uuid):
-        return HTTPException(status.HTTP_200_OK, detail="Тренинг успешно удален")
+        return {"detail": "Тренинг успешно удален"}
     else:
         raise HTTPException(status_code=404, detail="Тренинг не найден")
 
