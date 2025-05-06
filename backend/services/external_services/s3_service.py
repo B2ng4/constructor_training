@@ -71,6 +71,10 @@ class S3Service:
 
 
 
+
+# Пример названия файла (object_name) -> photos_0284dc0a-462d-43d2-96e4-031dfd6c7b92.jpg
+# ссылка на файл https://s3.twcstorage.ru/d08d3831-edc9b373-5fab-42f0-9e2f-441c90348394/photos/0284dc0a-462d-43d2-96e4-031dfd6c7b92.jpg
+
     async def delete_file(self, object_name:str):
         if await self.s3_client.delete_objects(Bucket='bucket-name', Delete={'Objects': object_name}):
             return True
