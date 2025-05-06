@@ -68,3 +68,25 @@ class S3Service:
         except Exception as e:
             print(f"Ошибка при загрузке файла: {str(e)}")
             raise e
+
+
+
+
+    async def delete_file(self, object_name: str):
+        key = "/".join(object_name.split("/photos/")[-1].split("/"))
+        object_name = f"photos/{key}"
+        print(f"Attempting to delete object: {object_name}")
+        try:
+            response = self.s3_client.delete_objects(
+                Bucket=self.bucket_name,
+                Delete={'Objects': [{'Key': object_name}]}
+            )
+            if 'Deleted' in response:
+                return True
+            else:
+                raise HTTPException(status_code=404, detail="Файл не удалён")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Ошибка при удалении файла: {str(e)}")
+
+
+

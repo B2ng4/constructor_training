@@ -19,7 +19,7 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 
-@router.post("/register")
+@router.post("/register", name="регистрация пользователя")
 async def register_user(
     user_data: UserRegister,
     background_tasks: BackgroundTasks,
@@ -37,7 +37,7 @@ async def register_user(
         )
 
 
-@router.post("/login")
+@router.post("/login", name="Логин")
 async def login_user(
     username: Optional[str] = Form(default=None),
     password: Optional[str] = Form(default=None),
@@ -63,7 +63,7 @@ async def login_user(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.get("/me/")
+@router.get("/me/", name="Получение данных текущего пользователя")
 async def get_user(
     token: str = Depends(oauth2_scheme),
     user_service: UserService = Depends(get_user_service),
