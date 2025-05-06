@@ -1,31 +1,49 @@
 <template>
 	<div class="q-ma-md column">
-		<BaseCard
-			@drag="replace(step, step.step_number,)"
-			draggable="true"
-			class="q-mb-md cursor-move"
-			v-for="step in steps"
-			:key="step"
+		<draggable
+			:list="mySteps"
+			@start="drag=true"
+			@end="drag=false"
+			item-key="id"
 		>
-			<template v-slot:title>
-				Шаг: {{ step.step_number }}
+			<template #item="{element}">
+				<BaseCard
+					class="q-mb-md cursor-move"
+					:key="element.step_number"
+				>
+					<template v-slot:title>
+						Шаг: {{ element.step_number }}
+					</template>
+				</BaseCard>
 			</template>
-		</BaseCard>
-		<q-btn flat color="secondary" label="Добавить шаг" />
+		</draggable>
 	</div>
+	<q-btn class="full-width" flat color="secondary" label="Добавить шаг" />
 </template>
 
 <script>
 import BaseCard from "@components/BaseComponents/BaseCard.vue";
+import draggable from 'vuedraggable';
 export default {
 	name: "EditPageSteps",
-	components: {BaseCard},
+	components: { BaseCard, draggable},
 	props: {
-		steps: ''
+		steps: {
+			type: Array,
+		}
 	},
-	methods: {
-		replace(step, newPosition, oldPosition) {
-			this.steps
+	data() {
+		return {
+			drag: false,
+			mySteps: [],
+		}
+	},
+	watch: {
+		//Хорошая практика, когда мы не изменяем пропсы () => поэтому когда данные приходят, заносим в локальную переменную
+		steps(newVal, oldVal) {
+			if (newVal !== oldVal) {
+				this.mySteps = newVal;
+			}
 		}
 	}
 };
