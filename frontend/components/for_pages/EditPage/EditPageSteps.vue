@@ -1,6 +1,12 @@
 <template>
 	<div class="q-ma-md column">
-		<BaseCard class="q-mb-md" v-for="step in steps" :key="step">
+		<BaseCard
+			@drag="replace(step, step.step_number,)"
+			draggable="true"
+			class="q-mb-md cursor-move"
+			v-for="step in steps"
+			:key="step"
+		>
 			<template v-slot:title>
 				Шаг: {{ step.step_number }}
 			</template>
@@ -17,6 +23,11 @@ export default {
 	props: {
 		steps: ''
 	},
+	methods: {
+		replace(step, newPosition, oldPosition) {
+			this.steps
+		}
+	}
 };
 </script>
 
