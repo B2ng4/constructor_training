@@ -72,13 +72,21 @@ class S3Service:
 
 
 
-# Пример названия файла (object_name) -> photos_0284dc0a-462d-43d2-96e4-031dfd6c7b92.jpg
-# ссылка на файл https://s3.twcstorage.ru/d08d3831-edc9b373-5fab-42f0-9e2f-441c90348394/photos/0284dc0a-462d-43d2-96e4-031dfd6c7b92.jpg
+    async def delete_file(self, object_name: str):
+        key = "/".join(object_name.split("/photos/")[-1].split("/"))
+        object_name = f"photos/{key}"
+        print(f"Attempting to delete object: {object_name}")
+        try:
+            response = self.s3_client.delete_objects(
+                Bucket=self.bucket_name,
+                Delete={'Objects': [{'Key': object_name}]}
+            )
+            if 'Deleted' in response:
+                return True
+            else:
+                raise HTTPException(status_code=404, detail="Файл не удалён")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Ошибка при удалении файла: {str(e)}")
 
-    async def delete_file(self, object_name:str):
-        object_name = "photos_"+object_name.split("/")[-1]
-        if await self.s3_client.delete_objects(Bucket='bucket-name', Delete={'Objects': object_name}):
-            return True
-        else:
-            raise HTTPException(status_code=404, detail="Файл не удалён")
+
 

@@ -16,7 +16,7 @@ from services.user_service import UserService
 router = APIRouter(prefix="/training", tags=["Тренинги"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
-@router.post("/create_training")
+@router.post("/create_training", name="Создание тренинга")
 async def create_training(
     ser_data: TrainingCreate,
     token: str = Depends(oauth2_scheme),
@@ -36,7 +36,7 @@ async def create_training(
 
 
 
-@router.get("/{training_uuid}", response_model=TrainingResponse)
+@router.get("/{training_uuid}", response_model=TrainingResponse, name="Получение конкретного тренинга")
 
 async def get_training(training_uuid: UUID4, service: TrainingsService = Depends(get_trainings_service)):
 
@@ -47,7 +47,7 @@ async def get_training(training_uuid: UUID4, service: TrainingsService = Depends
 
 
 
-@router.get("/my_trainings/", response_model=list[TrainingResponse])
+@router.get("/my_trainings/", response_model=list[TrainingResponse],name="Получение всех тренингов пользователя")
 async def get_my_trainings(token: str = Depends(oauth2_scheme),
                            user_service: UserService = Depends(get_user_service),
                            training_service: TrainingsService = Depends(get_trainings_service)):
@@ -59,7 +59,7 @@ async def get_my_trainings(token: str = Depends(oauth2_scheme),
 
 
 
-@router.put("/{training_uuid}")
+@router.put("/{training_uuid}", name="Обновление тренинга")
 async def update_training(
     training_uuid: UUID4,
     training_data: TrainingUpdate,
@@ -73,7 +73,7 @@ async def update_training(
 
 
 
-@router.delete("/{training_uuid}")
+@router.delete("/{training_uuid}", name="Удаление тренинга по uuid")
 async def delete_training(
     training_uuid: UUID4, service: TrainingsService = Depends(get_trainings_service)
 ):
@@ -85,7 +85,7 @@ async def delete_training(
 
 
 
-@router.post("/upload-photos/{training_uuid}")
+@router.post("/upload-photos/{training_uuid}", name="Загрузка фото")
 async def upload_photos_by_training(
         training_uuid: UUID4,
         files: List[UploadFile] = File(..., description="Загрузка фото"),
@@ -119,4 +119,17 @@ async def upload_photos_by_training(
         "uploaded_urls": uploaded_urls,
         "created_steps": created_steps
     }
+
+
+
+@router.delete("/delete-photo/{url_photo:path}", name="Удаление фото по url")
+async def delete_photo_by_url(url_photo: str, s3_service: S3Service = Depends(get_s3_service)):
+    if await s3_service.delete_file(url_photo):
+        return {"status": "OK"}
+    else:
+        raise HTTPException(status_code=404, detail="Фото не найдено")
+
+
+
+
 
