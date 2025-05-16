@@ -75,3 +75,14 @@ class TrainingUpdate(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+
+class TrainingStepUpdate(BaseModel):
+    id: Optional[int] = None  # Добавьте это поле
+    step_number: Optional[int] = None
+    action_type_id: Optional[int] = None
+    area: Optional[Dict[str, int]] = None
+    meta: Optional[Dict[str, Any]] = None
+    annotation: Optional[str] = None
+    image_url: Optional[str] = None

@@ -58,18 +58,25 @@ async def get_my_trainings(token: str = Depends(oauth2_scheme),
     return trainings
 
 
-
-@router.put("/{training_uuid}", name="Обновление тренинга")
-async def update_training(
-    training_uuid: UUID4,
-    training_data: TrainingUpdate,
-    service: TrainingsService = Depends(get_trainings_service),
+@router.patch("/{training_uuid}", name="Частичное обновление тренинга")
+async def patch_training(
+        training_uuid: UUID4,
+        training_data: TrainingUpdate,
+        token: str = Depends(oauth2_scheme),
+        service: TrainingsService = Depends(get_trainings_service),
+        user_service: UserService = Depends(get_user_service),
 ):
-    training = await service.update_training(training_uuid, training_data)
-    if not training:
-        raise HTTPException(status_code=404, detail="Тренинг не найден")
+    """Частичное обновление тренинга и/или его шагов"""
+    user = await user_service.get_current_user(token)
 
-    return {"detail": "Данные тренинга успешно обновлены"}
+    # Обновление тренинга
+    updated_training = await service.patch_training(training_uuid, training_data)
+
+    return {
+        "status": "success",
+        "detail": "Данные тренинга успешно обновлены",
+        "data": updated_training
+    }
 
 
 

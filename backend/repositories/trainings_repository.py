@@ -62,24 +62,43 @@ class TrainingRepository:
         return result.scalars().all()
 
 
-
-    async def update(self, training_uuid: UUID4, training_data: TrainingUpdate) -> Training:
-        """ Обновление тренинга"""
-
-        update_data = training_data.model_dump(exclude_unset=True)
+    async def patch_training_fields(self, training_uuid: UUID4, update_data: Dict) -> Training:
+        """Частичное обновление полей тренинга"""
         if not update_data:
             return await self.get_by_uuid(training_uuid)
-
         query = (
             update(Training)
             .where(Training.uuid == training_uuid)
             .values(**update_data)
-            .returning(Training)
         )
-        result = await self.session.execute(query)
+        await self.session.execute(query)
         await self.session.commit()
-        return result.scalar_one()
+        return await self.get_by_uuid(training_uuid)
 
+
+
+    async def update_training_step(self, step_id: int, update_data: Dict) -> Optional[TrainingStep]:
+        """Обновить шаг тренинга по id шага"""
+        if not update_data:
+            return None
+        query = (
+            update(TrainingStep)
+            .where(TrainingStep.id == step_id)
+            .values(**update_data)
+        )
+        await self.session.execute(query)
+        await self.session.commit()
+
+        return await self.session.get(TrainingStep, step_id)
+
+
+
+    async def create_training_step(self, step: TrainingStep) -> TrainingStep:
+        """Создание шага тренинга"""
+        self.session.add(step)
+        await self.session.commit()
+        await self.session.refresh(step)
+        return step
 
     async def delete(self, training_uuid: UUID4) -> bool:
         """ Удаление тренинга"""
