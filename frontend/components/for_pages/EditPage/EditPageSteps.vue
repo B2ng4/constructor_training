@@ -30,6 +30,7 @@ import axios from "axios";
 export default {
 	name: "EditPageSteps",
 	components: { BaseCard, draggable},
+	emits: ['select-url'],
 	props: {
 		steps: {
 			type: Array,
@@ -45,10 +46,15 @@ export default {
 	methods: {
 		selectedTrainingStep(stepNumber) {
 			this.selectTrainingStep = stepNumber;
+			this.$emit("select-url", this.selectTrainingStep);
 		},
 		async updateSteps() {
 			let payload = this.mySteps;
-			let response = await axios.put(`${__BASE__URL__}/training/${this.$route.params.uuid}`, {payload});
+			let response = await axios.patch(`${__BASE__URL__}/training/${this.$route.params.uuid}`, {steps: payload}, {
+				headers: {
+					Authorization: `Bearer ${localStorage.getItem("tokenAuth")}`,
+				}
+			});
 			try {
 				console.log(response);
 			} catch (error) {
@@ -61,6 +67,7 @@ export default {
 			if (newVal !== oldVal) {
 				this.mySteps = newVal;
 				this.selectTrainingStep = this.mySteps[0];
+				this.$emit("select-url", this.selectTrainingStep);
 			}
 		},
 		mySteps: {

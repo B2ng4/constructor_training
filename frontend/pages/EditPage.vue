@@ -1,11 +1,12 @@
 <template>
 	<q-layout view="hHh lpR fFf">
 		<q-drawer width="250" show-if-above side="left" bordered>
-			<EditPageSteps :steps="traininData.steps"/>
+			<EditPageSteps @select-url="selectTrainingUrl" :steps="traininData.steps"/>
 		</q-drawer>
 
-		<q-page-container>
+		<q-page-container style="position: relative; display: flex; justify-content: center; align-items: center; min-height: 100vh;">
 			<EditPageUploadPhoto v-if="traininData.steps && traininData.steps.length === 0" />
+			<EditPagePhotoView v-else :steps="steps"/>
 		</q-page-container>
 	</q-layout>
 </template>
@@ -15,11 +16,13 @@
 import axios from "axios";
 import EditPageUploadPhoto from "@components/for_pages/EditPage/EditPageUploadPhoto.vue";
 import EditPageSteps from "@components/for_pages/EditPage/EditPageSteps.vue";
+import EditPagePhotoView from "@components/for_pages/EditPage/EditPagePhotoView.vue";
 export default {
-	components: {EditPageUploadPhoto, EditPageSteps},
+	components: {EditPageUploadPhoto, EditPageSteps, EditPagePhotoView},
 	data() {
 		return {
 			traininData: {},
+			steps: '',
 		}
 	},
 	methods: {
@@ -28,6 +31,9 @@ export default {
 				.then((response) => {
 					this.traininData = response.data;
 				})
+		},
+		selectTrainingUrl(url) {
+			this.steps = url;
 		}
 	},
 	mounted() {

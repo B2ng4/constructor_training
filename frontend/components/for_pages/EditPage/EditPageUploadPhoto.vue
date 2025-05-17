@@ -1,5 +1,5 @@
 <template>
-	<div class="container fixed-center">
+	<div class="container">
 		<div class="header cursor-pointer" @click="$refs.input.click()">
 			<img
 				style="width: 100px"
