@@ -14,3 +14,7 @@ body {
 .cursor-move {
     cursor: move;
 }
+
+.rounded-8 {
+    border-radius: 8px;
+}

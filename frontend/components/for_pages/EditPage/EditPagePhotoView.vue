@@ -1,5 +1,5 @@
 <template>
-		<q-img :src="steps.image_url" no-native-menu style="width: 80%;">
+		<q-img class="rounded-8" :src="steps.image_url" no-native-menu style="width: 70%;">
 			<div class="absolute-top text-center">
 				Caption
 			</div>

@@ -21,7 +21,7 @@ class Configs(BaseSettings):
         default="HS256", env="ALGORITHM"
     )  # Алгоритм шифрования для JWT
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(
-        default=60, env="ACCESS_TOKEN_EXPIRE_MINUTES"
+        default=600000, env="ACCESS_TOKEN_EXPIRE_MINUTES"
     )  # Время жизни токена
 
     # ------------ БД ------------
