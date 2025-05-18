@@ -18,3 +18,7 @@ body {
 .rounded-8 {
     border-radius: 8px;
 }
+
+.display-none {
+    display: none;
+}
