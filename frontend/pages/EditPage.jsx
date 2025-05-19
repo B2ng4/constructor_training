@@ -1,12 +1,15 @@
 import { useParams } from "react-router";
+import { Excalidraw } from "@excalidraw/excalidraw";
 
 function EditPage() {
 	const { uuid } = useParams();
 
 	return (
-		<p className="read-the-docs">
-			Editing training with UUID: {uuid}
-		</p>
+		<>
+		<div style={{ height: "900px" }}>
+			<Excalidraw />
+		</div>
+		</>
 	);
 }
 
