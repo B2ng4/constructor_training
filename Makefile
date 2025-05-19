@@ -16,4 +16,8 @@ PORT = 8001
  backend:
 	$(PYTHON) backend/main.py
 
+create_test_user:
+	$(PYTHON) backend/scripts/create_user.py
+
+
 

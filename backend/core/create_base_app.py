@@ -19,7 +19,6 @@ async def create_initial_user():
             await create_test_user()
 
 
-
 def create_base_app(configs):
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator[dict, None]:
