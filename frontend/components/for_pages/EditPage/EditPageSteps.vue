@@ -24,7 +24,7 @@
 </template>
 
 <script>
-import BaseCard from "@components/BaseComponents/BaseCard.vue";
+import BaseCard from "@components/base-components/BaseCard.vue";
 import draggable from 'vuedraggable';
 import axios from "axios";
 export default {

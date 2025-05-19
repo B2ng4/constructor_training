@@ -90,7 +90,7 @@
 </template>
   
 <script>
-import BaseCard from '@components/BaseComponents/BaseCard.vue'
+import BaseCard from '@components/base-components/BaseCard.vue'
 import axios from 'axios';
 export default {
     name: 'RegistrationForm',

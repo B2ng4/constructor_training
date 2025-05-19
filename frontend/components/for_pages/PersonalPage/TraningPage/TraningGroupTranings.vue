@@ -12,7 +12,7 @@
 			<q-card-section>
 
 				<div class="fixed-center column q-gutter-xs">
-					<router-link :to="{ name: 'edit', params: { uuid: training.uuid } }" >
+					<a :href="`/training/edit/${training.uuid}`">
 						<q-btn
 							class="button-edit"
 							:class="{ hidden: training.hiddenStatus }"
@@ -21,7 +21,7 @@
 							round
 							icon="edit"
 						/>
-					</router-link>
+					</a>
 					<q-btn
 						class="button-edit"
 						:class="{ hidden: training.hiddenStatus }"

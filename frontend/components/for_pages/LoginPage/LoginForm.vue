@@ -61,7 +61,7 @@
 
 <script>
 import axios from 'axios';
-import BaseCard from '@components/BaseComponents/BaseCard.vue';
+import BaseCard from '@components/base-components/BaseCard.vue';
 export default {
     name: 'LoginForm',
     components: {BaseCard},
