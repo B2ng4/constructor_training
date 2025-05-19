@@ -14,7 +14,6 @@ async def create_test_user():
             last_name="string",
             password="string"
         )
-
         result = await repo.add_user(test_user)
         if result:
             print("✅Тестовый пользователь создан")
