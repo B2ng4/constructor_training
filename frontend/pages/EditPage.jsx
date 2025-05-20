@@ -1,10 +1,11 @@
 import { useParams } from "react-router";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import 'tldraw/tldraw.css';
-import CustomTldraw from "@components/for_pages/EditPage/EditPageCustomTldraw.jsx";
+import BaseCanvas from "@components/for_pages/EditPage/EditPageBaseCanvas.jsx"
 
-//Получаем тренинг
+/*
+ Метод получения данных тренинга
+*/
 async function getTrainings(uuid) {
 	let result = await axios.get(`${__BASE__URL__}/training/` + uuid);
 	try {
@@ -13,7 +14,9 @@ async function getTrainings(uuid) {
 		return error;
 	}
 }
-
+/*
+ Страница EditPage()
+*/
 function EditPage() {
 	const { uuid } = useParams();
 	const [dataTraining, setDataTraining] = useState(null);
@@ -31,9 +34,7 @@ function EditPage() {
 	if (isLoading) return <div>Loading...</div>;
 	return (
 		<>
-			<div style={{ position: 'fixed', inset: 0 }}>
-				<CustomTldraw training={dataTraining} />
-			</div>
+				<BaseCanvas training={dataTraining} />
 		</>
 	);
 }

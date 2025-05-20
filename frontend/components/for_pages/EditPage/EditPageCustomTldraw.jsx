@@ -1,13 +1,16 @@
 import { Tldraw, useEditor } from 'tldraw';
 import { useEffect, useState } from 'react';
 
-function PageManager(props) {
+//Отрисовка шагов
+function Steps(props) {
 	const editor = useEditor()
 	useEffect(() => {
 		if (!editor) return
 		props.training.steps.forEach((step) => {
 			editor.createPage({id: `page:${step.id}`, name: String(step.id), meta: {data: step}});
 		})
+		//создается стандартная страница библы
+		editor.deletePage('page:page')
 	}, [editor])
 	return null;
 }
@@ -21,7 +24,7 @@ function getTraining(training) {
 function CustomTldraw(props) {
 	return (
 		<Tldraw>
-			<PageManager training={props.training} />
+			<Steps training={props.training} />
 		</Tldraw>
 	);
 }
