@@ -1,18 +1,21 @@
 import { Tldraw, useEditor } from 'tldraw';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 function PageManager(props) {
 	const editor = useEditor()
-
 	useEffect(() => {
 		if (!editor) return
 		props.training.steps.forEach((step) => {
-			editor.createPage({id: `page:${step.id}`});
+			editor.createPage({id: `page:${step.id}`, name: String(step.id), meta: {data: step}});
 		})
-		editor.setCurrentPage('page:1')
 	}, [editor])
+	return null;
+}
 
-	return null
+function getTraining(training) {
+	const [selectedTraining, setSelectedTraining] = useState(null);
+	setSelectedTraining(training);
+	return selectedTraining;
 }
 
 function CustomTldraw(props) {
@@ -20,7 +23,7 @@ function CustomTldraw(props) {
 		<Tldraw>
 			<PageManager training={props.training} />
 		</Tldraw>
-	)
+	);
 }
 
 export default CustomTldraw;

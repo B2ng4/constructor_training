@@ -27,6 +27,7 @@ function EditPage() {
 		}
 		fetchData();
 	}, [uuid]);
+
 	if (isLoading) return <div>Loading...</div>;
 	return (
 		<>
