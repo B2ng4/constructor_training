@@ -1,7 +1,8 @@
 import { useParams } from "react-router";
-import { Excalidraw } from "@excalidraw/excalidraw";
 import axios from "axios";
 import { useEffect, useState } from "react";
+import 'tldraw/tldraw.css';
+import CustomTldraw from "@components/for_pages/EditPage/EditPageCustomTldraw.jsx";
 
 //Получаем тренинг
 async function getTrainings(uuid) {
@@ -16,20 +17,22 @@ async function getTrainings(uuid) {
 function EditPage() {
 	const { uuid } = useParams();
 	const [dataTraining, setDataTraining] = useState(null);
-
+	const [isLoading, setIsLoading] = useState(true);
 	useEffect(() => {
 		async function fetchData() {
 			const data = await getTrainings(uuid);
 			setDataTraining(data);
+			setIsLoading(false);
+
 		}
 		fetchData();
 	}, [uuid]);
+	if (isLoading) return <div>Loading...</div>;
 	return (
 		<>
-			<h1>{dataTraining?.title}</h1>
-		<div style={{ height: "900px" }}>
-			<Excalidraw/>
-		</div>
+			<div style={{ position: 'fixed', inset: 0 }}>
+				<CustomTldraw training={dataTraining} />
+			</div>
 		</>
 	);
 }
