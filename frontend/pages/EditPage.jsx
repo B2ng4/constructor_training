@@ -34,7 +34,7 @@ function EditPage() {
 	if (isLoading) return <div>Loading...</div>;
 	return (
 		<>
-				<BaseCanvas training={dataTraining} />
+				<BaseCanvas props={dataTraining} />
 		</>
 	);
 }
