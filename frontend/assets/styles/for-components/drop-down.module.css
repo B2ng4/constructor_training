@@ -46,12 +46,12 @@ button:hover {
 }
 
 .drop-down-step {
-    width: 250px;
-    height: 400px;
-    overflow-y: scroll;
+    max-width: 250px;
+    min-height: 100px;
+    max-height: 400px;
+    overflow-y: auto;
     background: #ffffff;
-    margin-top:  0.75rem;
-    border-radius: 0.75rem;
+    border-radius: 0 0 0.75rem 0.75rem;
     -webkit-box-shadow: 7px 7px 10px -4px rgba(34, 60, 80, 0.2);
     -moz-box-shadow: 7px 7px 10px -4px rgba(34, 60, 80, 0.2);
     box-shadow: 7px 7px 10px -4px rgba(34, 60, 80, 0.2);
@@ -63,9 +63,14 @@ button:hover {
 
 .step {
     display: flex;
+    padding: 8px;
     flex-direction: row;
     align-items: center;
     gap: 0.75rem;
+}
+
+.step:hover {
+    background: rgba(202, 205, 206, 0.84);
 }
 
 .dnd-icon {
@@ -82,4 +87,21 @@ button:hover {
 
 .dnd-icon:active {
     cursor: grabbing;
+}
+
+.top-bar-step {
+    max-width: 250px;
+    height: 50px;
+    background: #ffffff;
+    margin-top: 0.75rem;
+    border-radius: 0.75rem 0.75rem 0 0;
+    border-bottom: 1px solid #ededed;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.check-icon {
+    width: 18px;
+    height: 18px;
 }
