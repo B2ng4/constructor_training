@@ -15,9 +15,9 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@assets': path.join(__dirname, '/frontend/assets'),
-      '@components': path.join(__dirname, '/frontend/components'),
-      '@pages': path.join(__dirname, '/frontend/pages')
+      '@assets': path.join(__dirname, './assets'),
+      '@components': path.join(__dirname, './components'),
+      '@pages': path.join(__dirname, './pages')
     }
   },
 });
