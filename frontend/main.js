@@ -1,6 +1,6 @@
 import { createApp } from "vue";
 import App from "./App.vue";
-import router from "../router/index.js";
+import router from "./router/index.js";
 import { Quasar } from "quasar";
 import quasarLang from "quasar/lang/ru";
 import "quasar/src/css/index.sass";
@@ -14,4 +14,4 @@ createApp(App)
     .use(router)
     .use(Quasar, { plugins: {Notify}, lang: quasarLang, config: { brand: {secondary: '#6274F8'} } })
     .use(pinia)
-    .mount("#vue-app");
+    .mount("#app");
