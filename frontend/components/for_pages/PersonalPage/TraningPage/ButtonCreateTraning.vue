@@ -1,13 +1,13 @@
 <template>
-	<div class="row justify-center q-mt-sm">
-		<TraningModal/>
+	<div class="row justify-end q-mt-sm q-mr-xl">
+		<TrainingModal/>
 	</div>
 </template>
 
 <script>
-import TraningModal from './TraningModal.vue';
+import TrainingModal from './TraningModal.vue';
 export default {
-    components: { TraningModal },
+    components: { TrainingModal },
 }
 </script>
 

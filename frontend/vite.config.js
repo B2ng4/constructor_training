@@ -9,13 +9,14 @@ export default defineConfig({
     quasar(),
   ],
   define: {
-    __BASE__URL__: JSON.stringify('http://localhost:8002'),
+    __BASE__URL__: JSON.stringify('https://shyly-excelling-marlin.cloudpub.ru'),
   },
   resolve: {
     alias: {
       '@assets': path.join(__dirname, './assets'),
       '@components': path.join(__dirname, './components'),
-      '@pages': path.join(__dirname, './pages')
+      '@pages': path.join(__dirname, './pages'),
+      '@api': path.join(__dirname, './providers')
     }
   },
 });

@@ -56,9 +56,9 @@ export default {
                     'url': '/personal/library'
                 },
                 {
-                    'name': 'Тренинги',
+                    'name': 'Мои тренинги',
                     'icon': 'list_alt',
-                    'url': '/personal/traning'
+                    'url': '/personal/training'
                 },
                 {
                     'name': 'Поддержка',
