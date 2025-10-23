@@ -6,6 +6,8 @@
 
 
 from fastapi import FastAPI, APIRouter
+
+from backend.routing import tags_router
 from routing import auth_router, training_router
 from core.config import configs
 from core.create_base_app import create_base_app
@@ -14,6 +16,7 @@ from core.create_base_app import create_base_app
 app = create_base_app(configs)
 app.include_router(auth_router.router)
 app.include_router(training_router.router)
+app.include_router(tags_router.router)
 
 
 # feec3ca171c7

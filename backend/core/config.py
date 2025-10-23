@@ -7,7 +7,7 @@ import os
 class Configs(BaseSettings):
     # ------------ Настройки проекта ------------
     PROJECT_NAME: str = "Конструктор Тренингов"
-    PROJECT_DESCRIPTION: str = "веб-сервис Конструктор тренингов."
+    PROJECT_DESCRIPTION: str = "веб-сервис Конструктор тренингов. Тестовый пользователь: test@example.com string"
 
     # ------------ Веб-сервер ------------
     HOST: str = "localhost"
@@ -28,7 +28,7 @@ class Configs(BaseSettings):
     DB_HOST: Optional[str] = Field(default="localhost", env="DB_HOST")
     DB_PORT: Optional[int] = Field(default=5432, env="DB_PORT")
     DB_USER: Optional[str] = Field(default="postgres", env="DB_USER")
-    DB_NAME: Optional[str] = Field(default="timofeymac", env="DB_NAME")
+    DB_NAME: Optional[str] = Field(default="postgres", env="DB_NAME")
     DB_PASS: Optional[str] = Field(default="admin", env="DB_PASS")
 
     # ------------ Почта (оповещение) ------------
