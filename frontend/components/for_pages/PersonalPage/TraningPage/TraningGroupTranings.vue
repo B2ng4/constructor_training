@@ -45,7 +45,7 @@
 								</q-item>
 								<q-item clickable @click="publishTraining(training)">
 									<q-item-section>
-										<q-item-label>Опубликовать</q-item-label>
+										<q-item-label>{{training.publish === true ? 'Закрыть доступ' : 'Опубликовать'}}</q-item-label>
 									</q-item-section>
 								</q-item>
 								<q-item clickable @click="deleteTraining(training.uuid)">
