@@ -1,45 +1,17 @@
+# schemas/trainings.py
 from datetime import datetime
 from typing import List, Optional, Dict, Any, Union
 from pydantic import BaseModel, UUID4, Field, field_validator
 from uuid import UUID
+
+from backend.schemas.levels import LevelResponse
+from backend.schemas.tags import TagResponse
 
 
 # === Модели для TypesAction ===
 class ActionTypeResponse(BaseModel):
     id: int
     name: str
-
-    class Config:
-        from_attributes = True
-
-
-# === Модели для Tags ===
-class TagBase(BaseModel):
-    name: str
-
-
-class TagCreate(TagBase):
-    pass
-
-
-class TagResponse(TagBase):
-    id: int
-
-    class Config:
-        from_attributes = True
-
-
-# === Модели для Levels ===
-class LevelBase(BaseModel):
-    name: str
-
-
-class LevelCreate(LevelBase):
-    pass
-
-
-class LevelResponse(LevelBase):
-    id: int
 
     class Config:
         from_attributes = True
@@ -78,7 +50,6 @@ class TrainingStepResponse(TrainingStepBase):
         from_attributes = True
 
 
-
 # === Модели для Training ===
 class TrainingBase(BaseModel):
     title: str
@@ -88,6 +59,10 @@ class TrainingBase(BaseModel):
         None,
         ge=0,
         description="Ожидаемое время прохождения тренинга в минутах"
+    )
+    publish: bool = Field(
+        default=False,
+        description="Опубликован ли тренинг"
     )
 
     @field_validator('duration_minutes')
@@ -112,6 +87,11 @@ class TrainingUpdate(BaseModel):
         ge=0,
         description="Ожидаемое время прохождения тренинга в минутах"
     )
+    # ИСПРАВЛЕНО: добавлен publish в TrainingUpdate
+    publish: Optional[bool] = Field(
+        None,
+        description="Опубликован ли тренинг"
+    )
     steps: Optional[List[Union[TrainingStepCreate, TrainingStepUpdate]]] = Field(default_factory=list)
     tag_ids: Optional[List[int]] = None
 
@@ -127,8 +107,8 @@ class TrainingResponse(BaseModel):
     level_id: Optional[int] = None
     duration_minutes: Optional[int] = None
     created_at: Optional[datetime] = None
+    publish: bool = False
 
-    # Nested relationships
     level: Optional[LevelResponse] = None
     tags: List[TagResponse] = Field(default_factory=list)
     steps: List[TrainingStepResponse] = Field(default_factory=list)
@@ -148,6 +128,8 @@ class TrainingListResponse(BaseModel):
     level_id: Optional[int] = None
     duration_minutes: Optional[int] = None
     created_at: Optional[datetime] = None
+    publish: bool = False
+
     level: Optional[LevelResponse] = None
     tags: List[TagResponse] = Field(default_factory=list)
 

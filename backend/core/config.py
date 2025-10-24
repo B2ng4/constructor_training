@@ -5,6 +5,7 @@ import os
 
 
 class Configs(BaseSettings):
+    """Главный конфиг проекта"""
     # ------------ Настройки проекта ------------
     PROJECT_NAME: str = "Конструктор Тренингов"
     PROJECT_DESCRIPTION: str = "веб-сервис Конструктор тренингов. Тестовый пользователь: test@example.com string"

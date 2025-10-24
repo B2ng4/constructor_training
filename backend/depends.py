@@ -5,6 +5,8 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from jose import JWTError, jwt
 
+from backend.repositories.levels_repository import LevelsRepository
+from backend.repositories.tags_repository import TagsRepository
 from core.database import get_async_session
 from models.users import User
 from repositories.users_repository import UserRepository
@@ -14,10 +16,6 @@ from services.external_services.mail_service import EmailService
 from services.trainings_service import TrainingsService
 from core.config import configs, Configs
 from services.external_services.s3_service import S3Service
-
-# from services.external_services.redis_service import RedisService
-# import aioredis
-
 
 """
 Файл внедрения зависимостей
@@ -40,6 +38,20 @@ async def get_trainings_repository(
 ) -> TrainingRepository:
     """Получение репозитория тренингов"""
     return TrainingRepository(session)
+
+
+async def get_tags_repository(
+        session: AsyncSession = Depends(get_async_session)
+) -> TagsRepository:
+    """Получение репозитория тегов"""
+    return TagsRepository(session)
+
+
+async def get_levels_repository(
+        session: AsyncSession = Depends(get_async_session)
+) -> LevelsRepository:
+    """Получение репозитория уровней"""
+    return LevelsRepository(session)
 
 
 # === Сервисы ===
@@ -67,11 +79,6 @@ async def get_s3_service(
     return S3Service(session)
 
 
-# async def get_redis_service() -> aioredis.Redis:
-#     """Получение Redis сервиса"""
-#     return await RedisService.connect()
-
-
 # === Аутентификация ===
 
 async def get_current_user(
@@ -92,16 +99,20 @@ async def get_current_user(
     try:
         payload = jwt.decode(
             token,
-            configs.JWT_SECRET_KEY,
-            algorithms=[configs.JWT_ALGORITHM]
+            configs.SECRET_KEY,
+            algorithms=[configs.ALGORITHM]
         )
-        user_id: int = payload.get("sub")
-        if user_id is None:
+        user_identifier: str = payload.get("sub")
+        if user_identifier is None:
             raise credentials_exception
     except JWTError:
         raise credentials_exception
+    user = None
+    if user_identifier.isdigit():
+        user = await user_repo.get_by_id(int(user_identifier))
+    if user is None:
+        user = await user_repo.find_one_or_none(user_identifier)
 
-    user = await user_repo.get_by_id(int(user_id))
     if user is None:
         raise credentials_exception
 
