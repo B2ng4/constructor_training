@@ -1,7 +1,6 @@
 <template>
 	<div class="fullscreen-flow">
-		<VueFlow :nodes="nodes" :edges="edges">
-			<Background />
+		<VueFlow  fit-view-on-init :nodes="nodes">
 		</VueFlow>
 	</div>
 </template>
@@ -9,28 +8,17 @@
 <script setup>
 import { ref } from 'vue';
 import { VueFlow } from '@vue-flow/core';
-import { Background } from '@vue-flow/background';
-import { Controls } from '@vue-flow/controls';
 
 const nodes = ref([
 	{
 		id: '1',
-		type: 'input',
+		type: 'resizable',
 		position: { x: 100, y: 100 },
-		data: { label: 'Начальный узел' }
 	},
 	{
 		id: '2',
+		type: 'resizable',
 		position: { x: 300, y: 100 },
-		data: { label: 'Второй узел' }
-	}
-])
-
-const edges = ref([
-	{
-		id: 'e1-2',
-		source: '1',
-		target: '2'
 	}
 ])
 </script>

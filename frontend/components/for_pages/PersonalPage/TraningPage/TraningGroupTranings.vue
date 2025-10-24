@@ -107,7 +107,8 @@ async function publishTraining(training) {
 }
 
 function editTraining(uuid) {
-	router.push(`/edit/${uuid}`);
+	const route = router.resolve(`/edit/${uuid}`);
+	window.open(route.href, '_blank');
 }
 
 onMounted(() => {
