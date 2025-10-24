@@ -2,6 +2,7 @@
 	<div v-if="trainings.length > 0" class="row q-gutter-md q-ma-xl">
 		<q-spinner v-if="status"></q-spinner>
 		<q-card
+			@click="editTraining(training.uuid)"
 			class="my-card shadow-2"
 			bordered
 			v-for="training in trainings"
@@ -9,14 +10,25 @@
 		>
 			<q-card-section>
 				<div class="column">
-					<p style="font-weight: 700; font-size: 15px;" class="q-my-xs text-bold">{{ training.title }}</p>
+					<div class="row no-wrap items-center">
+						<svg viewBox="0 0 64 64" width="64" height="64" aria-hidden="true">
+							<defs>
+								<linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#ffd7e0" stop-opacity="0.95"></stop><stop offset="1" stop-color="#ffffff" stop-opacity="0.6"></stop></linearGradient>
+							</defs>
+							<rect x="4" y="4" width="56" height="56" rx="10" fill="url(#g)"></rect>
+							<g transform="translate(12,12)" fill="rgba(255,255,255,0.92)">
+								<path d="M8 0 L20 0 L8 24 L0 12 Z"></path>
+							</g>
+						</svg>
+						<p style="font-weight: 700; font-size: 15px" class=" text-bold q-ml-md">{{ training.title }}</p>
+					</div>
 					<p class="text-grey-8">{{ training.level?.label ?? "Уровень" }}</p>
 				</div>
 				<div class="q-gutter-xs">
 					<q-badge class="badge-tags" v-for="tag in training.tags">{{ tag.label }}</q-badge>
 				</div>
 				<!--Статус публикации и кнопка шестеренка-->
-				<div class="row content-center q-mt-md">
+				<div class="row items-center q-mt-md">
 					<div>
 						<q-badge v-if="training.publish !== false" class="custom-badge rounden-4" align="middle">
 							Опубликовано
@@ -24,7 +36,24 @@
 						<p class="text-grey-8 q-mb-none" v-else>Черновик</p>
 					</div>
 					<div class="q-ml-auto">
-						<q-btn-dropdown text-color="grey" color="white" icon="settings">
+						<q-btn-dropdown @click.stop text-color="grey" color="white" flat dropdown-icon="settings">
+							<q-list>
+								<q-item clickable @click="editTraining(training.uuid)">
+									<q-item-section>
+										<q-item-label>Редактировать</q-item-label>
+									</q-item-section>
+								</q-item>
+								<q-item clickable @click="publishTraining(training)">
+									<q-item-section>
+										<q-item-label>Опубликовать</q-item-label>
+									</q-item-section>
+								</q-item>
+								<q-item clickable @click="deleteTraining(training.uuid)">
+									<q-item-section>
+										<q-item-label>Удалить</q-item-label>
+									</q-item-section>
+								</q-item>
+							</q-list>
 						</q-btn-dropdown>
 					</div>
 				</div>
@@ -36,13 +65,17 @@
 <script setup>
 import { TrainingApi } from "@api/TrainingApi.js";
 import { onMounted, ref } from "vue";
+import { useRouter } from 'vue-router';
 
+const router = useRouter();
 const trainings = ref([]);
 const api = new TrainingApi();
 const status = ref(true);
 
-onMounted(async () => {
+async function getTrainings() {
 	try {
+		status.value = true;
+		trainings.value = [];
 		let response = await api.getTrainings();
 		trainings.value = response.data;
 	} catch (e) {
@@ -54,6 +87,31 @@ onMounted(async () => {
 	} finally {
 		status.value = false;
 	}
+}
+
+async function deleteTraining(uuid) {
+	try {
+		await api.deleteTraining(uuid);
+		await getTrainings();
+	} catch (e) {
+
+	}
+}
+
+async function publishTraining(training) {
+	try {
+		await api.updateTraining(training.uuid, {publish: !training.publish});
+		training.publish = !training.publish;
+	} catch (e) {
+	}
+}
+
+function editTraining(uuid) {
+	router.push(`/edit/${uuid}`);
+}
+
+onMounted(() => {
+	getTrainings();
 });
 
 </script>
