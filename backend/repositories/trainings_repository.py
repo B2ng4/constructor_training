@@ -4,7 +4,7 @@ from pydantic import UUID4
 from sqlalchemy.orm import selectinload, joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models.trainings import Training, TypesAction, TrainingStep
+from backend.models.trainings import Training, TypesAction, TrainingStep
 from sqlalchemy import select, delete, update, func, exists
 
 
@@ -180,3 +180,14 @@ class TrainingRepository:
         query = select(exists().where(Training.uuid == training_uuid))
         result = await self.session.execute(query)
         return result.scalar_one()
+
+
+    async def get_step_by_id(self, step_id: int) -> Optional[TrainingStep]:
+        """Получение шага по ID"""
+        query = (
+            select(TrainingStep)
+            .options(selectinload(TrainingStep.action_type))
+            .where(TrainingStep.id == step_id)
+        )
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()

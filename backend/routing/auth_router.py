@@ -10,9 +10,9 @@ from fastapi import (
 )
 from fastapi.security import OAuth2PasswordBearer
 from starlette import status
-from schemas.users import UserRegister, UserResponse, UserLogin, User
-from depends import get_user_service
-from services.user_service import UserService
+from backend.schemas.users import UserRegister, UserResponse, UserLogin, User
+from backend.depends import get_user_service
+from backend.services.user_service import UserService
 
 
 router = APIRouter(prefix="/auth",

@@ -8,7 +8,7 @@ from typing import Optional
 
 from pydantic import UUID4
 from sqlalchemy.ext.asyncio import AsyncSession
-from core.config import configs
+from backend.core.config import configs
 import mimetypes
 import hashlib
 import base64

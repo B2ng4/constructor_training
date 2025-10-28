@@ -8,7 +8,7 @@ class Configs(BaseSettings):
     """Главный конфиг проекта"""
     # ------------ Настройки проекта ------------
     PROJECT_NAME: str = "Конструктор Тренингов"
-    PROJECT_DESCRIPTION: str = "веб-сервис Конструктор тренингов. Тестовый пользователь: test@example.com string"
+    PROJECT_DESCRIPTION: str = "веб-сервис Конструктор тренингов. \nТестовый пользователь: test@example.com string"
 
     # ------------ Веб-сервер ------------
     HOST: str = "localhost"
