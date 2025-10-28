@@ -13,7 +13,7 @@
 					<div class="row no-wrap items-center">
 						<svg viewBox="0 0 64 64" width="64" height="64" aria-hidden="true">
 							<defs>
-								<linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#ffd7e0" stop-opacity="0.95"></stop><stop offset="1" stop-color="#ffffff" stop-opacity="0.6"></stop></linearGradient>
+								<linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="rgb(244, 224, 255)" stop-opacity="0.95"></stop><stop offset="1" stop-color="#ffffff" stop-opacity="0.6"></stop></linearGradient>
 							</defs>
 							<rect x="4" y="4" width="56" height="56" rx="10" fill="url(#g)"></rect>
 							<g transform="translate(12,12)" fill="rgba(255,255,255,0.92)">
@@ -45,7 +45,7 @@
 								</q-item>
 								<q-item clickable @click="publishTraining(training)">
 									<q-item-section>
-										<q-item-label>Опубликовать</q-item-label>
+										<q-item-label>{{training.publish === true ? 'Закрыть доступ' : 'Опубликовать'}}</q-item-label>
 									</q-item-section>
 								</q-item>
 								<q-item clickable @click="deleteTraining(training.uuid)">
@@ -107,7 +107,8 @@ async function publishTraining(training) {
 }
 
 function editTraining(uuid) {
-	router.push(`/edit/${uuid}`);
+	const route = router.resolve(`/edit/${uuid}`);
+	window.open(route.href, '_blank');
 }
 
 onMounted(() => {
