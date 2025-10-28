@@ -1,43 +1,30 @@
 <template>
-	<div class="fullscreen-flow">
-		<VueFlow  fit-view-on-init :nodes="nodes">
-		</VueFlow>
-	</div>
+	<group-steps v-if="store.trainingData" />
+	<vue-flow-component />
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { VueFlow } from '@vue-flow/core';
+import VueFlowComponent from "@components/for_pages/EditPage/VueFlowComponent.vue";
+import GroupSteps from "@components/for_pages/EditPage/GroupSteps.vue";
+import { TrainingApi } from "@api/TrainingApi.js";
+import { useRoute } from "vue-router";
+import { onMounted } from "vue";
+import { useTrainingData } from "@store/editTraining.js";
 
-const nodes = ref([
-	{
-		id: '1',
-		type: 'resizable',
-		position: { x: 100, y: 100 },
-	},
-	{
-		id: '2',
-		type: 'resizable',
-		position: { x: 300, y: 100 },
+const trainingApi = new TrainingApi();
+const route = useRoute();
+const store = useTrainingData();
+
+async function getTrainingData() {
+	try {
+		let response = await trainingApi.getTrainingByUuid(route.params.uuid);
+		store.setTrainingData(response.data);
+	} catch (e) {
+		alert("Данные тренинга не найдены");
 	}
-])
+}
+
+onMounted(() => {
+	getTrainingData();
+});
 </script>
-
-<style>
-@import '@vue-flow/core/dist/style.css';
-@import '@vue-flow/core/dist/theme-default.css';
-
-.fullscreen-flow {
-	width: 100vw;
-	height: 100vh;
-	margin: 0;
-	padding: 0;
-}
-
-/* Или если нужно внутри другого контейнера */
-.flow-container {
-	width: 100%;
-	height: 100%;
-	min-height: 500px;
-}
-</style>
