@@ -1,8 +1,8 @@
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from core.config import configs
-from schemas.mail import mail_send
+from backend.core.config import configs
+from backend.schemas.mail import mail_send
 import asyncio
 
 

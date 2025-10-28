@@ -8,8 +8,8 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from alembic import context
 from core.database import Base, DATABASE_URL
 
-from models.users import *
-from models.trainings import *
+from backend.models.trainings import Training, TrainingStep, TypesAction, Tags, Levels
+from backend.models.users import User
 
 
 # this is the Alembic Config object

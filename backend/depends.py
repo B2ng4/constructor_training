@@ -5,17 +5,18 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from jose import JWTError, jwt
 
+from backend.repositories.actions_repository import ActionsRepository
 from backend.repositories.levels_repository import LevelsRepository
 from backend.repositories.tags_repository import TagsRepository
 from core.database import get_async_session
-from models.users import User
-from repositories.users_repository import UserRepository
-from repositories.trainings_repository import TrainingRepository
-from services.user_service import UserService
-from services.external_services.mail_service import EmailService
-from services.trainings_service import TrainingsService
+from backend.models.users import User
+from backend.repositories.users_repository import UserRepository
+from backend.repositories.trainings_repository import TrainingRepository
+from backend.services.user_service import UserService
+from backend.services.external_services.mail_service import EmailService
+from backend.services.trainings_service import TrainingsService
 from core.config import configs, Configs
-from services.external_services.s3_service import S3Service
+from backend.services.external_services.s3_service import S3Service
 
 """
 Файл внедрения зависимостей
@@ -52,6 +53,12 @@ async def get_levels_repository(
 ) -> LevelsRepository:
     """Получение репозитория уровней"""
     return LevelsRepository(session)
+
+async def get_actions_repository(
+        session: AsyncSession = Depends(get_async_session)
+) -> ActionsRepository:
+    """Получение ипов действий"""
+    return ActionsRepository(session)
 
 
 # === Сервисы ===

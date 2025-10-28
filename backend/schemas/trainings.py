@@ -1,14 +1,15 @@
 # schemas/trainings.py
+
 from datetime import datetime
 from typing import List, Optional, Dict, Any, Union
 from pydantic import BaseModel, UUID4, Field, field_validator
 from uuid import UUID
-
 from backend.schemas.levels import LevelResponse
 from backend.schemas.tags import TagResponse
 
 
 # === Модели для TypesAction ===
+
 class ActionTypeResponse(BaseModel):
     id: int
     name: str
@@ -18,10 +19,12 @@ class ActionTypeResponse(BaseModel):
 
 
 # === Модели для TrainingStep ===
+
 class TrainingStepBase(BaseModel):
     step_number: int
     action_type_id: Optional[int] = None
     training_uuid: Optional[UUID4] = None
+    parent_step_id: Optional[int] = None  # Добавлено для вложенности
     area: Optional[Dict[str, int]] = None
     meta: Optional[Dict[str, Any]] = None
     annotation: Optional[str] = None
@@ -29,28 +32,38 @@ class TrainingStepBase(BaseModel):
 
 
 class TrainingStepCreate(TrainingStepBase):
-    pass
+    steps: Optional[List['TrainingStepCreate']] = Field(default_factory=list)  # Вложенные шаги
 
 
 class TrainingStepUpdate(BaseModel):
     id: Optional[int] = None
     step_number: Optional[int] = None
     action_type_id: Optional[int] = None
+    parent_step_id: Optional[int] = None  # Добавлено для вложенности
     area: Optional[Dict[str, int]] = None
     meta: Optional[Dict[str, Any]] = None
     annotation: Optional[str] = None
     image_url: Optional[str] = None
+    steps: Optional[List[Union['TrainingStepCreate', 'TrainingStepUpdate']]] = Field(default_factory=list)
 
 
 class TrainingStepResponse(TrainingStepBase):
     id: int
     action_type: Optional[ActionTypeResponse] = None
+    steps: List['TrainingStepResponse'] = Field(default_factory=list)  # Вложенные шаги
 
     class Config:
         from_attributes = True
 
 
+# Обновление forward references для рекурсивных моделей
+TrainingStepCreate.model_rebuild()
+TrainingStepUpdate.model_rebuild()
+TrainingStepResponse.model_rebuild()
+
+
 # === Модели для Training ===
+
 class TrainingBase(BaseModel):
     title: str
     description: str
@@ -60,9 +73,15 @@ class TrainingBase(BaseModel):
         ge=0,
         description="Ожидаемое время прохождения тренинга в минутах"
     )
+
     publish: bool = Field(
         default=False,
         description="Опубликован ли тренинг"
+    )
+
+    skip_steps: Optional[bool] = Field(
+        default=True,
+        description="Пропускать шаги?"
     )
 
     @field_validator('duration_minutes')
@@ -87,17 +106,14 @@ class TrainingUpdate(BaseModel):
         ge=0,
         description="Ожидаемое время прохождения тренинга в минутах"
     )
-    # ИСПРАВЛЕНО: добавлен publish в TrainingUpdate
     publish: Optional[bool] = Field(
         None,
         description="Опубликован ли тренинг"
     )
-    steps: Optional[List[Union[TrainingStepCreate, TrainingStepUpdate]]] = Field(default_factory=list)
     tag_ids: Optional[List[int]] = None
 
     class Config:
         from_attributes = True
-
 
 class TrainingResponse(BaseModel):
     uuid: UUID4
@@ -108,7 +124,7 @@ class TrainingResponse(BaseModel):
     duration_minutes: Optional[int] = None
     created_at: Optional[datetime] = None
     publish: bool = False
-
+    skip_steps: Optional[bool] = None
     level: Optional[LevelResponse] = None
     tags: List[TagResponse] = Field(default_factory=list)
     steps: List[TrainingStepResponse] = Field(default_factory=list)
@@ -129,9 +145,48 @@ class TrainingListResponse(BaseModel):
     duration_minutes: Optional[int] = None
     created_at: Optional[datetime] = None
     publish: bool = False
-
+    skip_steps: Optional[bool] = None
     level: Optional[LevelResponse] = None
     tags: List[TagResponse] = Field(default_factory=list)
 
     class Config:
         from_attributes = True
+
+
+
+class TrainingStepResponseWithId(TrainingStepResponse):
+    """Ответ с ID шага для операций обновления"""
+    pass
+
+class StepBulkCreateRequest(BaseModel):
+    """Запрос для массового создания шагов"""
+    steps: List[TrainingStepCreate]
+
+class StepBulkUpdateRequest(BaseModel):
+    """Запрос для массового обновления шагов"""
+    steps: List[TrainingStepUpdate]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
