@@ -2,11 +2,11 @@
 	<Tree
 		:data="steps"
 		item-key="id"
-		nesting-key="children"
+		nesting-key="steps"
 		v-slot="{ item }"
 	>
-		<div class="tree-item-content">
-			<span class="user-name">{{ item.name }}</span>
+		<div class="tree-item-content cursor-pointer">
+			<span>{{ item.id }}</span>
 		</div>
 	</Tree>
 </template>

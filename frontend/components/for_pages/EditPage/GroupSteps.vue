@@ -6,7 +6,7 @@
 		color="secondary"
 	>
 		<div class="q-pa-xs step-group column">
-			<GroupStepsTreeSteps v-if="a" :steps="a"/>
+			<GroupStepsTreeSteps :steps="steps"/>
 			<q-btn class="q-mt-md" @click="addStep" label="Добавить шаг"></q-btn>
 		</div>
 	</q-btn-dropdown>
@@ -19,39 +19,6 @@ import { TrainingApi } from "@api/TrainingApi.js";
 import { useRoute } from "vue-router";
 import GroupStepsTreeSteps from "@components/for_pages/EditPage/GroupStepsTreeSteps.vue";
 
-const a = [
-	{
-		id: 1,
-		name: 'Создать документ',
-		children: [
-			{
-				id: 2,
-				name: 'Добавить заголовок',
-				children: [],
-			},
-			{
-				id: 3,
-				name: 'Добавить текст',
-				children: [
-					{
-						id: 4,
-						name: 'Сменить шрифт',
-					},
-				],
-			},
-		],
-	},
-	{
-		id: 5,
-		name: 'Создать таблицу',
-		children: [
-			{
-				id: 6,
-				name: 'Добавить строки',
-			},
-		],
-	},
-]
 
 const api = new TrainingApi();
 const store = useTrainingData();
