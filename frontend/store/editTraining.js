@@ -14,5 +14,9 @@ export const useTrainingData = defineStore("city", () => {
 		steps.value = newSteps;
 	}
 
-	return { trainingData, setTrainingData, setSteps, steps };
+	function addStep(newStep) {
+		steps.value.push(newStep);
+	}
+
+	return { trainingData, setTrainingData, setSteps, steps, addStep };
 });
