@@ -47,4 +47,24 @@ export class TrainingApi extends BaseApi {
 		}
 	}
 
+	async getTrainingByUuid(uuid) {
+		try {
+			super.httpMethod = 'get';
+			super.sourceUrl = `/training/${uuid}`;
+			return super.createRequest();
+		} catch (e) {
+			throw new Error(e);
+		}
+	}
+
+	async addStep(uuid, payload) {
+		try {
+			super.httpMethod = 'post';
+			super.sourceUrl = `/training/${uuid}/steps`;
+			super.data = payload;
+			return super.createRequest();
+		} catch (e) {
+			throw new Error(e);
+		}
+	}
 }

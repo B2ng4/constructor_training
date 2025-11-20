@@ -84,7 +84,6 @@ export class BaseApi {
 	async createRequest() {
 		try {
 			if (this.axiosInstance) {
-				console.log(this._headers)
 				return await this.axiosInstance({
 					url: this.baseUrl + this.sourceUrl,
 					method: this.httpMethod,

@@ -20,7 +20,7 @@
 								<path d="M8 0 L20 0 L8 24 L0 12 Z"></path>
 							</g>
 						</svg>
-						<p style="font-weight: 700; font-size: 15px" class=" text-bold q-ml-md">{{ training.title }}</p>
+						<p style="font-weight: 600; font-size: 15px" class="q-ml-md">{{ training.title }}</p>
 					</div>
 					<p class="text-grey-8">{{ training.level?.label ?? "Уровень" }}</p>
 				</div>
