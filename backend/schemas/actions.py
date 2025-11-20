@@ -23,3 +23,11 @@ class ActionResponse(ActionBase):
     value: int
     class Config:
         from_attributes = True
+
+
+class ActionTypeResponse(BaseModel):
+    value: int
+    label: str
+
+    class Config:
+        from_attributes = True

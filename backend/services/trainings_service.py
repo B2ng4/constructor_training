@@ -11,7 +11,7 @@ from backend.schemas.trainings import (
     TrainingUpdate,
     TrainingStepCreate,
     TrainingStepUpdate,
-    TrainingStepResponse
+    TrainingStepResponse, TrainingListResponse
 )
 
 from backend.models.trainings import Training, TrainingStep, TypesAction, Tags
@@ -120,10 +120,11 @@ class TrainingsService:
     async def get_trainings_by_user_id(
             self,
             user_id: int
-    ) -> List[TrainingResponse]:
-        """Получение тренингов пользователя с загрузкой relationships"""
-        trainings = await self.repo.get_by_user_id_with_relations(user_id)
-        return [TrainingResponse.model_validate(training) for training in trainings]
+    ) -> List[TrainingListResponse]:  # ✅ ИЗМЕНЕНО
+        """Получение тренингов пользователя БЕЗ шагов"""
+        trainings = await self.repo.get_by_user_id(user_id)  # ✅ БЕЗ _with_relations
+        return [TrainingListResponse.model_validate(training) for training in trainings]  # ✅ TrainingListResponse
+
 
     async def patch_training(
             self,
