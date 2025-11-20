@@ -18,13 +18,52 @@ class TrainingRepository:
 
     def _get_eager_load_options(self):
         """
-        Централизованные опции для eager loading всех relationships
+        Правильная рекурсивная загрузка вложенных steps
+        Нельзя цеплять разные relationship друг за другом!
         """
+        from sqlalchemy.orm import selectinload
+
+        # ✅ Правильно: отдельные цепочки для каждого relationship пути
+        steps_with_action = (
+            selectinload(Training.steps)
+            .selectinload(TrainingStep.action_type)
+        )
+
+        # Вложенные steps первого уровня
+        nested_steps = (
+            selectinload(Training.steps)
+            .selectinload(TrainingStep.steps)
+            .selectinload(TrainingStep.action_type)
+        )
+
+        # Вложенные steps второго уровня
+        nested_steps2 = (
+            selectinload(Training.steps)
+            .selectinload(TrainingStep.steps)
+            .selectinload(TrainingStep.steps)
+            .selectinload(TrainingStep.action_type)
+        )
+
         return [
             selectinload(Training.tags),
-            joinedload(Training.level),
-            selectinload(Training.steps).selectinload(TrainingStep.action_type)
+            selectinload(Training.level),
+            steps_with_action,
+            nested_steps,
+            nested_steps2
         ]
+
+    def _get_step_eager_load_options(self, depth: int = 3):
+        """
+        Рекурсивная загрузка вложенных подшагов
+        """
+        # ✅ Строим цепочку загрузки вложенных steps
+        step_loader = selectinload(TrainingStep.action_type)
+
+        current = selectinload(TrainingStep.steps).selectinload(TrainingStep.action_type)
+        for _ in range(depth - 1):
+            current = current.selectinload(TrainingStep.steps).selectinload(TrainingStep.action_type)
+
+        return [step_loader, current]
 
     async def create(self, training: Training) -> Training:
         """Создание тренинга"""
@@ -97,22 +136,54 @@ class TrainingRepository:
         return result.rowcount > 0
 
     async def create_training_step(self, step: TrainingStep) -> TrainingStep:
-        """Создание шага тренинга"""
+        """Создание шага тренинга БЕЗ загрузки relationships"""
         self.session.add(step)
         await self.session.flush()
-        await self.session.refresh(step)
-        return step
 
-    async def get_training_steps(self, training_uuid: UUID4) -> List[TrainingStep]:
-        """Получение всех шагов тренинга по его uuid"""
+        # ✅ Просто обновляем, БЕЗ selectinload для steps
         query = (
             select(TrainingStep)
-            .options(selectinload(TrainingStep.action_type))
-            .where(TrainingStep.training_uuid == training_uuid)
-            .order_by(TrainingStep.step_number)
+            .options(
+                selectinload(TrainingStep.action_type)
+                # ❌ УБИРАЕМ selectinload(TrainingStep.steps)!
+            )
+            .where(TrainingStep.id == step.id)
         )
         result = await self.session.execute(query)
-        return result.scalars().all()
+        return result.scalars().unique().one()
+
+    def _get_step_eager_load_options(self, depth: int = 3):
+        """
+        БЕЗ selectinload для steps - только action_type
+        """
+        return [
+            selectinload(TrainingStep.action_type)
+            # ❌ УБИРАЕМ selectinload(TrainingStep.steps)!
+        ]
+
+    def _get_eager_load_options(self):
+        """
+        Упрощенная версия - загружаем только действия, БЕЗ вложенных steps
+        """
+        return [
+            selectinload(Training.tags),
+            selectinload(Training.level),
+            selectinload(Training.steps).selectinload(TrainingStep.action_type)
+            # ❌ БОЛЬШЕ НЕ пытаемся цеплять TrainingStep.steps!
+        ]
+
+    async def get_training_steps(self, training_uuid: UUID4) -> List[TrainingStep]:
+        """Получение всех корневых шагов тренинга с вложенными подшагами"""
+        query = (
+            select(TrainingStep)
+            .options(*self._get_step_eager_load_options(depth=5))
+            .where(TrainingStep.training_uuid == training_uuid)
+            .where(TrainingStep.parent_step_id.is_(None))  # Только корневые шаги
+            .order_by(TrainingStep.step_number)
+        )
+
+        result = await self.session.execute(query)
+        return result.scalars().unique().all()
 
     async def update_training_step(self, step_id: int, update_data: Dict) -> bool:
         """Обновить шаг тренинга по id шага"""
@@ -181,12 +252,11 @@ class TrainingRepository:
         result = await self.session.execute(query)
         return result.scalar_one()
 
-
     async def get_step_by_id(self, step_id: int) -> Optional[TrainingStep]:
-        """Получение шага по ID"""
+        """Получение шага по ID с загрузкой relationships"""
         query = (
             select(TrainingStep)
-            .options(selectinload(TrainingStep.action_type))
+            .options(*self._get_step_eager_load_options(depth=3))
             .where(TrainingStep.id == step_id)
         )
         result = await self.session.execute(query)
