@@ -11,7 +11,7 @@
 				class="q-mt-md"
 				@click="modal = !modal"
 				label="Добавить шаг"
-			></q-btn>
+			/>
 		</div>
 	</q-btn-dropdown>
 	<ModalCreateStep :step-count="steps.length" v-model="modal" />

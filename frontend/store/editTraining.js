@@ -22,7 +22,6 @@ export const useTrainingData = defineStore("training", () => {
 
 	function selectStep(newStep) {
 		selectedStep.value = newStep;
-		console.log(newStep);
 	}
 
 	return {
