@@ -8,7 +8,7 @@
 				<q-input dense v-model="step.name" autofocus />
 				<q-toggle
 					class="q-ml-none"
-					label="Дочерние шаги"
+					label="Вложенные шаги"
 					size="lg"
 					v-model="childSteps.status"
 				/>

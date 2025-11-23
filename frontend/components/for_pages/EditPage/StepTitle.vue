@@ -1,6 +1,5 @@
 <template>
 	<div
-		v-if="store.selectedStep"
 		class="cursor-pointer absolute q-ma-lg"
 		style="z-index: 1; left: 50%; transform: translateX(-50%)"
 	>
@@ -25,8 +24,21 @@
 
 <script setup>
 import { useTrainingData } from "@store/editTraining.js";
+import { TrainingApi } from "@api/TrainingApi.js";
+import {watch} from "vue";
+import {useRoute} from "vue-router";
 
+const api = new TrainingApi();
 const store = useTrainingData();
+const route = useRoute();
+
+watch(store.selectedStep, (n) => {
+	if (n) {
+		setTimeout(() => {
+			console.log(n);
+		}, 3000)
+	}
+})
 </script>
 
 <style scoped></style>
