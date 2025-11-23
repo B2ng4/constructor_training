@@ -47,7 +47,7 @@ export default {
             buttonLeftPanel: [
                 {
                     'name': 'Главная',
-                    'icon': 'home_outline',
+                    'icon': 'home',
                     'url': '/personal/home'
                 },
                 {

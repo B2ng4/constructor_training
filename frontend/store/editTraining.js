@@ -1,9 +1,10 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 
-export const useTrainingData = defineStore("city", () => {
+export const useTrainingData = defineStore("training", () => {
 	const trainingData = ref(null);
 	const steps = ref(null);
+	const selectedStep = ref(null);
 
 	function setTrainingData(newTrainingData) {
 		trainingData.value = newTrainingData;
@@ -12,11 +13,25 @@ export const useTrainingData = defineStore("city", () => {
 
 	function setSteps(newSteps) {
 		steps.value = newSteps;
+		selectStep(steps.value[0]);
 	}
 
 	function addStep(newStep) {
 		steps.value.push(newStep);
 	}
 
-	return { trainingData, setTrainingData, setSteps, steps, addStep };
+	function selectStep(newStep) {
+		selectedStep.value = newStep;
+		console.log(newStep);
+	}
+
+	return {
+		trainingData,
+		setTrainingData,
+		setSteps,
+		steps,
+		addStep,
+		selectStep,
+		selectedStep,
+	};
 });

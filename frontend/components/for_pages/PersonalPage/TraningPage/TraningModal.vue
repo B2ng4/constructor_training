@@ -57,7 +57,7 @@
 	<!-- Кнопка создания -->
 	<div class="row q-gutter-sm items-center">
 		<q-btn
-			color="secondary"
+			color="primary"
 			text-color="white"
 			label="Создать"
 			@click="openModal"
