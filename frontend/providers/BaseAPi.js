@@ -5,9 +5,7 @@ export class BaseApi {
 	_sourceDomain = '';
 	_sourceUrl = '';
 	_httpMethod = '';
-	//В ТЕЛЕ ЗАПРОСА
 	_data =  {};
-	//В СТРОКЕ ЗАПРОСА
 	_params = {};
 	_axiosInstance = null;
 	_typeContent = null;

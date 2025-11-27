@@ -17,7 +17,9 @@ export default defineConfig({
       '@components': path.join(__dirname, './components'),
       '@pages': path.join(__dirname, './pages'),
       '@api': path.join(__dirname, './providers'),
-			'@store': path.join(__dirname, './store')
+			'@store': path.join(__dirname, './store'),
+			'@config': path.join(__dirname, './config'),
+			'@composables': path.join(__dirname, './composables'),
     }
   },
 });

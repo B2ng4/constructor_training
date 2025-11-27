@@ -47,7 +47,7 @@ export default {
             buttonLeftPanel: [
                 {
                     'name': 'Главная',
-                    'icon': 'home_outline',
+                    'icon': 'home',
                     'url': '/personal/home'
                 },
                 {
@@ -56,7 +56,7 @@ export default {
                     'url': '/personal/library'
                 },
                 {
-                    'name': 'Мои тренинги',
+                    'name': 'Создание тренинга',
                     'icon': 'list_alt',
                     'url': '/personal/training'
                 },

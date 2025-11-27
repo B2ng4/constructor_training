@@ -1,3 +1,6 @@
+@import "@quasar/extras/material-icons/material-icons.css";
+@import "quasar/src/css/index.sass";
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background-color: #F8F9FB;

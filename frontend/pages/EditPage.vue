@@ -1,15 +1,19 @@
 <template>
 	<group-steps v-if="store.trainingData" />
-	<vue-flow-component />
+	<step-title v-if="store.selectedStep" />
+	<vue-flow-component v-if="store.selectedStep?.image_url" />
+	<upload-photo class="absolute-center" v-else />
 </template>
 
 <script setup>
 import VueFlowComponent from "@components/for_pages/EditPage/VueFlowComponent.vue";
+import UploadPhoto from "@components/for_pages/EditPage/UploadPhoto.vue";
 import GroupSteps from "@components/for_pages/EditPage/GroupSteps.vue";
 import { TrainingApi } from "@api/TrainingApi.js";
 import { useRoute } from "vue-router";
 import { onMounted } from "vue";
 import { useTrainingData } from "@store/editTraining.js";
+import StepTitle from "@components/for_pages/EditPage/StepTitle.vue";
 
 const trainingApi = new TrainingApi();
 const route = useRoute();
