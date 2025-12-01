@@ -68,8 +68,8 @@
 
 <script setup>
 import { ref } from "vue";
-import { TrainingApi } from "@api/TrainingApi.js";
-import { MetaTrainingApi } from "@api/MetaTrainingApi.js";
+import { TrainingApi } from "@api/api/TrainingApi.js";
+import { MetaTrainingApi } from "@api/api/MetaTrainingApi.js";
 
 const metaApi = new MetaTrainingApi();
 const listTags = ref([]);

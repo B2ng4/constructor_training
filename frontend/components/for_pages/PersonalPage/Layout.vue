@@ -38,7 +38,7 @@
 </template>
 
 <script>
-import UserCard from '@components/for_pages/PersonalPage/for_header/UserCard.vue';
+import UserCard from '@components/for_pages/PersonalPage/ForHeader/UserCard.vue';
 export default {
     name: 'Layout',
     components: {UserCard},

@@ -1,12 +1,14 @@
-import LoginPage from "@pages/LoginPage.vue";
-import PersonalPage from "@pages/PersonalPage.vue";
-import Page403 from "@pages/Page403.vue";
-import RegistrationPage from "@pages/RegistrationPage.vue";
-import HomePage from "@pages/HomePage.vue";
-import LibraryPage from "@pages/LibraryPage.vue";
-import TraningPage from "@pages/TraningPage.vue";
-import HelpPage from "@pages/HelpPage.vue";
-import EditPage from "@pages/EditPage.vue";
+import {
+	EditPage,
+	HelpPage,
+	HomePage,
+	LibraryPage,
+	LoginPage,
+	Page403,
+	PersonalPage,
+	RegistrationPage,
+	TrainingPage,
+} from "@pages";
 
 export const routes = [
 	{ path: "/login", component: LoginPage, name: 'LoginPage' },
@@ -27,7 +29,7 @@ export const routes = [
 			},
 			{
 				path: '/personal/training',
-				component: TraningPage,
+				component: TrainingPage,
 			},
 			{
 				path: '/personal/help',

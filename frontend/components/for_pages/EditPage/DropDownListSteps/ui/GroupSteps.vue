@@ -7,11 +7,7 @@
 	>
 		<div class="q-pa-xs step-group column">
 			<GroupStepsTreeSteps />
-			<q-btn
-				class="q-mt-md"
-				@click="modal = !modal"
-				label="Добавить шаг"
-			/>
+			<q-btn class="q-mt-md" @click="modal = !modal" label="Добавить шаг" />
 		</div>
 	</q-btn-dropdown>
 	<ModalCreateStep :step-count="steps.length" v-model="modal" />
@@ -20,7 +16,7 @@
 <script setup>
 import { computed, ref } from "vue";
 import { useTrainingData } from "@store/editTraining.js";
-import GroupStepsTreeSteps from "@components/for_pages/EditPage/GroupStepsTreeSteps.vue";
+import { GroupStepsTreeSteps } from "@components/for_pages/EditPage/DropDownListSteps";
 import ModalCreateStep from "@components/for_pages/EditPage/ModalCreateStep.vue";
 
 const store = useTrainingData();

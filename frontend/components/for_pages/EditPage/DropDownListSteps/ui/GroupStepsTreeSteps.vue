@@ -11,13 +11,14 @@
 </template>
 
 <script setup>
-import { Tree } from "@components/vue_dnd_kit_components/Tree";
+import { Tree } from "@components/vue_dnd_kit_components/tree/index.ts";
 import { watch } from "vue";
 import { useTrainingData } from "@store/editTraining.js";
 
 const store = useTrainingData();
 const steps = store.steps;
 
+//TODO: СДЕЛАТЬ ОБРАБОТКУ ИЗМЕНЕНИЯ ШАГОВ
 watch(steps, (value) => {
 	console.log(value);
 });

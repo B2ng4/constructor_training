@@ -25,7 +25,7 @@
 					<p class="text-grey-8">{{ training.level?.label ?? "Уровень" }}</p>
 				</div>
 				<div class="q-gutter-xs">
-					<q-badge class="badge-tags" v-for="tag in training.tags">{{ tag.label }}</q-badge>
+					<q-badge :key="tag.id" class="badge-tags" v-for="tag in training.tags">{{ tag.label }}</q-badge>
 				</div>
 				<!--Статус публикации и кнопка шестеренка-->
 				<div class="row items-center q-mt-md">
@@ -63,7 +63,7 @@
 </template>
 
 <script setup>
-import { TrainingApi } from "@api/TrainingApi.js";
+import { TrainingApi } from "@api/api/TrainingApi.js";
 import { onMounted, ref } from "vue";
 import { useRouter } from 'vue-router';
 

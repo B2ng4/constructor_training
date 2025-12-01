@@ -13,7 +13,7 @@
 					v-model="childSteps.status"
 				/>
 				<div class="flex column" v-if="childSteps.status">
-					<q-input v-for="el in childSteps.steps" v-model="el.meta.name" />
+					<q-input v-for="el in childSteps.steps" v-model="el.meta.name" :key="el.step_number" />
 					<q-btn
 						class="q-mt-lg"
 						flat
@@ -37,7 +37,7 @@
 
 <script setup>
 import { useRoute } from "vue-router";
-import { TrainingApi } from "@api/TrainingApi.js";
+import { TrainingApi } from "@api/api/TrainingApi.js";
 import { ref } from "vue";
 import { useTrainingData } from "@store/editTraining.js";
 
@@ -67,6 +67,7 @@ async function addStep() {
 		value.value = false;
 		store.addStep(response.data);
 	} catch (e) {
+		console.error(e);
 		alert("Ошибка добавления нового шага");
 	}
 }

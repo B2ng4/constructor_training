@@ -1,11 +1,11 @@
-import axios from 'axios'
+import axios from "axios";
 
 export class BaseApi {
-	_baseUrl = '';
-	_sourceDomain = '';
-	_sourceUrl = '';
-	_httpMethod = '';
-	_data =  {};
+	_baseUrl = "";
+	_sourceDomain = "";
+	_sourceUrl = "";
+	_httpMethod = "";
+	_data = {};
 	_params = {};
 	_axiosInstance = null;
 	_typeContent = null;
@@ -19,11 +19,11 @@ export class BaseApi {
 	}
 
 	set httpMethod(method) {
-		let allowedMethods = ['get', 'post', 'put', 'delete', 'patch'];
+		let allowedMethods = ["get", "post", "put", "delete", "patch"];
 		if (allowedMethods.includes(method)) {
 			this._httpMethod = method;
 		} else {
-			throw new Error(`Разрешенные методы (${allowedMethods.join(', ')})`);
+			throw new Error(`Разрешенные методы (${allowedMethods.join(", ")})`);
 		}
 	}
 
@@ -80,18 +80,17 @@ export class BaseApi {
 	}
 
 	async createRequest() {
-		try {
-			if (this.axiosInstance) {
-				return await this.axiosInstance({
-					url: this.baseUrl + this.sourceUrl,
-					method: this.httpMethod,
-					params: {...this.params},
-					data: {...this.data},
-					headers: {...this.headers, ...{Authorization: `Bearer ${localStorage.getItem('tokenAuth')}`}}
-				});
-			}
-		} catch (e) {
-			return e;
+		if (this.axiosInstance) {
+			return await this.axiosInstance({
+				url: this.baseUrl + this.sourceUrl,
+				method: this.httpMethod,
+				params: { ...this.params },
+				data: this.data,
+				headers: {
+					...this.headers,
+					...{ Authorization: `Bearer ${localStorage.getItem("tokenAuth")}` },
+				},
+			});
 		}
 	}
 }

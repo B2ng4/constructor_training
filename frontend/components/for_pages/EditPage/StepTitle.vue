@@ -24,7 +24,7 @@
 
 <script setup>
 import { useTrainingData } from "@store/editTraining.js";
-import { TrainingApi } from "@api/TrainingApi.js";
+import { TrainingApi } from "@api/api/TrainingApi.js";
 import {watch} from "vue";
 import {useRoute} from "vue-router";
 
@@ -32,6 +32,7 @@ const api = new TrainingApi();
 const store = useTrainingData();
 const route = useRoute();
 
+//TODO: СДЕЛАТЬ ИЗМЕНЕНИЕ НАЗВАНИЯ ШАГА
 watch(store.selectedStep, (n) => {
 	if (n) {
 		setTimeout(() => {

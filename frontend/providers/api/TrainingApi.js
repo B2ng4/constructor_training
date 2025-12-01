@@ -1,4 +1,4 @@
-import {BaseApi} from "./BaseApi.js";
+import {BaseApi} from "./BaseAPi.js";
 
 export class TrainingApi extends BaseApi {
 	constructor() {
