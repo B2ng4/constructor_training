@@ -3,8 +3,10 @@
 	<div v-if="!loadingStatus">
 		<group-steps  />
 		<step-title  />
-		<tool-bar />
-		<vue-flow-component ref="flowComponent" v-if="store.selectedStep?.image_url" />
+		<div v-if="store.selectedStep?.image_url">
+			<tool-bar @select-event="flowComponent?.createNode"/>
+			<vue-flow-component ref="flowComponent"  />
+		</div>
 		<upload-photo
 			@upload-photo="getTrainingData"
 			class="absolute-center"

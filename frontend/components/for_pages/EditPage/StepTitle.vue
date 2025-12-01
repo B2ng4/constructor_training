@@ -1,6 +1,6 @@
 <template>
 	<div
-		class="cursor-pointer absolute q-ma-lg"
+		class="cursor-pointer absolute q-ma-lg card shadow-7"
 		style="z-index: 1; left: 50%; transform: translateX(-50%)"
 	>
 		<h4 class="q-ma-none">
@@ -42,4 +42,10 @@ watch(store.selectedStep, (n) => {
 })
 </script>
 
-<style scoped></style>
+<style scoped>
+.card {
+	background: #ffffff;
+	padding: 10px;
+	border-radius: 10px;
+}
+</style>

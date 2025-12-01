@@ -35,16 +35,15 @@ const createFullscreenNode = () => {
 	];
 };
 
-const createNode = (typeEvent) => {
+const createNode = (event) => {
 	const width = window.innerWidth;
 	const height = window.innerHeight;
-
-	nodes.value.push({
-		id: "2",
-		data: { label: "Node 1", type: typeEvent },
+	nodes.value[1] = {
+		id: "1",
+		data: { label: event.name, type: event.type },
 		position: { x: width / 2, y: height / 2 },
 		zIndex: 1000,
-	});
+	};
 };
 
 watch(
