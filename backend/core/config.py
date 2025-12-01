@@ -55,7 +55,7 @@ class Configs(BaseSettings):
         default="GFsM7bTRHbQ4CoZVDCmKsP19Lt8FN0ipQpl5OnTM", env="AWS_SECRET_ACCESS_KEY"
     )
     S3_BUCKET_NAME: Optional[str] = Field(
-        default="d08d3831-edc9b373-5fab-42f0-9e2f-441c90348394", env="S3_BUCKET_NAME"
+        default="d08d3831-8109d35a-047b-4e0c-9056-0f5412a5327a", env="S3_BUCKET_NAME"
     )
     S3_ENDPOINT_URL: Optional[str] = Field(
         default="https://s3.twcstorage.ru/", env="S3_ENDPOINT_URL"
