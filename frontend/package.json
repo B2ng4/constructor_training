@@ -13,6 +13,7 @@
     "@quasar/extras": "^1.16.17",
     "@vue-dnd-kit/core": "^1.7.0",
     "@vue-flow/core": "^1.47.0",
+    "@vue-flow/node-resizer": "^1.5.0",
     "@vueuse/core": "^13.1.0",
     "axios": "^1.8.1",
     "pinia": "^3.0.1",
