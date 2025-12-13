@@ -1,6 +1,10 @@
 <template>
 	<div class="fullscreen-flow">
-		<VueFlow v-model="nodes" :default-viewport="{ zoom: 0.4 }" />
+		<VueFlow v-model="nodes" :default-viewport="{ zoom: 0.4 }" >
+			<template #node-resizable="resizableNodeProps">
+				<ResizableNode :data="resizableNodeProps.data" />
+			</template>
+		</VueFlow>
 	</div>
 </template>
 
@@ -8,6 +12,7 @@
 import { ref, watch, onMounted } from "vue";
 import { VueFlow } from "@vue-flow/core";
 import { useTrainingData } from "@store/editTraining.js";
+import ResizableNode from "./ResizableNode.vue";
 
 const store = useTrainingData();
 const nodes = ref([]);
@@ -39,11 +44,15 @@ const createNode = (event) => {
 	const width = window.innerWidth;
 	const height = window.innerHeight;
 	nodes.value[1] = {
-		id: "1",
+		id: event.id,
+		type: 'resizable',
 		data: { label: event.name, type: event.type },
 		position: { x: width / 2, y: height / 2 },
 		zIndex: 1000,
+		style: { border: '2px solid black' },
 	};
+	// В VueFlow не меняются ноды, поэтому нужно обновить его
+	nodes.value = [...nodes.value];
 };
 
 watch(
@@ -55,7 +64,6 @@ watch(
 
 onMounted(() => {
 	createFullscreenNode();
-	window.addEventListener("resize", createFullscreenNode);
 });
 
 defineExpose({
@@ -66,7 +74,6 @@ defineExpose({
 <style>
 @import "@vue-flow/core/dist/style.css";
 @import "@vue-flow/core/dist/theme-default.css";
-
 .fullscreen-flow {
 	width: 100vw;
 	height: 100vh;

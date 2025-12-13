@@ -9,6 +9,9 @@
 				:color="selectedEvent?.id === event.id ? 'primary' : ''"
 				:text-color="selectedEvent?.id === event.id ? 'white' : 'black'"
 			>
+				<q-tooltip class="bg-primary text-body1">
+					{{event.name}}
+				</q-tooltip>
 				<Component :is="event.icon" />
 			</q-btn>
 		</div>
@@ -21,8 +24,10 @@ import {
 	RightClick,
 	LeftClick,
 	DoubleClick,
-	Text
-} from "@components/for_pages/EditPage/IconsToolBar/index.js";
+	Text,
+	Mouseover,
+	Keyboard,
+} from "@components/for_pages/EditPage/IconsToolBar";
 
 const selectedEvent = ref(null);
 const events = [
@@ -53,13 +58,13 @@ const events = [
 	{
 		type: "mouseover",
 		name: "Наведение курсора",
-		icon: "",
+		icon: Mouseover,
 		id: 5,
 	},
 	{
 		type: "keydown",
 		name: "Нажатие клавиши",
-		icon: "",
+		icon: Keyboard,
 		id: 6,
 	},
 ];

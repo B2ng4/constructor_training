@@ -11,7 +11,7 @@
 </template>
 
 <script setup>
-import { Tree } from "@components/vue_dnd_kit_components/tree/index.ts";
+import { Tree } from "@components/vue_dnd_kit_components/tree";
 import { watch } from "vue";
 import { useTrainingData } from "@store/editTraining.js";
 
