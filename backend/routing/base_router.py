@@ -46,7 +46,6 @@ class BaseRouter(Generic[ModelType, CreateSchemaType, UpdateSchemaType, Response
     def _register_routes(self):
         """Регистрация базовых CRUD маршрутов"""
 
-        # CREATE - ИСПРАВЛЕНО: используем self.create_schema
         @self.router.post(
             "/",
             response_model=self.response_schema,
@@ -55,7 +54,7 @@ class BaseRouter(Generic[ModelType, CreateSchemaType, UpdateSchemaType, Response
             description=f"Создать новый объект {self.entity_name.lower()}"
         )
         async def create(
-                data: self.create_schema = Body(...),  # ИСПРАВЛЕНО
+                data: self.create_schema = Body(...),
                 repo=Depends(self.repository_dependency),
                 current_user: User = Depends(self.auth_dependency)
         ):

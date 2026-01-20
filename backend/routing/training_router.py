@@ -137,15 +137,6 @@ async def upload_photos_by_training(
 
 
 
-@router.delete("/delete-photo/{url_photo:path}", name="Удаление фото по url")
-async def delete_photo_by_url(url_photo: str, s3_service: S3Service = Depends(get_s3_service)):
-    if await s3_service.delete_file(url_photo):
-        return {"status": "OK"}
-    else:
-        raise HTTPException(status_code=404, detail="Фото не найдено")
-
-
-
 # === ЭНДПОИНТЫ ДЛЯ УПРАВЛЕНИЯ ШАГАМИ ===
 
 @router.post("/{training_uuid}/steps",

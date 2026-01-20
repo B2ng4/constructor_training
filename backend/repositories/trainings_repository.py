@@ -23,20 +23,17 @@ class TrainingRepository:
         """
         from sqlalchemy.orm import selectinload
 
-        # ✅ Правильно: отдельные цепочки для каждого relationship пути
         steps_with_action = (
             selectinload(Training.steps)
             .selectinload(TrainingStep.action_type)
         )
 
-        # Вложенные steps первого уровня
         nested_steps = (
             selectinload(Training.steps)
             .selectinload(TrainingStep.steps)
             .selectinload(TrainingStep.action_type)
         )
 
-        # Вложенные steps второго уровня
         nested_steps2 = (
             selectinload(Training.steps)
             .selectinload(TrainingStep.steps)
@@ -56,7 +53,7 @@ class TrainingRepository:
         """
         Рекурсивная загрузка вложенных подшагов
         """
-        # ✅ Строим цепочку загрузки вложенных steps
+
         step_loader = selectinload(TrainingStep.action_type)
 
         current = selectinload(TrainingStep.steps).selectinload(TrainingStep.action_type)
@@ -140,12 +137,10 @@ class TrainingRepository:
         self.session.add(step)
         await self.session.flush()
 
-        # ✅ Просто обновляем, БЕЗ selectinload для steps
         query = (
             select(TrainingStep)
             .options(
                 selectinload(TrainingStep.action_type)
-                # ❌ УБИРАЕМ selectinload(TrainingStep.steps)!
             )
             .where(TrainingStep.id == step.id)
         )
@@ -158,7 +153,6 @@ class TrainingRepository:
         """
         return [
             selectinload(TrainingStep.action_type)
-            # ❌ УБИРАЕМ selectinload(TrainingStep.steps)!
         ]
 
     def _get_eager_load_options(self):
@@ -169,7 +163,6 @@ class TrainingRepository:
             selectinload(Training.tags),
             selectinload(Training.level),
             selectinload(Training.steps).selectinload(TrainingStep.action_type)
-            # ❌ БОЛЬШЕ НЕ пытаемся цеплять TrainingStep.steps!
         ]
 
     async def get_training_steps(self, training_uuid: UUID4) -> List[TrainingStep]:

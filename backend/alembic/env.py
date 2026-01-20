@@ -15,14 +15,13 @@ from models.users import User
 # this is the Alembic Config object
 config = context.config
 
-# заменяем URL базы данных на ваш асинхронный URL
+
 config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
-# Интерпретируем файл конфигурации, если он присутствует
+
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Добавляем модель MetaData для автогенерации миграций
 target_metadata = Base.metadata
 
 
@@ -42,7 +41,6 @@ def run_migrations_offline() -> None:
 
 async def run_migrations_online() -> None:
     """Запуск миграций в 'онлайн' режиме."""
-    # Создаем асинхронный движок вручную
     connectable = create_async_engine(DATABASE_URL)
 
     async with connectable.connect() as connection:

@@ -24,7 +24,6 @@ async def create_tag(
         current_user: User = Depends(get_current_user)
 ):
     """Создать новый тег"""
-    # Проверка уникальности
     existing = await repo.get_by_name(tag_data.label)
     if existing:
         raise HTTPException(
@@ -142,8 +141,6 @@ async def update_tag(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Тег с ID {tag_value} не найден"
         )
-
-    # Проверка уникальности
     existing = await repo.get_by_name(tag_data.label)
     if existing and existing.value != tag_value:
         raise HTTPException(
