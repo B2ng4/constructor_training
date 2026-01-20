@@ -51,18 +51,15 @@ class S3Service:
             content_type = "application/octet-stream"
 
         try:
-            sha256_hash = hashlib.sha256(file_content).digest()
-            sha256_hash_b64 = base64.b64encode(sha256_hash).decode("utf-8")
             self.s3_client.put_object(
                 Bucket=self.bucket_name,
                 Key=object_name,
                 Body=file_content,
                 ContentType=content_type,
-                ChecksumSHA256=sha256_hash_b64,
+                ACL='public-read'
             )
-            file_url = (
-                f"{self.endpoint_url.rstrip('/')}/{self.bucket_name}/{object_name}"
-            )
+
+            file_url = f"https://{self.bucket_name}.hb.ru-msk.vkcloud-storage.ru/{object_name}"
 
             return file_url
         except Exception as e:

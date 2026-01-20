@@ -233,6 +233,7 @@ class TrainingRepository:
 
             new_step = TrainingStep(
                 step_number=step_number,
+                meta={"name": "Шаг без названия"},
                 training_uuid=training_uuid,
                 image_url=photo_url
             )

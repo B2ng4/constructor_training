@@ -32,6 +32,7 @@ class UserService:
 
 
     async def authenticate(self, email: EmailStr, password: str):
+
         user = await self.user_repo.find_one_or_none(email=email)
         if not user or not verify_password(plain_password=password, hashed_password=user.password):
             return None

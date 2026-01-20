@@ -49,18 +49,18 @@ class Configs(BaseSettings):
 
     # ------------ S3 хранилище ----------------------------------------
     AWS_ACCESS_KEY_ID: Optional[str] = Field(
-        default="ASBZAQIUA7VOLQU0DDTD", env="AWS_ACCESS_KEY_ID"
+        default="hXdk2bY3SMUqxU9P9uSWKt", env="AWS_ACCESS_KEY_ID"
     )
     AWS_SECRET_ACCESS_KEY: Optional[str] = Field(
-        default="GFsM7bTRHbQ4CoZVDCmKsP19Lt8FN0ipQpl5OnTM", env="AWS_SECRET_ACCESS_KEY"
+        default="fAae8FaSuJUTvvHv1fyayWdr8GyaZ8RRjzTE9yyZnzt8", env="AWS_SECRET_ACCESS_KEY"
     )
     S3_BUCKET_NAME: Optional[str] = Field(
-        default="d08d3831-8109d35a-047b-4e0c-9056-0f5412a5327a", env="S3_BUCKET_NAME"
+        default="trainings", env="S3_BUCKET_NAME"
     )
     S3_ENDPOINT_URL: Optional[str] = Field(
-        default="https://s3.twcstorage.ru/", env="S3_ENDPOINT_URL"
+        default="https://hb.ru-msk.vkcloud-storage.ru", env="S3_ENDPOINT_URL"
     )
-    S3_REGION_NAME: Optional[str] = Field(default="ru-1", env="S3_REGION_NAME")
+    S3_REGION_NAME: Optional[str] = Field(default="ru-msk", env="S3_REGION_NAME")
 
     
      #------------------- REDIS --------------------------------------------

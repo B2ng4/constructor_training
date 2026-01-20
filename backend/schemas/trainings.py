@@ -153,7 +153,7 @@ class TrainingResponse(BaseModel):
 class TrainingStepResponseWithId(TrainingStepResponse):
     """Ответ с ID шага для операций обновления"""
     pass
-ахаха
+
 
 class StepBulkCreateRequest(BaseModel):
     """Запрос для массового создания шагов"""
