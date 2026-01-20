@@ -98,14 +98,11 @@ class TrainingsService:
             step_dict = step_data.model_dump(exclude={"action_type_id"})
             return TrainingStep(**step_dict)
 
-    async def get_training(self, training_uuid: UUID4) -> TrainingResponse:
+    async def get_training(self, training_uuid: UUID4) -> Optional[TrainingResponse]:
         """Получение тренинга по UUID с загрузкой всех relationships"""
         training = await self.repo.get_by_uuid_with_relations(training_uuid)
         if not training:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Тренинг не найден"
-            )
+            return None
         return TrainingResponse.model_validate(training)
 
     async def get_trainings_by_params(
@@ -123,6 +120,8 @@ class TrainingsService:
     ) -> List[TrainingListResponse]:
         """Получение тренингов пользователя БЕЗ шагов"""
         trainings = await self.repo.get_by_user_id(user_id)
+        if not trainings:
+            return None
         return [TrainingListResponse.model_validate(training) for training in trainings]
 
     async def patch_training(

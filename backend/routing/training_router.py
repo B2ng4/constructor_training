@@ -3,12 +3,12 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, status
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import UUID4
-
+from fastapi.responses import JSONResponse
 from depends import get_trainings_service, get_s3_service, get_user_service
 from starlette import status
 from services.trainings_service import TrainingsService
 from services.external_services.s3_service import S3Service
-from schemas.trainings import TrainingResponse, TrainingUpdate, TrainingCreate
+from schemas.trainings import TrainingResponse, TrainingUpdate, TrainingCreate, TrainingListResponse
 from services.user_service import UserService
 
 from schemas.trainings import TrainingStepResponse, TrainingStepCreate, StepBulkCreateRequest, \
@@ -38,25 +38,31 @@ async def create_training(
 
 
 
-@router.get("/{training_uuid}", response_model=TrainingResponse, name="Получение конкретного тренинга")
-
-async def get_training(training_uuid: UUID4, service: TrainingsService = Depends(get_trainings_service)):
-
+@router.get("/{training_uuid}", name="Получение конкретного тренинга")
+async def get_training(
+    training_uuid: UUID4,
+    service: TrainingsService = Depends(get_trainings_service)
+):
     training = await service.get_training(training_uuid)
     if not training:
-        raise HTTPException(status_code=404, detail="Тренинг не найден")
+        return JSONResponse(
+            status_code=200,
+            content={"detail": "Нет тренингов"}
+        )
     return training
 
 
-
-@router.get("/my_trainings/", response_model=list[TrainingResponse],name="Получение всех тренингов пользователя")
-async def get_my_trainings(token: str = Depends(oauth2_scheme),
-                           user_service: UserService = Depends(get_user_service),
-                           training_service: TrainingsService = Depends(get_trainings_service)):
+@router.get("/my_trainings/", response_model=list[TrainingListResponse], name="Получение всех тренингов пользователя")
+async def get_my_trainings(
+        token: str = Depends(oauth2_scheme),
+        user_service: UserService = Depends(get_user_service),
+        training_service: TrainingsService = Depends(get_trainings_service)
+):
     user = await user_service.get_current_user(token)
     trainings = await training_service.get_trainings_by_user_id(user.id)
+
     if not trainings:
-        raise HTTPException(status_code=404, detail="Тренинги не найдены")
+        return []
     return trainings
 
 
