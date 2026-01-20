@@ -1,7 +1,7 @@
 import asyncio
-from backend.core.database import async_session, get_async_session
-from backend.repositories.users_repository import UserRepository
-from backend.schemas.users import UserRegister
+from core.database import async_session, get_async_session
+from repositories.users_repository import UserRepository
+from schemas.users import UserRegister
 
 
 async def create_test_user():

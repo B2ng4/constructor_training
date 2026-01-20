@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from sqlalchemy import text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from backend.core.database import Base
+from core.database import Base
 import sqlalchemy as sa
 
 
@@ -26,6 +26,6 @@ class User(Base):
     photo: Mapped[Optional[str]] = mapped_column(sa.String, nullable=True)
 
     created_trainings: Mapped[List["Training"]] = relationship(
-        "backend.models.trainings.Training",
+        "models.trainings.Training",
         back_populates="creator"
     )

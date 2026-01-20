@@ -2,7 +2,7 @@
 from typing import List, Optional
 from sqlalchemy import select, func, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
-from backend.models.trainings import Tags, Training, training_tags
+from models.trainings import Tags, Training, training_tags
 
 
 class TagsRepository:
@@ -102,7 +102,7 @@ class TagsRepository:
     ) -> List[Training]:
         """Получение тренингов по тегу"""
         from sqlalchemy.orm import selectinload, joinedload
-        from backend.models.trainings import TrainingStep
+        from models.trainings import TrainingStep
 
         query = (
             select(Training)

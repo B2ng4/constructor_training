@@ -6,9 +6,9 @@ from contextlib import asynccontextmanager
 
 from starlette.responses import HTMLResponse
 
-from backend.core.database import get_async_session
-from backend.repositories.users_repository import UserRepository
-from backend.scripts.create_user import create_test_user
+from core.database import get_async_session
+from repositories.users_repository import UserRepository
+from scripts.create_user import create_test_user
 
 
 async def create_initial_user():

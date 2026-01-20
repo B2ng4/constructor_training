@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query, Path, Body
 from pydantic import BaseModel
 from sqlalchemy.exc import IntegrityError
 
-from backend.models.users import User
+from models.users import User
 
 # Generic типы
 ModelType = TypeVar("ModelType")

@@ -1,9 +1,9 @@
 # routing/levels_router.py
-from backend.routing.base_router import BaseRouter
-from backend.repositories.levels_repository import LevelsRepository
-from backend.depends import get_levels_repository, get_current_user
-from backend.models.trainings import Levels
-from backend.schemas.levels import LevelResponse, LevelCreate, LevelUpdate
+from routing.base_router import BaseRouter
+from repositories.levels_repository import LevelsRepository
+from depends import get_levels_repository, get_current_user
+from models.trainings import Levels
+from schemas.levels import LevelResponse, LevelCreate, LevelUpdate
 
 
 class LevelsRouter(BaseRouter[Levels, LevelCreate, LevelUpdate, LevelResponse, LevelsRepository]):

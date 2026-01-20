@@ -3,9 +3,9 @@ from typing import List, Optional, Dict, Any, Union
 from pydantic import BaseModel, UUID4, Field, field_validator
 from uuid import UUID
 
-from backend.schemas.actions import ActionTypeResponse
-from backend.schemas.levels import LevelResponse
-from backend.schemas.tags import TagResponse
+from schemas.actions import ActionTypeResponse
+from schemas.levels import LevelResponse
+from schemas.tags import TagResponse
 
 
 # === Модели для TrainingStep ===
@@ -37,11 +37,9 @@ class TrainingStepUpdate(BaseModel):
     steps: Optional[List[Union['TrainingStepCreate', 'TrainingStepUpdate']]] = Field(default_factory=list)
 
 
-# ✅ БЕЗ steps в Response!
 class TrainingStepResponse(TrainingStepBase):
     id: int
     action_type: Optional[ActionTypeResponse] = None
-    # ❌ УБРАЛИ steps отсюда!
 
     class Config:
         from_attributes = True
@@ -50,8 +48,6 @@ class TrainingStepResponse(TrainingStepBase):
 TrainingStepCreate.model_rebuild()
 TrainingStepUpdate.model_rebuild()
 
-
-# === Модели для Training ===
 
 class TrainingBase(BaseModel):
     title: str
@@ -105,7 +101,6 @@ class TrainingUpdate(BaseModel):
         from_attributes = True
 
 
-# ✅ Для списка тренингов - БЕЗ steps
 class TrainingListResponse(BaseModel):
     """
     Упрощенная модель для списка тренингов (БЕЗ шагов)
@@ -126,7 +121,6 @@ class TrainingListResponse(BaseModel):
         from_attributes = True
 
 
-# ✅ Для детального просмотра - со СПИСКОМШАГОВ (без вложенности)
 class TrainingResponse(BaseModel):
     """
     Полная модель тренинга с шагами (БЕЗ вложенных подшагов в response)
@@ -148,6 +142,8 @@ class TrainingResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
 
 
 class TrainingStepResponseWithId(TrainingStepResponse):

@@ -1,8 +1,8 @@
 # repositories/levels_repository.py
 from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from backend.models.trainings import TypesAction
-from backend.repositories.base_repository import BaseRepository
+from models.trainings import TypesAction
+from repositories.base_repository import BaseRepository
 
 
 class ActionsRepository(BaseRepository[TypesAction]):

@@ -3,11 +3,11 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.exc import IntegrityError
 
-from backend.schemas.tags import TagCreate, TagUpdate, TagResponse, TagWithTrainingsCount
-from backend.schemas.trainings import TrainingListResponse
-from backend.repositories.tags_repository import TagsRepository
-from backend.depends import get_tags_repository, get_current_user
-from backend.models.users import User
+from schemas.tags import TagCreate, TagUpdate, TagResponse, TagWithTrainingsCount
+from schemas.trainings import TrainingListResponse
+from repositories.tags_repository import TagsRepository
+from depends import get_tags_repository, get_current_user
+from models.users import User
 
 router = APIRouter(prefix="/tags", tags=["Теги"])
 

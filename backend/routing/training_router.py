@@ -4,15 +4,16 @@ from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, status
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import UUID4
 
-from backend.depends import get_trainings_service, get_s3_service, get_user_service
+from depends import get_trainings_service, get_s3_service, get_user_service
 from starlette import status
-from backend.services.trainings_service import TrainingsService
-from backend.services.external_services.s3_service import S3Service
-from backend.schemas.trainings import TrainingResponse, TrainingUpdate, TrainingCreate
-from backend.services.user_service import UserService
+from services.trainings_service import TrainingsService
+from services.external_services.s3_service import S3Service
+from schemas.trainings import TrainingResponse, TrainingUpdate, TrainingCreate
+from services.user_service import UserService
 
-from backend.schemas.trainings import TrainingStepResponse, TrainingStepCreate, StepBulkCreateRequest, \
+from schemas.trainings import TrainingStepResponse, TrainingStepCreate, StepBulkCreateRequest, \
     TrainingStepUpdate
+
 
 router = APIRouter(prefix="/training", tags=["Тренинги"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
@@ -174,49 +175,47 @@ async def add_steps_bulk(
 
 
 
-@router.patch("/steps/{step_id}",
-              response_model=TrainingStepResponse,
-              name="Обновление шага")
-async def update_step(
+@router.patch(
+    "/{training_uuid}/steps/{step_id}",
+    response_model=TrainingStepResponse,
+    summary="Обновить шаг тренинга"
+)
+async def update_training_step(
+    training_uuid: UUID4,
     step_id: int,
     step_data: TrainingStepUpdate,
-    token: str = Depends(oauth2_scheme),
-    service: TrainingsService = Depends(get_trainings_service),
-    user_service: UserService = Depends(get_user_service),
+    service: TrainingsService = Depends(get_trainings_service)
 ):
-    """Обновление одного шага тренинга"""
-    user = await user_service.get_current_user(token)
-    updated_step = await service.update_step(step_id, step_data)
-    return updated_step
+    """Обновление шага по UUID тренинга и ID шага"""
+    return await service.update_step(training_uuid, step_id, step_data)
 
 
-@router.delete("/steps/{step_id}", name="Удаление шага")
-async def delete_step(
+@router.delete(
+    "/{training_uuid}/steps/{step_id}",
+    summary="Удалить шаг тренинга"
+)
+async def delete_training_step(
+    training_uuid: UUID4,
     step_id: int,
-    token: str = Depends(oauth2_scheme),
-    service: TrainingsService = Depends(get_trainings_service),
-    user_service: UserService = Depends(get_user_service),
+    service: TrainingsService = Depends(get_trainings_service)
 ):
-    """Удаление одного шага тренинга"""
-    user = await user_service.get_current_user(token)
-    await service.delete_step(step_id)
-    return {"detail": "Шаг успешно удален", "step_id": step_id}
+    """Удаление шага по UUID тренинга и ID шага"""
+    await service.delete_step(training_uuid, step_id)
+    return {"message": f"Шаг {step_id} успешно удалён"}
 
 
-@router.delete("/steps/bulk", name="Массовое удаление шагов")
-async def delete_steps_bulk(
+@router.delete(
+    "/{training_uuid}/steps",
+    summary="Массовое удаление шагов"
+)
+async def delete_training_steps_bulk(
+    training_uuid: UUID4,
     step_ids: List[int],
-    token: str = Depends(oauth2_scheme),
-    service: TrainingsService = Depends(get_trainings_service),
-    user_service: UserService = Depends(get_user_service),
+    service: TrainingsService = Depends(get_trainings_service)
 ):
-    """Массовое удаление шагов тренинга"""
-    user = await user_service.get_current_user(token)
-    result = await service.delete_steps_bulk(step_ids)
-    return {
-        "detail": "Операция удаления завершена",
-        **result
-    }
+    """Массовое удаление шагов по UUID тренинга и списку ID"""
+    result = await service.delete_steps_bulk(training_uuid, step_ids)
+    return result
 
 
 @router.get("/{training_uuid}/steps",

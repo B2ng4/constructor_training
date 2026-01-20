@@ -1,10 +1,10 @@
 # routing/levels_router.py
-from backend.routing.base_router import BaseRouter
-from backend.depends import get_current_user, get_actions_repository
-from backend.models.trainings import TypesAction
+from routing.base_router import BaseRouter
+from depends import get_current_user, get_actions_repository
+from models.trainings import TypesAction
 
-from backend.repositories.actions_repository import ActionsRepository
-from backend.schemas.actions import ActionResponse, ActionCreate, ActionUpdate
+from repositories.actions_repository import ActionsRepository
+from schemas.actions import ActionResponse, ActionCreate, ActionUpdate
 
 
 class ActionsRouter(BaseRouter[TypesAction, ActionCreate, ActionUpdate, ActionResponse, ActionsRepository]):

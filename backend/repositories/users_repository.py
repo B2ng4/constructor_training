@@ -1,8 +1,8 @@
 from sqlalchemy import func
 
-from backend.models.users import User
-from backend.schemas.users import UserRegister
-from backend.utils.security import get_password_hash
+from models.users import User
+from schemas.users import UserRegister
+from utils.security import get_password_hash
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
 from sqlalchemy.future import select

@@ -7,7 +7,7 @@ from pydantic import UUID4
 from sqlalchemy import ForeignKey, JSON, Enum, text, func, Table, Column, Integer
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from backend.core.database import Base
+from core.database import Base
 import sqlalchemy as sa
 
 # ==========================================================================
@@ -73,29 +73,29 @@ class Training(Base):
     )
 
     creator: Mapped["User"] = relationship(
-        "backend.models.users.User",
+        "models.users.User",
         back_populates="created_trainings",
         lazy="selectin"  # ✅ ИЗМЕНЕНО
     )
 
     steps: Mapped[List["TrainingStep"]] = relationship(
-        "backend.models.trainings.TrainingStep",
+        "models.trainings.TrainingStep",
         back_populates="training",
-        order_by="backend.models.trainings.TrainingStep.id",
+        order_by="models.trainings.TrainingStep.id",
         cascade="all, delete-orphan",
         lazy="selectin",  # ✅ ИЗМЕНЕНО с joined на selectin
         passive_deletes=True
     )
 
     level: Mapped[Optional["Levels"]] = relationship(
-        "backend.models.trainings.Levels",
+        "models.trainings.Levels",
         back_populates="trainings",
         foreign_keys=[level_id],
         lazy="selectin"  # ✅ ДОБАВЛЕНО
     )
 
     tags: Mapped[List["Tags"]] = relationship(
-        "backend.models.trainings.Tags",
+        "models.trainings.Tags",
         secondary=training_tags,
         back_populates="trainings",
         lazy="selectin"  # ✅ ДОБАВЛЕНО
@@ -132,19 +132,19 @@ class TrainingStep(Base):
     image_url: Mapped[Optional[str]] = mapped_column(sa.Text)
 
     training: Mapped["Training"] = relationship(
-        "backend.models.trainings.Training",
+        "models.trainings.Training",
         back_populates="steps",
         lazy="selectin"  # ✅ ДОБАВЛЕНО
     )
 
     action_type: Mapped[Optional["TypesAction"]] = relationship(
-        "backend.models.trainings.TypesAction",
+        "models.trainings.TypesAction",
         back_populates="steps",
         lazy="selectin"  # ✅ ДОБАВЛЕНО - КРИТИЧНО!
     )
 
     steps: Mapped[List["TrainingStep"]] = relationship(
-        "backend.models.trainings.TrainingStep",
+        "models.trainings.TrainingStep",
         back_populates="parent_step",
         cascade="all, delete-orphan",
         lazy="selectin",  # ✅ ИЗМЕНЕНО с joined на selectin - КРИТИЧНО!
@@ -152,7 +152,7 @@ class TrainingStep(Base):
     )
 
     parent_step: Mapped[Optional["TrainingStep"]] = relationship(
-        "backend.models.trainings.TrainingStep",
+        "models.trainings.TrainingStep",
         back_populates="steps",
         remote_side=[id],
         foreign_keys=[parent_step_id],
@@ -170,7 +170,7 @@ class TypesAction(Base):
     label: Mapped[Optional[str]] = mapped_column(sa.String(50), unique=True)
 
     steps: Mapped[List["TrainingStep"]] = relationship(
-        "backend.models.trainings.TrainingStep",
+        "models.trainings.TrainingStep",
         back_populates="action_type",
         lazy="selectin"
     )
@@ -186,7 +186,7 @@ class Tags(Base):
     label: Mapped[str] = mapped_column(sa.String(50), unique=True, nullable=False)
 
     trainings: Mapped[List["Training"]] = relationship(
-        "backend.models.trainings.Training",
+        "models.trainings.Training",
         secondary=training_tags,
         back_populates="tags",
         lazy="selectin"
@@ -203,7 +203,7 @@ class Levels(Base):
     label: Mapped[str] = mapped_column(sa.String(50), unique=True, nullable=False)
 
     trainings: Mapped[List["Training"]] = relationship(
-        "backend.models.trainings.Training",
+        "models.trainings.Training",
         back_populates="level",
         lazy="selectin"
     )

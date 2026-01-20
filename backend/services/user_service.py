@@ -3,15 +3,15 @@ from fastapi import HTTPException, status, BackgroundTasks
 from typing import Optional
 from jose import jwt
 from pydantic import EmailStr
-from backend.schemas.users import UserRegister, UserLogin, User, UserResponse
-from backend.repositories.users_repository import UserRepository
-from backend.utils.security import verify_password, get_password_hash, create_access_token
-from backend.schemas import mail
+from schemas.users import UserRegister, UserLogin, User, UserResponse
+from repositories.users_repository import UserRepository
+from utils.security import verify_password, get_password_hash, create_access_token
+from schemas import mail
 from sqlalchemy.ext.asyncio import AsyncSession
-from backend.core.config import configs
-from backend.schemas.mail import mail_send
-from backend.services.external_services.mail_service import EmailService
-from backend.utils.security import create_access_token, decode_access_token
+from core.config import configs
+from schemas.mail import mail_send
+from services.external_services.mail_service import EmailService
+from utils.security import create_access_token, decode_access_token
 
 
 class UserService:
