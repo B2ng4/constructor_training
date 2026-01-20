@@ -1,5 +1,5 @@
 <template>
-	<h6 class="q-ma-none q-mb-lg">Загруженные изображения</h6>
+	<h6 class="q-ma-none q-mb-lg" v-if="title">Загруженные изображения</h6>
 	<q-list padding>
 		<q-item
 			clickable
@@ -29,7 +29,7 @@
 import { ModalPreview } from "@components/for_pages/EditPage/UploaderPhoto";
 import { ref } from "vue";
 
-const props = defineProps(["images"]);
+const props = defineProps(["images", "title"]);
 const emit = defineEmits(["deleteImage"]);
 
 const selectedImage = ref(null);

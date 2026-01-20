@@ -7,7 +7,7 @@
 					@download-photos="downloadPhotos"
 					v-if="images.length === 0"
 				/>
-				<photo-list v-else @delete-image="deleteImage" :images="images"/>
+				<photo-list v-else @delete-image="deleteImage" :images="images" :title="true"/>
 			</q-card-section>
 		</q-card>
 		<q-btn v-if="images.length > 0" class="q-mt-lg" color="primary" @click="uploadImages">Загрузить</q-btn>
@@ -37,9 +37,9 @@ const downloadPhotos = (event) => {
 			url: URL.createObjectURL(item),
 			size: item.size,
 			originalFile: item,
-		}
+		};
 	});
-}
+};
 
 const deleteImage = (id) => {
 	images.value = images.value.filter((el) => {
@@ -58,5 +58,5 @@ const uploadImages = async () => {
 	} catch {
 		alert('Error');
 	}
-}
+};
 </script>

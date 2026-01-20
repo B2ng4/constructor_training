@@ -5,31 +5,12 @@
 				<div class="text-h6">Создать шаг</div>
 			</q-card-section>
 			<q-card-section class="flex column q-gutter-md">
-				<q-input dense v-model="step.name" autofocus />
-				<q-toggle
-					class="q-ml-none"
-					label="Вложенные шаги"
-					size="lg"
-					v-model="childSteps.status"
-				/>
-				<div class="flex column" v-if="childSteps.status">
-					<q-input v-for="el in childSteps.steps" v-model="el.meta.name" :key="el.step_number" />
-					<q-btn
-						class="q-mt-lg"
-						flat
-						label="Добавить"
-						@click="
-							childSteps.steps.push({
-								step_number: childSteps.steps.length + 1,
-								meta: { name: 'Шаг без названия' },
-							})
-						"
-					/>
-				</div>
+				<photo-list @delete-image="deleteImage" :images="images" :title="false"/>
+				<q-btn flat color="primary" @click="addPhoto">Добавить изображение</q-btn>
 			</q-card-section>
 			<q-card-actions align="right" class="text-primary">
 				<q-btn flat label="Отмена" v-close-popup />
-				<q-btn flat label="Создать" @click="addStep" />
+				<q-btn flat label="Создать" @click="addSteps" />
 			</q-card-actions>
 		</q-card>
 	</q-dialog>
@@ -37,38 +18,55 @@
 
 <script setup>
 import { useRoute } from "vue-router";
-import { TrainingApi } from "@api/api/TrainingApi.js";
+import { MetaTrainingApi } from "@api/api/MetaTrainingApi.js";
 import { ref } from "vue";
-import { useTrainingData } from "@store/editTraining.js";
+import { PhotoList } from "@components/for_pages/EditPage/UploaderPhoto";
 
 const value = defineModel();
 const route = useRoute();
-const api = new TrainingApi();
-const store = useTrainingData();
+const api = new MetaTrainingApi();
+const images = ref([]);
 
-const props = defineProps({
-	stepCount: Number,
-});
+const addPhoto = () => {
+	const input = document.createElement('input');
+	input.type = 'file';
+	input.multiple = true;
+	input.accept = 'image/*';
 
-const step = ref({ name: "Шаг без названия" });
-const childSteps = ref({
-	steps: [],
-	status: false,
-});
+	input.onchange = (event) => {
+		const files = event.target.files;
+		if (!files || files.length === 0) return;
 
-async function addStep() {
+		const newImages = Array.from(files).map((file, index) => ({
+			id: Date.now() + index,
+			name: file.name,
+			url: URL.createObjectURL(file),
+			size: file.size,
+			originalFile: file,
+		}));
+
+		images.value = [...images.value, ...newImages];
+	};
+	input.click();
+};
+
+const deleteImage = (id) => {
+	images.value = images.value.filter((el) => {
+		return el.id !== id;
+	});
+};
+
+const addSteps = async () => {
 	try {
-		let payload = {
-			step_number: props.stepCount + 1,
-			meta: step.value,
-			steps: childSteps.value.steps,
-		};
-		const response = await api.addStep(route.params.uuid, payload);
+		let formData = new FormData();
+		images.value.forEach((el) => {
+			formData.append('files', el.originalFile);
+		});
+		await api.uploadImages(route.params.uuid, formData);
+		images.value = [];
 		value.value = false;
-		store.addStep(response.data);
-	} catch (e) {
-		console.error(e);
-		alert("Ошибка добавления нового шага");
+	} catch {
+			alert('Error');
 	}
-}
+};
 </script>

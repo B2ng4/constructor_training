@@ -2,13 +2,11 @@ import axios from "axios";
 
 export class BaseApi {
 	_baseUrl = "";
-	_sourceDomain = "";
 	_sourceUrl = "";
 	_httpMethod = "";
 	_data = {};
 	_params = {};
 	_axiosInstance = null;
-	_typeContent = null;
 	_headers = {};
 
 	constructor(baseUrl) {
@@ -61,14 +59,6 @@ export class BaseApi {
 
 	get axiosInstance() {
 		return this._axiosInstance;
-	}
-
-	set sourceDomain(domain) {
-		this._sourceDomain = domain;
-	}
-
-	get sourceDomain() {
-		return this._sourceDomain;
 	}
 
 	get headers() {

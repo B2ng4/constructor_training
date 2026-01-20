@@ -1,5 +1,5 @@
 <template>
-	<div class="cursor-pointer absolute q-ma-lg card shadow-7">
+	<div class="cursor-pointer absolute q-ma-lg card shadow-2">
 		<h6 class="q-ma-none">
 			{{ store.selectedStep.meta.name }}
 		</h6>

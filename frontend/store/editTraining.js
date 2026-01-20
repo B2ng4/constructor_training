@@ -13,7 +13,9 @@ export const useTrainingData = defineStore("training", () => {
 
 	function setSteps(newSteps) {
 		steps.value = newSteps;
-		selectStep(steps.value[0]);
+		if (steps.value.length > 0) {
+			selectStep(steps.value[0]);
+		}
 	}
 
 	function addStep(newStep) {

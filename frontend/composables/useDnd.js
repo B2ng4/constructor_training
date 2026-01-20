@@ -11,7 +11,7 @@ export default function useDnd() {
 				url: URL.createObjectURL(item),
 				size: item.size,
 				originalFile: item,
-			}
+			};
 		});
 	};
 

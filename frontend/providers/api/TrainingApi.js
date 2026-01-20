@@ -39,7 +39,7 @@ export class TrainingApi extends BaseApi {
 	async updateTraining(uuid, payload) {
 		try {
 			super.httpMethod = 'patch';
-			super.sourceUrl = `/training/${uuid}`
+			super.sourceUrl = `/training/${uuid}`;
 			super.data = payload;
 			return super.createRequest();
 		} catch (e) {
@@ -51,17 +51,6 @@ export class TrainingApi extends BaseApi {
 		try {
 			super.httpMethod = 'get';
 			super.sourceUrl = `/training/${uuid}`;
-			return super.createRequest();
-		} catch (e) {
-			throw new Error(e);
-		}
-	}
-
-	async addStep(uuid, payload) {
-		try {
-			super.httpMethod = 'post';
-			super.sourceUrl = `/training/${uuid}/steps`;
-			super.data = payload;
 			return super.createRequest();
 		} catch (e) {
 			throw new Error(e);

@@ -1,18 +1,18 @@
 <template>
 	<base-loader size="100px" v-model="loadingStatus" />
-	<div v-if="!loadingStatus">
-		<group-steps  />
-		<step-title  />
+	<template v-if="!loadingStatus">
+		<group-steps v-if="store.steps"/>
+		<step-title />
 		<div v-if="store.selectedStep?.image_url">
 			<tool-bar @select-event="flowComponent?.createNode"/>
 			<vue-flow-component ref="flowComponent"  />
 		</div>
-		<upload-photo
-			@upload-photo="getTrainingData"
-			class="absolute-center"
-			v-else
-		/>
-	</div>
+	</template>
+	<upload-photo
+		@upload-photo="getTrainingData"
+		class="absolute-center"
+		v-if="store.selectedStep === null"
+	/>
 </template>
 
 <script setup>
@@ -38,8 +38,7 @@ const loadingStatus = ref(true);
 async function getTrainingData() {
 	try {
 		loadingStatus.value = true;
-		let response = await trainingApi.getTrainingByUuid(route.params.uuid);
-		store.setTrainingData(response.data);
+		store.setTrainingData((await trainingApi.getTrainingByUuid(route.params.uuid)).data);
 	} catch {
 		alert("Данные тренинга не найдены");
 	} finally {

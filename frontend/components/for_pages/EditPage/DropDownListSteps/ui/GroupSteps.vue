@@ -6,11 +6,11 @@
 		color="primary"
 	>
 		<div class="q-pa-xs step-group column">
-			<GroupStepsTreeSteps />
-			<q-btn class="q-mt-md" @click="modal = !modal" label="Добавить шаг" />
+			<GroupStepsTreeSteps v-if="steps.length > 0" class="q-mb-md"/>
+			<q-btn unelevated no-caps @click="modal = !modal" label="Добавить шаг" />
 		</div>
 	</q-btn-dropdown>
-	<ModalCreateStep :step-count="steps.length" v-model="modal" />
+	<ModalCreateStep v-model="modal" />
 </template>
 
 <script setup>

@@ -9,7 +9,7 @@ export default defineConfig({
     quasar(),
   ],
   define: {
-    __BASE__URL__: JSON.stringify('https://shyly-excelling-marlin.cloudpub.ru'),
+    __BASE__URL__: JSON.stringify('http://localhost:8002'),
   },
   resolve: {
     alias: {

@@ -5,6 +5,6 @@
 </template>
 
 <script setup>
-const props = defineProps(['size']);
+defineProps(['size']);
 const model = defineModel();
 </script>

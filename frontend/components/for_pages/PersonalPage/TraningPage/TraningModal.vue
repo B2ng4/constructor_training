@@ -8,14 +8,14 @@
 				<q-btn icon="close" flat round dense v-close-popup />
 			</q-card-section>
 			<q-card-section>
-				<q-input color="secondary" filled v-model="dataTraining.title" label="Название" />
+				<q-input color="primary" filled v-model="dataTraining.title" label="Название" />
 				<q-input
 					v-model="dataTraining.description"
 					filled
 					class="q-mt-md"
 					label="Описание"
 					type="textarea"
-					color="secondary"
+					color="primary"
 				/>
 				<q-select
 					class="q-mt-md"
@@ -26,7 +26,7 @@
 					use-chips
 					emit-value
 					map-options
-					color="secondary"
+					color="primary"
 					label="Теги"
 				/>
 				<div class="q-mt-md row q-gutter-xs no-wrap">
@@ -35,13 +35,13 @@
 						type="number"
 						label="Количество недель"
 						class="col"
-						color="secondary"
+						color="primary"
 						filled/>
 					<q-select
 						v-model="dataTraining.level_id"
 						label="Уровень подготовки"
 						class="col"
-						color="secondary"
+						color="primary"
 						emit-value
 						map-options
 						filled
@@ -49,7 +49,7 @@
 				</div>
 			</q-card-section>
 			<q-card-actions align="right" class="row justify-center">
-				<q-btn flat class="fit" label="Создать" color="secondary" @click="createTraining" />
+				<q-btn flat class="fit" label="Создать" color="primary" @click="createTraining" />
 			</q-card-actions>
 		</q-card>
 	</q-dialog>
@@ -62,7 +62,7 @@
 			label="Создать"
 			@click="openModal"
 		/>
-		<q-input dense color="secondary" filled v-model="text" label="Поиск" />
+		<q-input dense color="primary" filled v-model="text" label="Поиск" />
 	</div>
 </template>
 
@@ -92,18 +92,15 @@ async function createTraining() {
 
 async function openModal() {
 	showModal.value = !showModal.value;
-	getMetaData();
+	await getMetaData();
 }
 
 async function getMetaData() {
 	try {
-		let tags = await metaApi.getTags();
-		listTags.value = tags.data;
-
-		let levels = await metaApi.getLevels();
-		levelList.value = levels.data;
+		listTags.value = (await metaApi.getTags()).data;
+		levelList.value = (await metaApi.getLevels()).data;
 	} catch {
-		alert(0)
+		console.error('Ошибка получения метаданных');
 	}
 }
 </script>
