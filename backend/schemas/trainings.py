@@ -1,9 +1,11 @@
+# Файл: schemas/trainings.py
+
 from datetime import datetime
 from typing import List, Optional, Dict, Any, Union
 from pydantic import BaseModel, UUID4, Field, field_validator
 from uuid import UUID
 
-from schemas.actions import ActionTypeResponse
+from schemas.actions import ActionResponse
 from schemas.levels import LevelResponse
 from schemas.tags import TagResponse
 
@@ -39,7 +41,7 @@ class TrainingStepUpdate(BaseModel):
 
 class TrainingStepResponse(TrainingStepBase):
     id: int
-    action_type: Optional[ActionTypeResponse] = None
+    action_type: Optional[ActionResponse] = None
 
     class Config:
         from_attributes = True
@@ -159,3 +161,14 @@ class StepBulkCreateRequest(BaseModel):
 class StepBulkUpdateRequest(BaseModel):
     """Запрос для массового обновления шагов"""
     steps: List[TrainingStepUpdate]
+
+
+class StepOrderUpdate(BaseModel):
+    """Модель для обновления номера шага."""
+    id: int = Field(..., description="ID шага")
+    step_number: int = Field(..., description="Новый порядковый номер шага")
+
+
+class StepsReorderRequest(BaseModel):
+    """Запрос на обновление порядка шагов."""
+    steps: List[StepOrderUpdate]

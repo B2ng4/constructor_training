@@ -11,7 +11,7 @@ from schemas.trainings import (
     TrainingUpdate,
     TrainingStepCreate,
     TrainingStepUpdate,
-    TrainingStepResponse, TrainingListResponse
+    TrainingStepResponse, TrainingListResponse, StepOrderUpdate
 )
 
 from models.trainings import Training, TrainingStep, TypesAction, Tags
@@ -419,4 +419,51 @@ class TrainingsService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Ошибка удаления шагов: {str(e)}"
+            )
+
+        # +++ НАЧАЛО НОВОГО КОДА +++
+
+    async def reorder_steps(
+            self,
+            training_uuid: UUID4,
+            steps_order: List[StepOrderUpdate]
+    ) -> Dict[str, Any]:
+        """Обновление порядка шагов в тренинге."""
+        try:
+            training_exists = await self.repo.check_training_exists(training_uuid)
+            if not training_exists:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Тренинг с UUID {training_uuid} не найден"
+                )
+
+            if not steps_order:
+                return {"updated_count": 0, "total_requested": 0}
+            step_ids_to_update = [step.id for step in steps_order]
+            validated_steps_count = await self.repo.count_steps_in_training(
+                training_uuid, step_ids_to_update
+            )
+            if validated_steps_count != len(step_ids_to_update):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Один или несколько ID шагов не принадлежат указанному тренингу."
+                )
+            steps_to_update_dict = [step.model_dump() for step in steps_order]
+            updated_count = await self.repo.bulk_update_step_numbers(steps_to_update_dict)
+
+            await self.session.commit()
+
+            return {
+                "обновденл шагов": updated_count,
+                "всего": len(steps_order)
+            }
+
+        except HTTPException:
+            await self.session.rollback()
+            raise
+        except Exception as e:
+            await self.session.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Ошибка обновления порядка шагов: {str(e)}"
             )

@@ -11,12 +11,12 @@ class ActionsRepository(BaseRepository[TypesAction]):
     """
 
     def __init__(self, session: AsyncSession):
-        super().__init__(model=TypesAction, session=session, pk_field="value")
+        super().__init__(model=TypesAction, session=session, pk_field="id")
 
-    async def get_by_label(self, label: str) -> Optional[TypesAction]:
+    async def get_by_id(self, id: str) -> Optional[TypesAction]:
         """Получение действия по названию"""
         from sqlalchemy import select
 
-        query = select(TypesAction).where(TypesAction.label == label)
+        query = select(TypesAction).where(TypesAction.id == id)
         result = await self.session.execute(query)
         return result.scalar_one_or_none()

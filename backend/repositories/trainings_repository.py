@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 
 from pydantic import UUID4
 from sqlalchemy.orm import selectinload, joinedload
@@ -210,6 +210,8 @@ class TrainingRepository:
         """Получение типа шага тренинга по его id"""
         return await self.session.get(TypesAction, action_type_id)
 
+
+
     async def create_steps_from_photos(
             self,
             training_uuid: UUID4,
@@ -240,11 +242,13 @@ class TrainingRepository:
         await self.session.flush()
         return created_steps_info
 
+
     async def check_training_exists(self, training_uuid: UUID4) -> bool:
         """Проверка существования тренинга по uuid"""
         query = select(exists().where(Training.uuid == training_uuid))
         result = await self.session.execute(query)
         return result.scalar_one()
+
 
     async def get_step_by_id(self, step_id: int) -> Optional[TrainingStep]:
         """Получение шага по ID с загрузкой relationships"""
@@ -255,6 +259,7 @@ class TrainingRepository:
         )
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
+
 
     async def get_step_by_id_and_training(
             self,
@@ -269,3 +274,32 @@ class TrainingRepository:
 
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
+
+
+    async def count_steps_in_training(self, training_uuid: UUID4, step_ids: List[int]) -> int:
+        """Подсчет количества шагов из списка, принадлежащих тренингу."""
+        if not step_ids:
+            return 0
+        query = (
+            select(func.count(TrainingStep.id))
+            .where(
+                TrainingStep.training_uuid == training_uuid,
+                TrainingStep.id.in_(step_ids)
+            )
+        )
+        result = await self.session.execute(query)
+        return result.scalar_one()
+
+    async def bulk_update_step_numbers(self, steps_data: List[Dict[str, Any]]) -> int:
+        """
+        Массовое обновление step_number для списка шагов.
+        """
+        if not steps_data:
+            return 0
+
+        await self.session.execute(
+            update(TrainingStep),
+            steps_data
+        )
+        await self.session.flush()
+        return len(steps_data)

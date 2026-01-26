@@ -75,7 +75,7 @@ class Training(Base):
     creator: Mapped["User"] = relationship(
         "models.users.User",
         back_populates="created_trainings",
-        lazy="selectin"  # ✅ ИЗМЕНЕНО
+        lazy="selectin"
     )
 
     steps: Mapped[List["TrainingStep"]] = relationship(
@@ -83,7 +83,7 @@ class Training(Base):
         back_populates="training",
         order_by="models.trainings.TrainingStep.id",
         cascade="all, delete-orphan",
-        lazy="selectin",  # ✅ ИЗМЕНЕНО с joined на selectin
+        lazy="selectin",
         passive_deletes=True
     )
 
@@ -91,14 +91,14 @@ class Training(Base):
         "models.trainings.Levels",
         back_populates="trainings",
         foreign_keys=[level_id],
-        lazy="selectin"  # ✅ ДОБАВЛЕНО
+        lazy="selectin"
     )
 
     tags: Mapped[List["Tags"]] = relationship(
         "models.trainings.Tags",
         secondary=training_tags,
         back_populates="trainings",
-        lazy="selectin"  # ✅ ДОБАВЛЕНО
+        lazy="selectin"
     )
 
 
@@ -117,7 +117,7 @@ class TrainingStep(Base):
 
     step_number: Mapped[int] = mapped_column(sa.Integer)
     action_type_id: Mapped[Optional[int]] = mapped_column(
-        ForeignKey("typesactions.value", ondelete="SET NULL")
+        ForeignKey("typesactions.id", ondelete="SET NULL")
     )
 
     parent_step_id: Mapped[Optional[int]] = mapped_column(
@@ -134,20 +134,20 @@ class TrainingStep(Base):
     training: Mapped["Training"] = relationship(
         "models.trainings.Training",
         back_populates="steps",
-        lazy="selectin"  # ✅ ДОБАВЛЕНО
+        lazy="selectin"
     )
 
     action_type: Mapped[Optional["TypesAction"]] = relationship(
         "models.trainings.TypesAction",
         back_populates="steps",
-        lazy="selectin"  # ✅ ДОБАВЛЕНО - КРИТИЧНО!
+        lazy="selectin"
     )
 
     steps: Mapped[List["TrainingStep"]] = relationship(
         "models.trainings.TrainingStep",
         back_populates="parent_step",
         cascade="all, delete-orphan",
-        lazy="selectin",  # ✅ ИЗМЕНЕНО с joined на selectin - КРИТИЧНО!
+        lazy="selectin",
         foreign_keys=[parent_step_id]
     )
 
@@ -156,7 +156,7 @@ class TrainingStep(Base):
         back_populates="steps",
         remote_side=[id],
         foreign_keys=[parent_step_id],
-        lazy="selectin"  # ✅ ДОБАВЛЕНО
+        lazy="selectin"
     )
 
 
@@ -165,9 +165,10 @@ class TypesAction(Base):
     Таблица типов шагов тренинга
     """
     __tablename__ = "typesactions"
-
-    value: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    label: Mapped[Optional[str]] = mapped_column(sa.String(50), unique=True)
+    id:Mapped[int] = mapped_column(primary_key=True)
+    type: Mapped[str] = mapped_column()
+    name: Mapped[Optional[str]]
+    meta: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
 
     steps: Mapped[List["TrainingStep"]] = relationship(
         "models.trainings.TrainingStep",

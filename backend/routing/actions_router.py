@@ -21,12 +21,11 @@ class ActionsRouter(BaseRouter[TypesAction, ActionCreate, ActionUpdate, ActionRe
             update_schema=ActionUpdate,
             entity_name="Действие",
             entity_name_plural="Действия",
-            pk_name="value",
-            pk_description="ID действия (value)"
+            pk_name="id",
         )
 
     def _get_order_by(self) -> str:
-        return "value"
+        return "id"
 
 
 Actions_router_instance = ActionsRouter()

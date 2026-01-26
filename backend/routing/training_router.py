@@ -8,7 +8,8 @@ from depends import get_trainings_service, get_s3_service, get_user_service
 from starlette import status
 from services.trainings_service import TrainingsService
 from services.external_services.s3_service import S3Service
-from schemas.trainings import TrainingResponse, TrainingUpdate, TrainingCreate, TrainingListResponse
+from schemas.trainings import TrainingResponse, TrainingUpdate, TrainingCreate, TrainingListResponse, \
+    StepsReorderRequest
 from services.user_service import UserService
 
 from schemas.trainings import TrainingStepResponse, TrainingStepCreate, StepBulkCreateRequest, \
@@ -173,6 +174,29 @@ async def add_steps_bulk(
 
 
 @router.patch(
+    "/{training_uuid}/steps/reorder",
+    summary="Обновить порядок шагов в тренинге",
+    name="Обновление порядка шагов"
+)
+async def reorder_training_steps(
+    training_uuid: UUID4,
+    request: StepsReorderRequest,
+    service: TrainingsService = Depends(get_trainings_service),
+    token: str = Depends(oauth2_scheme)
+):
+    """
+    Эндпойнт для массового обновления порядковых номеров (step_number)
+    шагов в тренинге.
+    """
+    result = await service.reorder_steps(training_uuid, request.steps)
+    return {
+        "status": "success",
+        "detail": "Порядок шагов успешно обновлен",
+        "data": result
+    }
+
+
+@router.patch(
     "/{training_uuid}/steps/{step_id}",
     response_model=TrainingStepResponse,
     summary="Обновить шаг тренинга"
@@ -225,5 +249,4 @@ async def get_training_steps(
     """Получение всех шагов тренинга"""
     steps = await service.get_training_steps(training_uuid)
     return [TrainingStepResponse.model_validate(step) for step in steps]
-
 

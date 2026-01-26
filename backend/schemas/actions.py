@@ -1,33 +1,41 @@
-# schemas/levels.py
-from pydantic import BaseModel, Field
-from typing import Optional
+# schemas/actions.py
 
+from pydantic import BaseModel
+from typing import Optional, Dict, Any
 
 class ActionBase(BaseModel):
-    """Базовая схема Действия"""
-    label: str = Field(..., description="Название действия")
+    """
+    Базовая схема, содержащая общие поля для создания и ответа.
+    """
+    type: Optional[str]
+    name: Optional[str] = None
+    meta: Optional[Dict[str, Any]] = None
 
 
 class ActionCreate(ActionBase):
-    """Схема для создания действия"""
+    """
+    Схема для создания нового действия.
+    Наследует все поля от ActionBase.
+    """
     pass
 
 
 class ActionUpdate(BaseModel):
-    """Схема для обновления уровня"""
-    label: Optional[str] = Field(None, description="Новое название действия")
+    """
+    Схема для частичного обновления действия (PATCH).
+    Все поля опциональны.
+    """
+    type: Optional[str]  = None
+    name: Optional[str] = None
+    meta: Optional[Dict[str, Any]] = None
 
 
 class ActionResponse(ActionBase):
-    """Схема ответа"""
-    value: int
-    class Config:
-        from_attributes = True
-
-
-class ActionTypeResponse(BaseModel):
-    value: int
-    label: str
+    """
+    Схема для ответа API.
+    Представляет полный объект из базы данных, включая id.
+    """
+    id: int
 
     class Config:
         from_attributes = True
