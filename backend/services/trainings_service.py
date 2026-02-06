@@ -3,6 +3,7 @@ from pydantic import UUID4
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import UploadFile
 
 from repositories.trainings_repository import TrainingRepository
 from schemas.trainings import (
@@ -17,6 +18,9 @@ from schemas.trainings import (
 from models.trainings import Training, TrainingStep, TypesAction, Tags
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException, status
+
+from services.BatchVideo_service import BatchVideoService
+from services.external_services.s3_service import S3Service
 
 
 class TrainingsService:
@@ -466,4 +470,45 @@ class TrainingsService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Ошибка обновления порядка шагов: {str(e)}"
+            )
+
+    async def add_steps_from_video(
+            self,
+            training_uuid: UUID4,
+            video_file: UploadFile,
+            video_service: BatchVideoService,
+            s3_service: S3Service
+    ) -> List[Dict]:
+        """
+        Обрабатывает видео: нарезает на кадры, загружает в S3, создает шаги в БД.
+        """
+        try:
+            training_exists = await self.repo.check_training_exists(training_uuid)
+            if not training_exists:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Тренинг с UUID {training_uuid} не найден"
+                )
+
+            frames_bytes = await video_service.extract_slides(video_file)
+
+            if not frames_bytes:
+                return []
+            uploaded_urls = []
+            for i, frame_data in enumerate(frames_bytes):
+                filename = f"video_slide_{i + 1:03d}.png"
+                object_name = s3_service.generate_unique_filename(filename)
+                url = await s3_service.upload_file(frame_data, object_name, training_uuid)
+                uploaded_urls.append(url)
+            created_steps = await self.create_steps_from_photos(training_uuid, uploaded_urls)
+
+            return created_steps
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            await self.session.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Ошибка обработки видео и создания шагов: {str(e)}"
             )

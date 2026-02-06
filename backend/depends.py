@@ -12,6 +12,7 @@ from core.database import get_async_session
 from models.users import User
 from repositories.users_repository import UserRepository
 from repositories.trainings_repository import TrainingRepository
+from services.BatchVideo_service import BatchVideoService
 from services.user_service import UserService
 from services.external_services.mail_service import EmailService
 from services.trainings_service import TrainingsService
@@ -124,4 +125,7 @@ async def get_current_user(
         raise credentials_exception
 
     return user
+
+def get_batch_video_service() -> BatchVideoService:
+    return BatchVideoService()
 

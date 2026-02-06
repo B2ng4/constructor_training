@@ -4,8 +4,10 @@ from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, status
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import UUID4
 from fastapi.responses import JSONResponse
-from depends import get_trainings_service, get_s3_service, get_user_service
+from depends import get_trainings_service, get_s3_service, get_user_service, get_batch_video_service
 from starlette import status
+
+from services.BatchVideo_service import BatchVideoService
 from services.trainings_service import TrainingsService
 from services.external_services.s3_service import S3Service
 from schemas.trainings import TrainingResponse, TrainingUpdate, TrainingCreate, TrainingListResponse, \
@@ -136,6 +138,32 @@ async def upload_photos_by_training(
         "created_steps": created_steps
     }
 
+
+
+@router.post("/upload-video/{training_uuid}", name="Загрузка видео (авто-нарезка)")
+async def upload_video_for_training(
+    training_uuid: UUID4,
+    file: UploadFile = File(..., description="Видеофайл"),
+    video_service: BatchVideoService = Depends(get_batch_video_service),
+    s3_service: S3Service = Depends(get_s3_service),
+    trainings_service: TrainingsService = Depends(get_trainings_service),
+    token: str = Depends(oauth2_scheme),
+):
+    """
+    Принимает видео, передает его в сервис для обработки.
+    """
+    created_steps = await trainings_service.add_steps_from_video(
+        training_uuid=training_uuid,
+        video_file=file,
+        video_service=video_service,
+        s3_service=s3_service
+    )
+
+    return {
+        "success": True,
+        "message": f"Видео обработано. Создано {len(created_steps)} шагов.",
+        "created_steps": created_steps
+    }
 
 
 # === ЭНДПОИНТЫ ДЛЯ УПРАВЛЕНИЯ ШАГАМИ ===
