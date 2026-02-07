@@ -3,7 +3,10 @@ from pydantic import UUID4
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import UploadFile
+from fastapi import UploadFile, HTTPException, status
+import requests
+from PIL import Image
+import io
 
 from repositories.trainings_repository import TrainingRepository
 from schemas.trainings import (
@@ -17,7 +20,6 @@ from schemas.trainings import (
 
 from models.trainings import Training, TrainingStep, TypesAction, Tags
 from sqlalchemy.exc import IntegrityError
-from fastapi import HTTPException, status
 
 from services.BatchVideo_service import BatchVideoService
 from services.external_services.s3_service import S3Service
@@ -87,7 +89,7 @@ class TrainingsService:
             self,
             step_data: TrainingStepCreate
     ) -> TrainingStep:
-        """Создание шага тренинга"""
+        """Создание объекта TrainingStep (без сохранения в БД)"""
         if step_data.action_type_id:
             action_type = await self.repo.get_action_type(step_data.action_type_id)
             if not action_type:
@@ -215,8 +217,12 @@ class TrainingsService:
             training_uuid: UUID4,
             photo_urls: List[str]
     ) -> List[Dict]:
-        """Создание шагов из фотографий"""
+        """
+        Создание шагов из фотографий с вычислением размеров.
+        Этот метод делегирует сохранение в репозиторий.
+        """
         try:
+            # 1. Проверяем существование тренинга
             training_exists = await self.repo.check_training_exists(training_uuid)
             if not training_exists:
                 raise HTTPException(
@@ -224,11 +230,47 @@ class TrainingsService:
                     detail=f"Тренинг с UUID {training_uuid} не найден"
                 )
 
-            result = await self.repo.create_steps_from_photos(training_uuid, photo_urls)
+            steps_data_to_create = []
 
+            existing_steps = await self.repo.get_training_steps(training_uuid)
+            next_step_number = len(existing_steps) + 1
+
+            for i, photo_url in enumerate(photo_urls):
+                image_meta = self._get_image_dimensions(photo_url)
+
+                steps_data_to_create.append({
+                    "step_number": next_step_number + i,
+                    "image_url": photo_url,
+                    "meta": {
+                        "name": "Шаг без названия",
+                        "image_width": image_meta.get("width", 0),
+                        "image_height": image_meta.get("height", 0),
+                    }
+                })
+
+            created_steps_info = []
+
+            for step_data in steps_data_to_create:
+                new_step = TrainingStep(
+                    step_number=step_data["step_number"],
+                    meta=step_data["meta"],
+                    training_uuid=training_uuid,
+                    image_url=step_data["image_url"]
+                )
+                self.session.add(new_step)
+
+                created_steps_info.append({
+                    "step_number": step_data["step_number"],
+                    "image_url": step_data["image_url"],
+                    "dimensions": {
+                        "width": step_data["meta"]["image_width"],
+                        "height": step_data["meta"]["image_height"]
+                    }
+                })
             await self.session.commit()
 
-            return result
+            return created_steps_info
+
         except HTTPException:
             await self.session.rollback()
             raise
@@ -238,6 +280,23 @@ class TrainingsService:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Ошибка создания шагов из фотографий: {str(e)}"
             )
+
+    def _get_image_dimensions(self, image_url: str) -> Dict[str, int]:
+        """
+        Загружает картинку из S3 и возвращает размеры.
+        """
+        try:
+            img_response = requests.get(image_url, stream=True, timeout=5)
+            img_response.raise_for_status()
+
+            img = Image.open(io.BytesIO(img_response.content))
+            return {
+                "width": img.width,
+                "height": img.height,
+            }
+        except Exception as e:
+            print(f"Warning: Не удалось получить размеры для {image_url}: {e}")
+            return {"width": 0, "height": 0}
 
     async def add_step(
             self,
@@ -425,8 +484,6 @@ class TrainingsService:
                 detail=f"Ошибка удаления шагов: {str(e)}"
             )
 
-        # +++ НАЧАЛО НОВОГО КОДА +++
-
     async def reorder_steps(
             self,
             training_uuid: UUID4,
@@ -443,23 +500,26 @@ class TrainingsService:
 
             if not steps_order:
                 return {"updated_count": 0, "total_requested": 0}
+
             step_ids_to_update = [step.id for step in steps_order]
             validated_steps_count = await self.repo.count_steps_in_training(
                 training_uuid, step_ids_to_update
             )
+
             if validated_steps_count != len(step_ids_to_update):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Один или несколько ID шагов не принадлежат указанному тренингу."
                 )
+
             steps_to_update_dict = [step.model_dump() for step in steps_order]
             updated_count = await self.repo.bulk_update_step_numbers(steps_to_update_dict)
 
             await self.session.commit()
 
             return {
-                "обновденл шагов": updated_count,
-                "всего": len(steps_order)
+                "updated_count": updated_count,
+                "total_requested": len(steps_order)
             }
 
         except HTTPException:
@@ -489,15 +549,18 @@ class TrainingsService:
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail=f"Тренинг с UUID {training_uuid} не найден"
                 )
-
             frames_bytes = await video_service.extract_slides(video_file)
 
             if not frames_bytes:
                 return []
+
             uploaded_urls = []
+
+            # 3. Грузим в S3
             for i, frame_data in enumerate(frames_bytes):
                 filename = f"video_slide_{i + 1:03d}.png"
                 object_name = s3_service.generate_unique_filename(filename)
+
                 url = await s3_service.upload_file(frame_data, object_name, training_uuid)
                 uploaded_urls.append(url)
             created_steps = await self.create_steps_from_photos(training_uuid, uploaded_urls)

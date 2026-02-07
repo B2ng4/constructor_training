@@ -36,6 +36,7 @@ dependencies = [
     "numpy>=2.2.6",
     "opencv-python-headless>=4.13.0.92",
     "passlib[bcrypt]==1.7.4",
+    "pillow>=12.1.0",
     "pyasn1==0.4.8",
     "pycryptodome==3.21.0",
     "pydantic==2.10.6",

@@ -210,14 +210,13 @@ class TrainingRepository:
         """Получение типа шага тренинга по его id"""
         return await self.session.get(TypesAction, action_type_id)
 
-
-
     async def create_steps_from_photos(
             self,
             training_uuid: UUID4,
             photo_urls: List[str]
     ) -> List[Dict]:
         """Создание шагов тренинга из фотографий (скриншотов)"""
+
         existing_steps = await self.get_training_steps(training_uuid)
         next_step_number = len(existing_steps) + 1
 
@@ -238,10 +237,10 @@ class TrainingRepository:
                 "step_number": step_number,
                 "image_url": photo_url
             })
-
         await self.session.flush()
-        return created_steps_info
+        await self.session.commit()
 
+        return created_steps_info
 
     async def check_training_exists(self, training_uuid: UUID4) -> bool:
         """Проверка существования тренинга по uuid"""
