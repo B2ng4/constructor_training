@@ -288,7 +288,6 @@ class TrainingsService:
         try:
             img_response = requests.get(image_url, stream=True, timeout=5)
             img_response.raise_for_status()
-
             img = Image.open(io.BytesIO(img_response.content))
             return {
                 "width": img.width,
