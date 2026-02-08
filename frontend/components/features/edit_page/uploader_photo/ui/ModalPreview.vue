@@ -15,7 +15,7 @@
 
 <script setup>
 const model = defineModel();
-const props = defineProps(["image"]);
+defineProps(["image"]);
 </script>
 
 <style scoped>

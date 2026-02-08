@@ -53,23 +53,13 @@
 			</q-card-actions>
 		</q-card>
 	</q-dialog>
-
-	<!-- Кнопка создания -->
-	<div class="row q-gutter-sm items-center">
-		<q-btn
-			color="primary"
-			text-color="white"
-			label="Создать"
-			@click="openModal"
-		/>
-		<q-input dense color="primary" filled v-model="text" label="Поиск" />
-	</div>
 </template>
 
 <script setup>
 import { ref } from "vue";
 import { TrainingApi } from "@api/api/TrainingApi.js";
 import { MetaTrainingApi } from "@api/api/MetaTrainingApi.js";
+import { trainingEvents } from "@utils/eventBus.js";
 
 const metaApi = new MetaTrainingApi();
 const listTags = ref([]);
@@ -84,10 +74,16 @@ const dataTraining = ref({
 	level_id: [],
 });
 
-const showModal = ref(false);
+const showModal = defineModel();
 
 async function createTraining() {
-	return await trainingApi.createTraining(dataTraining.value);
+	try {
+		await trainingApi.createTraining(dataTraining.value);
+		await trainingEvents.created.trigger();
+		showModal.value = false;
+	} catch (e) {
+		console.error(e);
+	}
 }
 
 async function openModal() {
@@ -103,4 +99,8 @@ async function getMetaData() {
 		console.error('Ошибка получения метаданных');
 	}
 }
+
+defineExpose(
+	openModal
+);
 </script>

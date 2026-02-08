@@ -26,7 +26,7 @@
 </template>
 
 <script setup>
-import { ModalPreview } from "@components/for_pages/EditPage/UploaderPhoto";
+import { ModalPreview } from "@components/features/edit_page/uploader_photo";
 import { ref } from "vue";
 
 const props = defineProps(["images", "title"]);

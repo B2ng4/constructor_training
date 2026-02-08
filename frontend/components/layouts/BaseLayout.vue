@@ -1,6 +1,6 @@
 <template>
     <q-layout view="lHh lpR fFf">
-        <!-- Вверхняя часть -->
+        <!-- Верхняя часть -->
         <q-header bordered style="height: 10%;" class="row items-center">
             <q-toolbar>
                 <UserCard class="q-ml-auto q-mr-xl"/>
@@ -11,7 +11,7 @@
             <div class="group_button_layout">
                 <router-link 
                     class="custom-nav-link column" 
-                    v-for="nav in buttonLeftPanel"  
+                    v-for="nav in navigationButtons"
                     :to="nav.url" 
                     active-class="active-nav-link"
                     :key="nav.url"
@@ -38,13 +38,13 @@
 </template>
 
 <script>
-import UserCard from '@components/for_pages/PersonalPage/ForHeader/UserCard.vue';
+import UserCard from '@components/features/personal_page/header/UserCard.vue';
 export default {
-    name: 'Layout',
+    name: 'BaseLayout',
     components: {UserCard},
     data() {
         return {
-            buttonLeftPanel: [
+            navigationButtons: [
                 {
                     'name': 'Главная',
                     'icon': 'home',
@@ -66,9 +66,9 @@ export default {
                     'url': '/personal/help'
                 }
             ]
-        }
+        };
     },
-}
+};
 </script>
 
 <style scoped>

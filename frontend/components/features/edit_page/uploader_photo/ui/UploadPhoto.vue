@@ -21,7 +21,7 @@ import {useRoute} from "vue-router";
 import {
 	FormUploadPhoto,
 	PhotoList
-} from "@components/for_pages/EditPage/UploaderPhoto";
+} from "@components/features/edit_page/uploader_photo";
 
 const emit = defineEmits(["uploadPhoto"]);
 const metaApi = new MetaTrainingApi();
@@ -39,6 +39,7 @@ const downloadPhotos = (event) => {
 			originalFile: item,
 		};
 	});
+	console.log(files);
 };
 
 const deleteImage = (id) => {

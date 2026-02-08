@@ -1,5 +1,25 @@
 <template>
-	<div v-if="trainings.length > 0" class="row q-gutter-md q-ma-xl">
+	<div v-if="trainings.length > 0 || true" class="row q-gutter-md q-ma-xl">
+		<!-- Карточка-скелетон для создания нового тренинга -->
+		<q-card class="my-card shadow-2 skeleton-card" bordered @click="modal = true">
+			<q-card-section class="skeleton-section">
+				<div class="column items-center justify-center full-height">
+					<q-icon
+						name="add_circle"
+						size="64px"
+						color="primary"
+						class="q-mb-md"
+					/>
+					<p style="font-weight: 600; font-size: 18px" class="text-primary">
+						Создать тренинг
+					</p>
+					<p class="text-grey-6 q-mt-xs text-center">
+						Нажмите здесь, чтобы создать новый тренинг
+					</p>
+				</div>
+			</q-card-section>
+		</q-card>
+
 		<q-spinner v-if="status"></q-spinner>
 		<q-card
 			@click="editTraining(training.uuid)"
@@ -60,17 +80,21 @@
 			</q-card-section>
 		</q-card>
 	</div>
+	<training-modal v-model="modal"/>
 </template>
 
 <script setup>
 import { TrainingApi } from "@api/api/TrainingApi.js";
-import { onMounted, ref } from "vue";
+import { onMounted, ref, onUnmounted } from "vue";
 import { useRouter } from 'vue-router';
+import { trainingEvents } from "@utils/eventBus.js";
+import TrainingModal from "@components/features/training_page/TrainingModal.vue";
 
 const router = useRouter();
 const trainings = ref([]);
 const api = new TrainingApi();
 const status = ref(true);
+const modal = ref(false);
 
 async function getTrainings() {
 	try {
@@ -79,6 +103,7 @@ async function getTrainings() {
 		let response = await api.getTrainings();
 		trainings.value = response.data;
 	} catch (e) {
+		console.error(e);
 		this.$q.notify({
 			message: "Ошибка получения списка тренингов",
 			position: "top",
@@ -94,7 +119,7 @@ async function deleteTraining(uuid) {
 		await api.deleteTraining(uuid);
 		await getTrainings();
 	} catch (e) {
-
+		console.error(e);
 	}
 }
 
@@ -103,6 +128,7 @@ async function publishTraining(training) {
 		await api.updateTraining(training.uuid, {publish: !training.publish});
 		training.publish = !training.publish;
 	} catch (e) {
+		console.error(e);
 	}
 }
 
@@ -111,10 +137,17 @@ function editTraining(uuid) {
 	window.open(route.href, '_blank');
 }
 
+const unsubscribe = trainingEvents.created.on(() => {
+	getTrainings();
+});
+
 onMounted(() => {
 	getTrainings();
 });
 
+onUnmounted(() => {
+	unsubscribe.off();
+});
 </script>
 
 <style scoped>
@@ -128,6 +161,33 @@ onMounted(() => {
 .my-card:hover, .my-card:focus {
 	transform: translateY(-6px);
 	cursor: pointer;
+}
+
+.skeleton-card:hover {
+	transform: translateY(-6px);
+	cursor: pointer;
+}
+
+.skeleton-section {
+	height: 100%;
+	min-height: 200px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.full-height {
+	height: 100%;
+}
+
+.skeleton-card .q-icon {
+	opacity: 0.8;
+	transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.skeleton-card:hover .q-icon {
+	opacity: 1;
+	transform: scale(1.1);
 }
 
 .badge-tags {

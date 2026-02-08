@@ -13,18 +13,18 @@
 </template>
 
 <script>
-import { useUserStore } from '../../../../store/userData';
+import { useUserStore } from "@store/userData.js";
 export default {
     name: 'UserCard',
     data() {
         return {
             first_name: ''
-        }
+        };
     },
     mounted() {
         this.first_name = useUserStore().getName;
     }
-}
+};
 </script>
 
 <style scoped>

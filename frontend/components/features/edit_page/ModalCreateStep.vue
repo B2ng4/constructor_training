@@ -20,7 +20,7 @@
 import { useRoute } from "vue-router";
 import { MetaTrainingApi } from "@api/api/MetaTrainingApi.js";
 import { ref } from "vue";
-import { PhotoList } from "@components/for_pages/EditPage/UploaderPhoto";
+import { PhotoList } from "@components/features/edit_page/uploader_photo";
 
 const value = defineModel();
 const route = useRoute();

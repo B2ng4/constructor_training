@@ -16,8 +16,8 @@
 <script setup>
 import { computed, ref } from "vue";
 import { useTrainingData } from "@store/editTraining.js";
-import { GroupStepsTreeSteps } from "@components/for_pages/EditPage/DropDownListSteps";
-import ModalCreateStep from "@components/for_pages/EditPage/ModalCreateStep.vue";
+import { GroupStepsTreeSteps } from "@components/features/edit_page/drop_down_list_steps";
+import ModalCreateStep from "@components/features/edit_page/ModalCreateStep.vue";
 
 const store = useTrainingData();
 const modal = ref(false);
