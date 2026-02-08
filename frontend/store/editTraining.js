@@ -1,14 +1,20 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
+import { createComparator } from "@utils/mixed.js";
 
 export const useTrainingData = defineStore("training", () => {
 	const trainingData = ref(null);
 	const steps = ref(null);
 	const selectedStep = ref(null);
+	const selectedEvent = ref(null);
+
+	const selectEvent = (val) => {
+		selectedEvent.value = val;
+	};
 
 	function setTrainingData(newTrainingData) {
 		trainingData.value = newTrainingData;
-		setSteps(newTrainingData.steps);
+		setSteps(newTrainingData.steps.sort(createComparator('step_number')));
 	}
 
 	function setSteps(newSteps) {
@@ -34,5 +40,7 @@ export const useTrainingData = defineStore("training", () => {
 		addStep,
 		selectStep,
 		selectedStep,
+		selectEvent,
+		selectedEvent
 	};
 });

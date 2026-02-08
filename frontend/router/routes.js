@@ -11,6 +11,7 @@ import {
 } from "@pages";
 
 export const routes = [
+	{path: "/", redirect: "/login" },
 	{ path: "/login", component: LoginPage, name: 'LoginPage' },
 	{ path: "/registration", component: RegistrationPage},
 	{ 	

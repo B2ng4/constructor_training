@@ -20,6 +20,7 @@ export default defineConfig({
 			'@store': path.join(__dirname, './store'),
 			'@config': path.join(__dirname, './config'),
 			'@composables': path.join(__dirname, './composables'),
+			'@utils': path.join(__dirname, './utils'),
     }
   },
 });

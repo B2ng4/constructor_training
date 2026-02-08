@@ -3,9 +3,9 @@
 </template>
 
 <script>
-import Layout from '@components/for_pages/PersonalPage/Layout.vue';
+import BaseLayout from '@components/layouts/BaseLayout.vue';
 export default {
     name: 'PersonalPage',
-    components: {Layout}
+    components: {Layout: BaseLayout}
 }
 </script>

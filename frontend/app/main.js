@@ -1,10 +1,9 @@
 import { createApp } from "vue";
 import App from "./App.vue";
 import router from "../router/index.js";
-import { Quasar } from "quasar";
+import { Quasar, Notify } from "quasar";
 import quasarLang from "quasar/lang/ru";
 import "@assets/styles/index.css";
-import { Notify } from "quasar";
 import { createPinia } from "pinia";
 import VueDndKitPlugin from "@vue-dnd-kit/core";
 import { colorSchema } from "@config/colorSchema.js";

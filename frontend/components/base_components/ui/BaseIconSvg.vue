@@ -13,9 +13,5 @@
 </template>
 
 <script setup>
-const props = defineProps(['size', 'color', 'picture']);
+defineProps(['size', 'color', 'picture']);
 </script>
-
-<style scoped>
-
-</style>
