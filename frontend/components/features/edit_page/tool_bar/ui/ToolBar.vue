@@ -2,12 +2,12 @@
 	<div class="tool-bar shadow-7">
 		<div class="q-gutter-x-md">
 			<q-btn
-				@click="selectEvent(event)"
+				@click="store.selectEvent(event);"
 				dense
 				:key="event.id"
 				v-for="event in events"
-				:color="selectedEvent?.id === event.id ? 'primary' : ''"
-				:text-color="selectedEvent?.id === event.id ? 'white' : 'black'"
+				:color="store.selectedEvent?.id === event.id ? 'primary' : ''"
+				:text-color="store.selectedEvent?.id === event.id ? 'white' : 'black'"
 			>
 				<q-tooltip class="bg-primary text-body1">
 					{{event.name}}
@@ -19,7 +19,6 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
 import {
 	RightClick,
 	LeftClick,
@@ -27,9 +26,11 @@ import {
 	Text,
 	Mouseover,
 	Keyboard,
-} from "@components/for_pages/EditPage/IconsToolBar";
+} from "@components/features/edit_page/icons_tool_bar/index.js";
+import { useTrainingData } from "@store/editTraining.js";
 
-const selectedEvent = ref(null);
+const store = useTrainingData();
+//TODO: БРАТЬ ДЕЙСТВИЯ ИЗ БД
 const events = [
 	{
 		type: "leftClick",
@@ -50,16 +51,16 @@ const events = [
 		id: 3,
 	},
 	{
-		type: "text",
-		name: "Ввод текста",
-		icon: Text,
-		id: 4,
-	},
-	{
 		type: "mouseover",
 		name: "Наведение курсора",
 		icon: Mouseover,
 		id: 5,
+	},
+	{
+		type: "text",
+		name: "Ввод текста",
+		icon: Text,
+		id: 4,
 	},
 	{
 		type: "keydown",
@@ -68,12 +69,6 @@ const events = [
 		id: 6,
 	},
 ];
-
-const emit = defineEmits(["selectEvent"]);
-const selectEvent = (event) => {
-	selectedEvent.value = event;
-	emit("selectEvent", selectedEvent.value);
-};
 </script>
 
 <style scoped>

@@ -1,16 +1,12 @@
 <template>
-    <ButtonCreateTraning />
-    <TraningGroupTranings/>
+    <TrainingGroupTrainings />
 </template>
 
 <script>
-import ButtonCreateTraning from '@components/for_pages/PersonalPage/TraningPage/ButtonCreateTraning.vue';
-import TraningGroupTranings from '@components/for_pages/PersonalPage/TraningPage/TraningGroupTranings.vue';
+import TrainingGroupTrainings from '@components/features/training_page/TraningGroupTrainings.vue';
 export default {
-    components: { ButtonCreateTraning, TraningGroupTranings }
-}
+	components: {
+		TrainingGroupTrainings: TrainingGroupTrainings
+	}
+};
 </script>
-
-<style>
-    
-</style>

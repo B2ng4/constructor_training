@@ -1,27 +1,4 @@
 @import "@quasar/extras/material-icons/material-icons.css";
 @import "quasar/src/css/index.sass";
-
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: #F8F9FB;
-}
-
-.size-button-70 {
-  width: 70%;
-}
-
-.size-button-50 {
-    width: 50%;
-}
-
-.cursor-move {
-    cursor: move;
-}
-
-.rounded-8 {
-    border-radius: 8px;
-}
-
-.display-none {
-    display: none;
-}
+@import "utilities.css";
+@import "global.css";

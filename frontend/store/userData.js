@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+import { defineStore } from 'pinia';
 
 export const useUserStore = defineStore('useUserStore', {
     state: () => {
@@ -8,7 +8,7 @@ export const useUserStore = defineStore('useUserStore', {
             phone_number: '',
             first_name: '',
             last_name:'',
-        }
+        };
       },
       getters: {
         getName: (state) => state.first_name,

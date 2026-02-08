@@ -14,6 +14,7 @@
 				autofocus
 				counter
 				@keyup.enter="scope.set"
+				@change="saveNewName"
 			/>
 		</q-popup-edit>
 	</div>
@@ -21,22 +22,27 @@
 
 <script setup>
 import { useTrainingData } from "@store/editTraining.js";
-import { TrainingApi } from "@api";
-import { watch } from "vue";
-import { useRoute } from "vue-router";
+import { TrainingStepApi } from "@api";
+import { useQuasar } from "quasar";
 
-const api = new TrainingApi();
+const api = new TrainingStepApi();
 const store = useTrainingData();
-const route = useRoute();
+const $q = useQuasar();
 
-//TODO: СДЕЛАТЬ ИЗМЕНЕНИЕ НАЗВАНИЯ ШАГА
-watch(store.selectedStep, (n) => {
-	if (n) {
-		setTimeout(() => {
-			console.log(n);
-		}, 3000);
-	}
-});
+const saveNewName = async () => {
+	setTimeout(async () => {
+		await api.editStep(store.trainingData.uuid, store.selectedStep.id, {
+			meta: {
+				name: store.selectedStep.meta.name,
+			},
+		});
+		$q.notify({
+			color: 'positive',
+			message: 'Название изменено',
+			position: 'bottom-right',
+		});
+	}, 2000);
+};
 </script>
 
 <style scoped>
