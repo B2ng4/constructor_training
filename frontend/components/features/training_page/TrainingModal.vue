@@ -56,7 +56,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { TrainingApi } from "@api/api/TrainingApi.js";
 import { MetaTrainingApi } from "@api/api/MetaTrainingApi.js";
 import { trainingEvents } from "@utils/eventBus.js";
@@ -86,10 +86,11 @@ async function createTraining() {
 	}
 }
 
-async function openModal() {
-	showModal.value = !showModal.value;
-	await getMetaData();
-}
+watch(showModal, async (val) => {
+	if (val === true) {
+		await getMetaData();
+	}
+});
 
 async function getMetaData() {
 	try {
@@ -99,8 +100,4 @@ async function getMetaData() {
 		console.error('Ошибка получения метаданных');
 	}
 }
-
-defineExpose(
-	openModal
-);
 </script>
