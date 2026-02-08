@@ -17,7 +17,7 @@ class TrainingStepBase(BaseModel):
     action_type_id: Optional[int] = None
     training_uuid: Optional[UUID4] = None
     parent_step_id: Optional[int] = None
-    area: Optional[Dict[str, int]] = None
+    area: Optional[Dict] = None
     meta: Optional[Dict[str, Any]] = None
     annotation: Optional[str] = None
     image_url: Optional[str] = None
@@ -32,7 +32,7 @@ class TrainingStepUpdate(BaseModel):
     step_number: Optional[int] = None
     action_type_id: Optional[int] = None
     parent_step_id: Optional[int] = None
-    area: Optional[Dict[str, int]] = None
+    area: Optional[Dict] = None
     meta: Optional[Dict[str, Any]] = None
     annotation: Optional[str] = None
     image_url: Optional[str] = None
