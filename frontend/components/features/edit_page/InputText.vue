@@ -1,7 +1,11 @@
 <template>
 	<div
-		class="cursor-pointer card text-center rounded-4 q-pa-md"
-		style="background: #ffffff"
+		class="cursor-pointer card text-center q-pa-md"
+		style="
+		background: rgba(255,255,255,0.68);
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+		height: 100%"
 	>
 		<span>
 			{{ model }}

@@ -9,7 +9,6 @@
 		</div>
 	</template>
 	<upload-photo
-		@upload-photo="getTrainingData"
 		class="absolute-center"
 		v-if="store.steps === null"
 	/>
@@ -21,7 +20,7 @@ import { UploadPhoto } from "@components/features/edit_page/uploader_photo";
 import { GroupSteps } from "@components/features/edit_page/drop_down_list_steps";
 import { TrainingApi } from "@api";
 import { useRoute } from "vue-router";
-import { onMounted, ref } from "vue";
+import { nextTick, onMounted, ref } from "vue";
 import { useTrainingData } from "@store/editTraining.js";
 import StepTitle from "@components/features/edit_page/StepTitle.vue";
 import { BaseLoader } from "@components/base_components/index.js";
@@ -36,6 +35,7 @@ const loadingStatus = ref(true);
 async function getTrainingData() {
 	try {
 		loadingStatus.value = true;
+		await nextTick();
 		store.setTrainingData((await trainingApi.getTrainingByUuid(route.params.uuid)).data);
 	} catch {
 		alert("Данные тренинга не найдены");

@@ -33,7 +33,7 @@
 					<q-input
 						v-model="dataTraining.duration_minutes"
 						type="number"
-						label="Количество недель"
+						label="Продолжительность"
 						class="col"
 						color="primary"
 						filled/>
@@ -47,9 +47,32 @@
 						filled
 						:options="levelList"/>
 				</div>
+				<div class="q-mt-md row items-center q-gutter-xs">
+					<q-toggle
+						v-model="dataTraining.skip_steps"
+					>
+						<span class="text-subtitle1">Пропуск шагов</span>
+					</q-toggle>
+					<q-icon
+						color="grey"
+						size="24px"
+						name="info"
+						class="cursor-pointer"
+					>
+						<q-tooltip anchor="top middle" >
+							<span style="font-size: 14px">Прохождение в любом порядке</span>
+						</q-tooltip>
+					</q-icon>
+				</div>
 			</q-card-section>
 			<q-card-actions align="right" class="row justify-center">
-				<q-btn flat class="fit" label="Создать" color="primary" @click="createTraining" />
+				<q-btn
+					flat
+					class="fit"
+					label="Создать"
+					color="primary"
+					@click="createTraining"
+				/>
 			</q-card-actions>
 		</q-card>
 	</q-dialog>
@@ -72,6 +95,7 @@ const dataTraining = ref({
 	tag_ids: [],
 	duration_minutes: [],
 	level_id: [],
+	skip_steps: false
 });
 
 const showModal = defineModel();

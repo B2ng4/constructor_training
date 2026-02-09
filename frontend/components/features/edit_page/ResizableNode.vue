@@ -2,12 +2,6 @@
 	<NodeResizer min-width="100" min-height="30" />
 	<NodeToolbar :is-visible="node.data.toolbarVisible">
 		<div class="column">
-			<template v-if="textMode">
-				<input-text
-					v-model="text"
-					class="q-mb-xs"
-				/>
-			</template>
 			<template v-if="saveMode">
 				<q-btn
 					no-caps
@@ -21,6 +15,16 @@
 	</NodeToolbar>
 	<Handle type="target" :position="Position.Left" />
 	<Handle type="source" :position="Position.Right" />
+	<template v-if="selectedMode === 'inputText'">
+		<input-text
+			v-model="metaText"
+		/>
+	</template>
+	<template v-if="selectedMode === 'keyPress'">
+		<watch-key
+			v-model="metaKeywords"
+		/>
+	</template>
 </template>
 
 <script setup>
@@ -31,16 +35,39 @@ import { computed, ref } from "vue";
 import { trainingStepApi } from "@api";
 import { useTrainingData } from "@store/editTraining.js";
 import InputText from "@components/features/edit_page/InputText.vue";
+import WatchKey from "@components/features/edit_page/WatchKey.vue";
 
 const props = defineProps(['node', 'position']);
 const store = useTrainingData();
-const text = ref('Текст');
+
+const metaText = computed({
+	get() {
+		return store.selectedStep.area?.metaText || '';
+	},
+	set(value) {
+		if (store.selectedStep.area) {
+			store.selectedStep.area.metaText = value;
+		}
+	}
+});
+
+const metaKeywords = computed({
+	get() {
+		return store.selectedStep.area?.metaKeywords || [];
+	},
+	set(value) {
+		if (store.selectedStep.area) {
+			store.selectedStep.area.metaKeywords = value;
+		}
+	}
+});
 
 //Для отображения кнопки для сохранения зоны
 const saveMode = ref(true);
 
-const textMode = computed(() => {
-	return props.node.data.type === 'text';
+const selectedMode = computed(() => {
+	console.log(props.node.data.type);
+	return props.node.data.type;
 });
 
 const sendRequest = async () => {
@@ -55,6 +82,8 @@ const sendRequest = async () => {
 					height: props.node.dimensions.height,
 					x: props.position.x,
 					y: props.position.y,
+					metaText: metaText.value,
+					metaKeywords: metaKeywords.value
 				}
 			}
 		);

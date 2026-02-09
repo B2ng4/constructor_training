@@ -1,12 +1,12 @@
 import { createApp } from "vue";
 import App from "./App.vue";
-import router from "../router/index.js";
+import router from "./router/index.js";
 import { Quasar, Notify } from "quasar";
 import quasarLang from "quasar/lang/ru";
 import "@assets/styles/index.css";
 import { createPinia } from "pinia";
 import VueDndKitPlugin from "@vue-dnd-kit/core";
-import { colorSchema } from "@config/colorSchema.js";
+import { colorSchema } from "./config/colorSchema.js";
 
 const pinia = createPinia();
 createApp(App)

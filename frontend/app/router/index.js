@@ -1,6 +1,6 @@
 import { createWebHistory, createRouter } from "vue-router";
 import { routes } from "./routes.js";
-import { checkAuth } from "../utils/checkAuth.js";
+import { checkAuth } from "@utils/checkAuth.js";
 
 const router = createRouter({
 	history: createWebHistory(),

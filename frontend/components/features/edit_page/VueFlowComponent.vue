@@ -70,28 +70,26 @@ const createFullscreenNode = async () => {
 	const x = (canvasWidth - imgWidth) / 2;
 	const y = (canvasHeight - imgHeight) / 2;
 
-	nodes.value = [
-		{
-			id: "fullscreen-image",
-			position: { x, y },
-			style: {
-				backgroundImage: `url(${store.selectedStep.image_url})`,
-				backgroundSize: "contain",
-				backgroundRepeat: "no-repeat",
-				width: `${imgWidth}px`,
-				height: `${imgHeight}px`,
-			},
-			dimensions: {
-				width: imgWidth,
-				height: imgHeight,
-			},
-			connectable: false,
-			data: { label: "" },
-			class: "fullscreen-node",
-			draggable: false,
-			selectable: false,
+	nodes.value[0] = {
+		id: "fullscreen-image",
+		position: { x, y },
+		style: {
+			backgroundImage: `url(${store.selectedStep.image_url})`,
+			backgroundSize: "contain",
+			backgroundRepeat: "no-repeat",
+			width: `${imgWidth}px`,
+			height: `${imgHeight}px`,
 		},
-	];
+		dimensions: {
+			width: imgWidth,
+			height: imgHeight,
+		},
+		connectable: false,
+		data: { label: "" },
+		class: "fullscreen-node",
+		draggable: false,
+		selectable: false,
+	};
 
 	//Если уже есть выбранное действие, то заносим его в store
 	//Почему именно в этом месте? (vue flow ломается, поэтому проверяем,
@@ -219,9 +217,18 @@ const updateNodePositionOnResize = () => {
 watch(
 	() => store.selectedStep.image_url,
 	() => {
-		// Очищаем ноду события перед созданием нового изображения
 		clearEventNode();
 		createFullscreenNode();
+		if(store.selectedStep.action_type) {
+			console.log(store.selectedStep.action_type);
+			createNode(
+				store.selectedStep.action_type,
+				store.selectedStep.area.width,
+				store.selectedStep.area.height,
+				store.selectedStep.area.x,
+				store.selectedStep.area.y,
+			);
+		}
 	},
 );
 

@@ -10,7 +10,13 @@
 				<photo-list v-else @delete-image="deleteImage" :images="images" :title="true"/>
 			</q-card-section>
 		</q-card>
-		<q-btn v-if="images.length > 0" class="q-mt-lg" color="primary" @click="uploadImages">Загрузить</q-btn>
+		<q-btn
+			v-if="images.length > 0"
+			class="q-mt-lg"
+			color="primary"
+			@click="uploadImages">
+			Создать шаги
+		</q-btn>
 	</div>
 </template>
 
@@ -56,6 +62,8 @@ const uploadImages = async () => {
 		});
 		await metaApi.uploadImages(route.params.uuid, formData);
 		emit('uploadPhoto');
+		//TODO ПОКА ТАК ПОТОМ СДЕЛАЕМ НОРМАЛЬНО
+		window.location.reload();
 	} catch {
 		alert('Error');
 	}

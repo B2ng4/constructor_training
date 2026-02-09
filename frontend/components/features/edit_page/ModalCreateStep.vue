@@ -5,7 +5,12 @@
 				<div class="text-h6">Создать шаг</div>
 			</q-card-section>
 			<q-card-section class="flex column q-gutter-md">
-				<photo-list @delete-image="deleteImage" :images="images" :title="false"/>
+				<photo-list
+					@delete-image="deleteImage"
+					:images="images"
+					:title="false"
+					v-if="images.length > 0"
+				/>
 				<q-btn flat color="primary" @click="addPhoto">Добавить изображение</q-btn>
 			</q-card-section>
 			<q-card-actions align="right" class="text-primary">
@@ -65,8 +70,9 @@ const addSteps = async () => {
 		await api.uploadImages(route.params.uuid, formData);
 		images.value = [];
 		value.value = false;
+		window.location.reload();
 	} catch {
-			alert('Error');
+			alert('Ошибка создания шагов');
 	}
 };
 </script>
