@@ -6,9 +6,12 @@ import os
 
 class Configs(BaseSettings):
     """Главный конфиг проекта"""
+
     # ------------ Настройки проекта ------------
     PROJECT_NAME: str = "Конструктор Тренингов"
-    PROJECT_DESCRIPTION: str = "веб-сервис Конструктор тренингов. \nТестовый пользователь: test@example.com string"
+    PROJECT_DESCRIPTION: str = (
+        "веб-сервис Конструктор тренингов. \nТестовый пользователь: test@example.com string"
+    )
 
     # ------------ Веб-сервер ------------
     HOST: str = "localhost"
@@ -62,20 +65,23 @@ class Configs(BaseSettings):
     )
     S3_REGION_NAME: Optional[str] = Field(default="ru-1", env="S3_REGION_NAME")
 
-    
-     #------------------- REDIS --------------------------------------------
+    # ------------------- REDIS --------------------------------------------
     # REDIS_URL:Optional[str] = Fiels()
 
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")
     )
+
+
 configs = Configs()
+
 
 def get_db_url():
     return (
         f"postgresql+asyncpg://{configs.DB_USER}:{configs.DB_PASS}@"
         f"{configs.DB_HOST}:{configs.DB_PORT}/{configs.DB_NAME}"
     )
+
 
 def get_auth_data():
     return {"secret_key": configs.SECRET_KEY, "algorithm": configs.ALGORITHM}

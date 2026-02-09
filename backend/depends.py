@@ -28,35 +28,37 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 # === Репозитории ===
 
+
 async def get_user_repository(
-        session: AsyncSession = Depends(get_async_session),
+    session: AsyncSession = Depends(get_async_session),
 ) -> UserRepository:
     """Получение репозитория пользователей"""
     return UserRepository(session)
 
 
 async def get_trainings_repository(
-        session: AsyncSession = Depends(get_async_session),
+    session: AsyncSession = Depends(get_async_session),
 ) -> TrainingRepository:
     """Получение репозитория тренингов"""
     return TrainingRepository(session)
 
 
 async def get_tags_repository(
-        session: AsyncSession = Depends(get_async_session)
+    session: AsyncSession = Depends(get_async_session),
 ) -> TagsRepository:
     """Получение репозитория тегов"""
     return TagsRepository(session)
 
 
 async def get_levels_repository(
-        session: AsyncSession = Depends(get_async_session)
+    session: AsyncSession = Depends(get_async_session),
 ) -> LevelsRepository:
     """Получение репозитория уровней"""
     return LevelsRepository(session)
 
+
 async def get_actions_repository(
-        session: AsyncSession = Depends(get_async_session)
+    session: AsyncSession = Depends(get_async_session),
 ) -> ActionsRepository:
     """Получение ипов действий"""
     return ActionsRepository(session)
@@ -64,8 +66,9 @@ async def get_actions_repository(
 
 # === Сервисы ===
 
+
 async def get_user_service(
-        session: AsyncSession = Depends(get_async_session),
+    session: AsyncSession = Depends(get_async_session),
 ) -> UserService:
     """Получение сервиса пользователей"""
     repo = UserRepository(session)
@@ -74,14 +77,14 @@ async def get_user_service(
 
 
 async def get_trainings_service(
-        session: AsyncSession = Depends(get_async_session),
+    session: AsyncSession = Depends(get_async_session),
 ) -> TrainingsService:
     """Получение сервиса тренингов"""
     return TrainingsService(session)
 
 
 async def get_s3_service(
-        session: AsyncSession = Depends(get_async_session),
+    session: AsyncSession = Depends(get_async_session),
 ) -> S3Service:
     """Получение S3 сервиса"""
     return S3Service(session)
@@ -89,9 +92,10 @@ async def get_s3_service(
 
 # === Аутентификация ===
 
+
 async def get_current_user(
-        token: str = Depends(oauth2_scheme),
-        user_repo: UserRepository = Depends(get_user_repository)
+    token: str = Depends(oauth2_scheme),
+    user_repo: UserRepository = Depends(get_user_repository),
 ) -> User:
     """
     Получение текущего аутентифицированного пользователя
@@ -105,11 +109,7 @@ async def get_current_user(
     )
 
     try:
-        payload = jwt.decode(
-            token,
-            configs.SECRET_KEY,
-            algorithms=[configs.ALGORITHM]
-        )
+        payload = jwt.decode(token, configs.SECRET_KEY, algorithms=[configs.ALGORITHM])
         user_identifier: str = payload.get("sub")
         if user_identifier is None:
             raise credentials_exception
@@ -126,6 +126,6 @@ async def get_current_user(
 
     return user
 
+
 def get_batch_video_service() -> BatchVideoService:
     return BatchVideoService()
-

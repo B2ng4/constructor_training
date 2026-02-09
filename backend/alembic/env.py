@@ -11,7 +11,6 @@ from core.database import Base, DATABASE_URL
 from models.trainings import Training, TrainingStep, TypesAction, Tags, Levels
 from models.users import User
 
-
 # this is the Alembic Config object
 config = context.config
 

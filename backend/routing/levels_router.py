@@ -6,7 +6,9 @@ from models.trainings import Levels
 from schemas.levels import LevelResponse, LevelCreate, LevelUpdate
 
 
-class LevelsRouter(BaseRouter[Levels, LevelCreate, LevelUpdate, LevelResponse, LevelsRepository]):
+class LevelsRouter(
+    BaseRouter[Levels, LevelCreate, LevelUpdate, LevelResponse, LevelsRepository]
+):
     """Роутер для управления уровнями сложности"""
 
     def __init__(self):
@@ -21,7 +23,7 @@ class LevelsRouter(BaseRouter[Levels, LevelCreate, LevelUpdate, LevelResponse, L
             entity_name="Уровень",
             entity_name_plural="Уровни",
             pk_name="value",
-            pk_description="ID уровня (value)"
+            pk_description="ID уровня (value)",
         )
 
     def _get_order_by(self) -> str:

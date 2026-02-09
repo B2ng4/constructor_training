@@ -12,13 +12,10 @@ async def create_test_user():
             phone_number="89249194507",
             first_name="string",
             last_name="string",
-            password="string"
+            password="string",
         )
         result = await repo.add_user(test_user)
         if result:
             print("✅Тестовый пользователь создан")
         else:
             print("❌ Пользователь уже существует")
-
-
-

@@ -32,10 +32,7 @@ class TagsRepository:
         return result.scalar_one_or_none()
 
     async def get_all(
-            self,
-            skip: int = 0,
-            limit: int = 100,
-            order_by: str = "label"
+        self, skip: int = 0, limit: int = 100, order_by: str = "label"
     ) -> List[Tags]:
         """Получение всех тегов"""
         query = select(Tags).offset(skip).limit(limit)
@@ -50,11 +47,7 @@ class TagsRepository:
 
     async def update(self, value: int, label: str) -> Optional[Tags]:
         """Обновление тега"""
-        query = (
-            update(Tags)
-            .where(Tags.value == value)
-            .values(label=label)
-        )
+        query = update(Tags).where(Tags.value == value).values(label=label)
         result = await self.session.execute(query)
         await self.session.commit()
 
@@ -84,8 +77,7 @@ class TagsRepository:
         """Получение тегов с количеством тренингов"""
         query = (
             select(
-                Tags,
-                func.count(training_tags.c.training_uuid).label("trainings_count")
+                Tags, func.count(training_tags.c.training_uuid).label("trainings_count")
             )
             .outerjoin(training_tags, Tags.value == training_tags.c.tag_value)
             .group_by(Tags.value)
@@ -95,10 +87,7 @@ class TagsRepository:
         return result.all()
 
     async def get_trainings_by_tag(
-            self,
-            tag_value: int,
-            skip: int = 0,
-            limit: int = 100
+        self, tag_value: int, skip: int = 0, limit: int = 100
     ) -> List[Training]:
         """Получение тренингов по тегу"""
         from sqlalchemy.orm import selectinload, joinedload
@@ -111,7 +100,7 @@ class TagsRepository:
             .options(
                 selectinload(Training.tags),
                 joinedload(Training.level),
-                selectinload(Training.steps).selectinload(TrainingStep.action_type)
+                selectinload(Training.steps).selectinload(TrainingStep.action_type),
             )
             .offset(skip)
             .limit(limit)

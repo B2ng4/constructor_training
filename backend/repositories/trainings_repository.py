@@ -23,9 +23,8 @@ class TrainingRepository:
         """
         from sqlalchemy.orm import selectinload
 
-        steps_with_action = (
-            selectinload(Training.steps)
-            .selectinload(TrainingStep.action_type)
+        steps_with_action = selectinload(Training.steps).selectinload(
+            TrainingStep.action_type
         )
 
         nested_steps = (
@@ -46,7 +45,7 @@ class TrainingRepository:
             selectinload(Training.level),
             steps_with_action,
             nested_steps,
-            nested_steps2
+            nested_steps2,
         ]
 
     def _get_step_eager_load_options(self, depth: int = 3):
@@ -56,9 +55,13 @@ class TrainingRepository:
 
         step_loader = selectinload(TrainingStep.action_type)
 
-        current = selectinload(TrainingStep.steps).selectinload(TrainingStep.action_type)
+        current = selectinload(TrainingStep.steps).selectinload(
+            TrainingStep.action_type
+        )
         for _ in range(depth - 1):
-            current = current.selectinload(TrainingStep.steps).selectinload(TrainingStep.action_type)
+            current = current.selectinload(TrainingStep.steps).selectinload(
+                TrainingStep.action_type
+            )
 
         return [step_loader, current]
 
@@ -75,7 +78,9 @@ class TrainingRepository:
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
-    async def get_by_uuid_with_relations(self, training_uuid: UUID4) -> Optional[Training]:
+    async def get_by_uuid_with_relations(
+        self, training_uuid: UUID4
+    ) -> Optional[Training]:
         """Получение тренинга по uuid СО ВСЕМИ relationships"""
         query = (
             select(Training)
@@ -107,7 +112,9 @@ class TrainingRepository:
         result = await self.session.execute(query)
         return result.scalars().all()
 
-    async def get_all_with_relations(self, skip: int = 0, limit: int = 100) -> List[Training]:
+    async def get_all_with_relations(
+        self, skip: int = 0, limit: int = 100
+    ) -> List[Training]:
         """Получение тренингов по фильтрам СО ВСЕМИ relationships"""
         query = (
             select(Training)
@@ -118,15 +125,15 @@ class TrainingRepository:
         result = await self.session.execute(query)
         return result.scalars().all()
 
-    async def patch_training_fields(self, training_uuid: UUID4, update_data: Dict) -> bool:
+    async def patch_training_fields(
+        self, training_uuid: UUID4, update_data: Dict
+    ) -> bool:
         """Частичное обновление полей тренинга"""
         if not update_data:
             return False
 
         query = (
-            update(Training)
-            .where(Training.uuid == training_uuid)
-            .values(**update_data)
+            update(Training).where(Training.uuid == training_uuid).values(**update_data)
         )
         result = await self.session.execute(query)
         await self.session.flush()
@@ -139,9 +146,7 @@ class TrainingRepository:
 
         query = (
             select(TrainingStep)
-            .options(
-                selectinload(TrainingStep.action_type)
-            )
+            .options(selectinload(TrainingStep.action_type))
             .where(TrainingStep.id == step.id)
         )
         result = await self.session.execute(query)
@@ -151,9 +156,7 @@ class TrainingRepository:
         """
         БЕЗ selectinload для steps - только action_type
         """
-        return [
-            selectinload(TrainingStep.action_type)
-        ]
+        return [selectinload(TrainingStep.action_type)]
 
     def _get_eager_load_options(self):
         """
@@ -162,7 +165,7 @@ class TrainingRepository:
         return [
             selectinload(Training.tags),
             selectinload(Training.level),
-            selectinload(Training.steps).selectinload(TrainingStep.action_type)
+            selectinload(Training.steps).selectinload(TrainingStep.action_type),
         ]
 
     async def get_training_steps(self, training_uuid: UUID4) -> List[TrainingStep]:
@@ -184,9 +187,7 @@ class TrainingRepository:
             return False
 
         query = (
-            update(TrainingStep)
-            .where(TrainingStep.id == step_id)
-            .values(**update_data)
+            update(TrainingStep).where(TrainingStep.id == step_id).values(**update_data)
         )
         result = await self.session.execute(query)
         await self.session.flush()
@@ -211,9 +212,7 @@ class TrainingRepository:
         return await self.session.get(TypesAction, action_type_id)
 
     async def create_steps_from_photos(
-            self,
-            training_uuid: UUID4,
-            photo_urls: List[str]
+        self, training_uuid: UUID4, photo_urls: List[str]
     ) -> List[Dict]:
         """Создание шагов тренинга из фотографий (скриншотов)"""
 
@@ -229,14 +228,13 @@ class TrainingRepository:
                 step_number=step_number,
                 meta={"name": "Шаг без названия"},
                 training_uuid=training_uuid,
-                image_url=photo_url
+                image_url=photo_url,
             )
 
             self.session.add(new_step)
-            created_steps_info.append({
-                "step_number": step_number,
-                "image_url": photo_url
-            })
+            created_steps_info.append(
+                {"step_number": step_number, "image_url": photo_url}
+            )
         await self.session.flush()
         await self.session.commit()
 
@@ -248,7 +246,6 @@ class TrainingRepository:
         result = await self.session.execute(query)
         return result.scalar_one()
 
-
     async def get_step_by_id(self, step_id: int) -> Optional[TrainingStep]:
         """Получение шага по ID с загрузкой relationships"""
         query = (
@@ -259,32 +256,29 @@ class TrainingRepository:
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
-
     async def get_step_by_id_and_training(
-            self,
-            step_id: int,
-            training_uuid: UUID4
+        self, step_id: int, training_uuid: UUID4
     ) -> Optional[TrainingStep]:
         """Получение шага по ID с проверкой принадлежности к тренингу"""
-        query = select(TrainingStep).where(
-            TrainingStep.id == step_id,
-            TrainingStep.training_uuid == training_uuid
-        ).options(selectinload(TrainingStep.action_type))
+        query = (
+            select(TrainingStep)
+            .where(
+                TrainingStep.id == step_id, TrainingStep.training_uuid == training_uuid
+            )
+            .options(selectinload(TrainingStep.action_type))
+        )
 
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
-
-    async def count_steps_in_training(self, training_uuid: UUID4, step_ids: List[int]) -> int:
+    async def count_steps_in_training(
+        self, training_uuid: UUID4, step_ids: List[int]
+    ) -> int:
         """Подсчет количества шагов из списка, принадлежащих тренингу."""
         if not step_ids:
             return 0
-        query = (
-            select(func.count(TrainingStep.id))
-            .where(
-                TrainingStep.training_uuid == training_uuid,
-                TrainingStep.id.in_(step_ids)
-            )
+        query = select(func.count(TrainingStep.id)).where(
+            TrainingStep.training_uuid == training_uuid, TrainingStep.id.in_(step_ids)
         )
         result = await self.session.execute(query)
         return result.scalar_one()
@@ -296,9 +290,6 @@ class TrainingRepository:
         if not steps_data:
             return 0
 
-        await self.session.execute(
-            update(TrainingStep),
-            steps_data
-        )
+        await self.session.execute(update(TrainingStep), steps_data)
         await self.session.flush()
         return len(steps_data)

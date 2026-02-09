@@ -9,8 +9,8 @@ from schemas.actions import ActionResponse
 from schemas.levels import LevelResponse
 from schemas.tags import TagResponse
 
-
 # === Модели для TrainingStep ===
+
 
 class TrainingStepBase(BaseModel):
     step_number: int
@@ -24,7 +24,7 @@ class TrainingStepBase(BaseModel):
 
 
 class TrainingStepCreate(TrainingStepBase):
-    steps: Optional[List['TrainingStepCreate']] = Field(default_factory=list)
+    steps: Optional[List["TrainingStepCreate"]] = Field(default_factory=list)
 
 
 class TrainingStepUpdate(BaseModel):
@@ -36,7 +36,9 @@ class TrainingStepUpdate(BaseModel):
     meta: Optional[Dict[str, Any]] = None
     annotation: Optional[str] = None
     image_url: Optional[str] = None
-    steps: Optional[List[Union['TrainingStepCreate', 'TrainingStepUpdate']]] = Field(default_factory=list)
+    steps: Optional[List[Union["TrainingStepCreate", "TrainingStepUpdate"]]] = Field(
+        default_factory=list
+    )
 
 
 class TrainingStepResponse(TrainingStepBase):
@@ -56,26 +58,18 @@ class TrainingBase(BaseModel):
     description: str
     level_id: Optional[int] = None
     duration_minutes: Optional[int] = Field(
-        None,
-        ge=0,
-        description="Ожидаемое время прохождения тренинга в минутах"
+        None, ge=0, description="Ожидаемое время прохождения тренинга в минутах"
     )
 
-    publish: bool = Field(
-        default=False,
-        description="Опубликован ли тренинг"
-    )
+    publish: bool = Field(default=False, description="Опубликован ли тренинг")
 
-    skip_steps: Optional[bool] = Field(
-        default=True,
-        description="Пропускать шаги?"
-    )
+    skip_steps: Optional[bool] = Field(default=True, description="Пропускать шаги?")
 
-    @field_validator('duration_minutes')
+    @field_validator("duration_minutes")
     @classmethod
     def validate_duration(cls, v):
         if v is not None and v < 0:
-            raise ValueError('Время прохождения не может быть отрицательным')
+            raise ValueError("Время прохождения не может быть отрицательным")
         return v
 
 
@@ -89,14 +83,9 @@ class TrainingUpdate(BaseModel):
     description: Optional[str] = None
     level_id: Optional[int] = None
     duration_minutes: Optional[int] = Field(
-        None,
-        ge=0,
-        description="Ожидаемое время прохождения тренинга в минутах"
+        None, ge=0, description="Ожидаемое время прохождения тренинга в минутах"
     )
-    publish: Optional[bool] = Field(
-        None,
-        description="Опубликован ли тренинг"
-    )
+    publish: Optional[bool] = Field(None, description="Опубликован ли тренинг")
     tag_ids: Optional[List[int]] = None
 
     class Config:
@@ -107,6 +96,7 @@ class TrainingListResponse(BaseModel):
     """
     Упрощенная модель для списка тренингов (БЕЗ шагов)
     """
+
     uuid: UUID4
     title: str
     description: str
@@ -146,29 +136,32 @@ class TrainingResponse(BaseModel):
         from_attributes = True
 
 
-
-
 class TrainingStepResponseWithId(TrainingStepResponse):
     """Ответ с ID шага для операций обновления"""
+
     pass
 
 
 class StepBulkCreateRequest(BaseModel):
     """Запрос для массового создания шагов"""
+
     steps: List[TrainingStepCreate]
 
 
 class StepBulkUpdateRequest(BaseModel):
     """Запрос для массового обновления шагов"""
+
     steps: List[TrainingStepUpdate]
 
 
 class StepOrderUpdate(BaseModel):
     """Модель для обновления номера шага."""
+
     id: int = Field(..., description="ID шага")
     step_number: int = Field(..., description="Новый порядковый номер шага")
 
 
 class StepsReorderRequest(BaseModel):
     """Запрос на обновление порядка шагов."""
+
     steps: List[StepOrderUpdate]

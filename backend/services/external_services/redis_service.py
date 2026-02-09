@@ -16,4 +16,3 @@
 #         if self.pool:
 #             await self.pool.close()
 #             self.pool = None
-

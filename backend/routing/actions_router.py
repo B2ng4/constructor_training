@@ -7,7 +7,11 @@ from repositories.actions_repository import ActionsRepository
 from schemas.actions import ActionResponse, ActionCreate, ActionUpdate
 
 
-class ActionsRouter(BaseRouter[TypesAction, ActionCreate, ActionUpdate, ActionResponse, ActionsRepository]):
+class ActionsRouter(
+    BaseRouter[
+        TypesAction, ActionCreate, ActionUpdate, ActionResponse, ActionsRepository
+    ]
+):
     """Роутер для управления действиями"""
 
     def __init__(self):

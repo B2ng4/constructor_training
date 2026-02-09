@@ -6,7 +6,6 @@ from schemas.mail import mail_send
 import asyncio
 
 
-
 class EmailService:
     def __init__(self):
         self.username = configs.MAIL_USERNAME
@@ -24,7 +23,6 @@ class EmailService:
         message["To"] = mail.email
         body = mail.body
         message.attach(MIMEText(body, "plain"))
-
 
         try:
             if self.use_ssl:

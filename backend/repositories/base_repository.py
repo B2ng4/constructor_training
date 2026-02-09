@@ -13,10 +13,7 @@ class BaseRepository(Generic[ModelType]):
     """
 
     def __init__(
-            self,
-            model: Type[ModelType],
-            session: AsyncSession,
-            pk_field: str = "id"
+        self, model: Type[ModelType], session: AsyncSession, pk_field: str = "id"
     ):
         self.model = model
         self.session = session
@@ -39,10 +36,7 @@ class BaseRepository(Generic[ModelType]):
         return await self.session.get(self.model, id)
 
     async def get_all(
-            self,
-            skip: int = 0,
-            limit: int = 100,
-            order_by: str = None
+        self, skip: int = 0, limit: int = 100, order_by: str = None
     ) -> List[ModelType]:
         """Получение всех записей"""
         query = select(self.model).offset(skip).limit(limit)
@@ -59,11 +53,7 @@ class BaseRepository(Generic[ModelType]):
         """Обновление записи"""
         pk_column = self._get_pk_column()
 
-        query = (
-            update(self.model)
-            .where(pk_column == id)
-            .values(**kwargs)
-        )
+        query = update(self.model).where(pk_column == id).values(**kwargs)
 
         result = await self.session.execute(query)
         await self.session.commit()

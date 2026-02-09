@@ -52,7 +52,8 @@ class BatchVideoService:
         while True:
             cap.grab()
             ret, frame = cap.read()
-            if not ret: break
+            if not ret:
+                break
             frame_idx += 2
 
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -73,12 +74,16 @@ class BatchVideoService:
             else:
                 stability_counter = 0
             if stability_counter > frames_to_wait:
-                (score, diff_map) = compare_ssim(last_saved_frame, gray, full=True)
+                score, diff_map = compare_ssim(last_saved_frame, gray, full=True)
 
                 if score < self.SSIM_THRESHOLD:
                     diff_map = (diff_map * 255).astype("uint8")
-                    thresh_diff = cv2.threshold(diff_map, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU)[1]
-                    cnts = cv2.findContours(thresh_diff.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                    thresh_diff = cv2.threshold(
+                        diff_map, 0, 255, cv2.THRESH_BINARY_INV | cv2.THRESH_OTSU
+                    )[1]
+                    cnts = cv2.findContours(
+                        thresh_diff.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+                    )
                     cnts = cnts[0] if len(cnts) == 2 else cnts[1]
 
                     significant_change = False
@@ -104,4 +109,5 @@ class BatchVideoService:
 
     def _save(self, lst, frame):
         ok, buf = cv2.imencode(".png", frame)
-        if ok: lst.append(buf.tobytes())
+        if ok:
+            lst.append(buf.tobytes())

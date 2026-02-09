@@ -1,4 +1,3 @@
-
 from enum import Enum
 from fastapi import Form
 from pydantic import BaseModel, EmailStr, Field, validator, field_validator

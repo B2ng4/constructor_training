@@ -15,7 +15,9 @@ from schemas.trainings import (
     TrainingUpdate,
     TrainingStepCreate,
     TrainingStepUpdate,
-    TrainingStepResponse, TrainingListResponse, StepOrderUpdate
+    TrainingStepResponse,
+    TrainingListResponse,
+    StepOrderUpdate,
 )
 
 from models.trainings import Training, TrainingStep, TypesAction, Tags
@@ -30,16 +32,10 @@ class TrainingsService:
         self.repo = TrainingRepository(session)
         self.session = session
 
-    async def create_training(
-            self,
-            training_data: TrainingCreate,
-            creator_id: int
-    ):
+    async def create_training(self, training_data: TrainingCreate, creator_id: int):
         """Создание тренинга с тегами и шагами"""
         try:
-            training_dict = training_data.model_dump(
-                exclude={"steps", "tag_ids"}
-            )
+            training_dict = training_data.model_dump(exclude={"steps", "tag_ids"})
 
             training = Training(**training_dict, creator_id=creator_id)
 
@@ -54,7 +50,7 @@ class TrainingsService:
             if not created_training:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Не удалось создать тренинг"
+                    detail="Не удалось создать тренинг",
                 )
 
             if training_data.steps:
@@ -65,14 +61,16 @@ class TrainingsService:
 
             await self.session.commit()
 
-            created_training = await self.repo.get_by_uuid_with_relations(created_training.uuid)
+            created_training = await self.repo.get_by_uuid_with_relations(
+                created_training.uuid
+            )
 
             if created_training:
                 return TrainingResponse.model_validate(created_training)
 
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Не удалось получить созданный тренинг"
+                detail="Не удалось получить созданный тренинг",
             )
 
         except HTTPException:
@@ -82,20 +80,17 @@ class TrainingsService:
             await self.session.rollback()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Ошибка создания тренинга: {str(e)}"
+                detail=f"Ошибка создания тренинга: {str(e)}",
             )
 
-    async def create_training_step(
-            self,
-            step_data: TrainingStepCreate
-    ) -> TrainingStep:
+    async def create_training_step(self, step_data: TrainingStepCreate) -> TrainingStep:
         """Создание объекта TrainingStep (без сохранения в БД)"""
         if step_data.action_type_id:
             action_type = await self.repo.get_action_type(step_data.action_type_id)
             if not action_type:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Тип действия с ID {step_data.action_type_id} не найден"
+                    detail=f"Тип действия с ID {step_data.action_type_id} не найден",
                 )
 
             step_dict = step_data.model_dump(exclude={"action_type_id"})
@@ -112,17 +107,14 @@ class TrainingsService:
         return TrainingResponse.model_validate(training)
 
     async def get_trainings_by_params(
-            self,
-            skip: int = 0,
-            limit: int = 100
+        self, skip: int = 0, limit: int = 100
     ) -> List[TrainingResponse]:
         """Получение списка тренингов с пагинацией"""
         trainings = await self.repo.get_all_with_relations(skip, limit)
         return [TrainingResponse.model_validate(t) for t in trainings]
 
     async def get_trainings_by_user_id(
-            self,
-            user_id: int
+        self, user_id: int
     ) -> List[TrainingListResponse]:
         """Получение тренингов пользователя БЕЗ шагов"""
         trainings = await self.repo.get_by_user_id(user_id)
@@ -131,27 +123,25 @@ class TrainingsService:
         return [TrainingListResponse.model_validate(training) for training in trainings]
 
     async def patch_training(
-            self,
-            training_uuid: UUID4,
-            training_data: TrainingUpdate
+        self, training_uuid: UUID4, training_data: TrainingUpdate
     ) -> TrainingResponse:
         """Частичное обновление тренинга и его шагов"""
         try:
-            existing_training = await self.repo.get_by_uuid_with_relations(training_uuid)
+            existing_training = await self.repo.get_by_uuid_with_relations(
+                training_uuid
+            )
             if not existing_training:
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Тренинг не найден"
+                    status_code=status.HTTP_404_NOT_FOUND, detail="Тренинг не найден"
                 )
 
             update_data = training_data.model_dump(
-                exclude_unset=True,
-                exclude={"steps", "tag_ids"}
+                exclude_unset=True, exclude={"steps", "tag_ids"}
             )
             if update_data:
                 await self.repo.patch_training_fields(training_uuid, update_data)
 
-            if hasattr(training_data, 'tag_ids') and training_data.tag_ids is not None:
+            if hasattr(training_data, "tag_ids") and training_data.tag_ids is not None:
                 tags_result = await self.session.execute(
                     select(Tags).where(Tags.value.in_(training_data.tag_ids))
                 )
@@ -159,7 +149,7 @@ class TrainingsService:
                 existing_training.tags = list(tags)
                 await self.session.flush()
 
-            if hasattr(training_data, 'steps') and training_data.steps is not None:
+            if hasattr(training_data, "steps") and training_data.steps is not None:
                 await self.patch_training_steps(training_uuid, training_data.steps)
 
             await self.session.commit()
@@ -174,20 +164,20 @@ class TrainingsService:
             await self.session.rollback()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Непредвиденная ошибка: {str(e)}"
+                detail=f"Непредвиденная ошибка: {str(e)}",
             )
 
     async def patch_training_steps(
-            self,
-            training_uuid: UUID4,
-            steps_data: List[Union[TrainingStepCreate, TrainingStepUpdate]]
+        self,
+        training_uuid: UUID4,
+        steps_data: List[Union[TrainingStepCreate, TrainingStepUpdate]],
     ):
         """Частичное обновление шагов тренинга"""
         existing_steps = await self.repo.get_training_steps(training_uuid)
         existing_steps_dict = {step.id: step for step in existing_steps}
 
         for step_data in steps_data:
-            step_id = getattr(step_data, 'id', None)
+            step_id = getattr(step_data, "id", None)
 
             if step_id and step_id in existing_steps_dict:
                 update_data = step_data.model_dump(exclude_unset=True, exclude={"id"})
@@ -203,8 +193,7 @@ class TrainingsService:
         success = await self.repo.delete(training_uuid)
         if not success:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Тренинг не найден"
+                status_code=status.HTTP_404_NOT_FOUND, detail="Тренинг не найден"
             )
         return True
 
@@ -213,9 +202,7 @@ class TrainingsService:
         return await self.repo.get_training_steps(training_uuid)
 
     async def create_steps_from_photos(
-            self,
-            training_uuid: UUID4,
-            photo_urls: List[str]
+        self, training_uuid: UUID4, photo_urls: List[str]
     ) -> List[Dict]:
         """
         Создание шагов из фотографий с вычислением размеров.
@@ -227,7 +214,7 @@ class TrainingsService:
             if not training_exists:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Тренинг с UUID {training_uuid} не найден"
+                    detail=f"Тренинг с UUID {training_uuid} не найден",
                 )
 
             steps_data_to_create = []
@@ -238,15 +225,17 @@ class TrainingsService:
             for i, photo_url in enumerate(photo_urls):
                 image_meta = self._get_image_dimensions(photo_url)
 
-                steps_data_to_create.append({
-                    "step_number": next_step_number + i,
-                    "image_url": photo_url,
-                    "meta": {
-                        "name": "Шаг без названия",
-                        "image_width": image_meta.get("width", 0),
-                        "image_height": image_meta.get("height", 0),
+                steps_data_to_create.append(
+                    {
+                        "step_number": next_step_number + i,
+                        "image_url": photo_url,
+                        "meta": {
+                            "name": "Шаг без названия",
+                            "image_width": image_meta.get("width", 0),
+                            "image_height": image_meta.get("height", 0),
+                        },
                     }
-                })
+                )
 
             created_steps_info = []
 
@@ -255,18 +244,20 @@ class TrainingsService:
                     step_number=step_data["step_number"],
                     meta=step_data["meta"],
                     training_uuid=training_uuid,
-                    image_url=step_data["image_url"]
+                    image_url=step_data["image_url"],
                 )
                 self.session.add(new_step)
 
-                created_steps_info.append({
-                    "step_number": step_data["step_number"],
-                    "image_url": step_data["image_url"],
-                    "dimensions": {
-                        "width": step_data["meta"]["image_width"],
-                        "height": step_data["meta"]["image_height"]
+                created_steps_info.append(
+                    {
+                        "step_number": step_data["step_number"],
+                        "image_url": step_data["image_url"],
+                        "dimensions": {
+                            "width": step_data["meta"]["image_width"],
+                            "height": step_data["meta"]["image_height"],
+                        },
                     }
-                })
+                )
             await self.session.commit()
 
             return created_steps_info
@@ -278,7 +269,7 @@ class TrainingsService:
             await self.session.rollback()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Ошибка создания шагов из фотографий: {str(e)}"
+                detail=f"Ошибка создания шагов из фотографий: {str(e)}",
             )
 
     def _get_image_dimensions(self, image_url: str) -> Dict[str, int]:
@@ -298,9 +289,7 @@ class TrainingsService:
             return {"width": 0, "height": 0}
 
     async def add_step(
-            self,
-            training_uuid: UUID4,
-            step_data: TrainingStepCreate
+        self, training_uuid: UUID4, step_data: TrainingStepCreate
     ) -> TrainingStepResponse:
         """Добавление одного шага к тренингу"""
         try:
@@ -308,7 +297,7 @@ class TrainingsService:
             if not training_exists:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Тренинг с UUID {training_uuid} не найден"
+                    detail=f"Тренинг с UUID {training_uuid} не найден",
                 )
 
             step = await self.create_training_step(step_data)
@@ -327,13 +316,11 @@ class TrainingsService:
             await self.session.rollback()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Ошибка добавления шага: {str(e)}"
+                detail=f"Ошибка добавления шага: {str(e)}",
             )
 
     async def add_steps_bulk(
-            self,
-            training_uuid: UUID4,
-            steps_data: List[TrainingStepCreate]
+        self, training_uuid: UUID4, steps_data: List[TrainingStepCreate]
     ) -> List[TrainingStepResponse]:
         """Массовое добавление шагов к тренингу"""
         try:
@@ -341,7 +328,7 @@ class TrainingsService:
             if not training_exists:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Тренинг с UUID {training_uuid} не найден"
+                    detail=f"Тренинг с UUID {training_uuid} не найден",
                 )
 
             created_steps = []
@@ -365,14 +352,11 @@ class TrainingsService:
             await self.session.rollback()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Ошибка добавления шагов: {str(e)}"
+                detail=f"Ошибка добавления шагов: {str(e)}",
             )
 
     async def update_step(
-            self,
-            training_uuid: UUID4,
-            step_id: int,
-            step_data: TrainingStepUpdate
+        self, training_uuid: UUID4, step_id: int, step_data: TrainingStepUpdate
     ) -> TrainingStepResponse:
         """Обновление шага по UUID тренинга и ID шага"""
         try:
@@ -382,12 +366,11 @@ class TrainingsService:
             if not existing_step:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Шаг {step_id} не найден в тренинге {training_uuid}"
+                    detail=f"Шаг {step_id} не найден в тренинге {training_uuid}",
                 )
 
             update_data = step_data.model_dump(
-                exclude_unset=True,
-                exclude={"id", "steps"}
+                exclude_unset=True, exclude={"id", "steps"}
             )
 
             if update_data:
@@ -405,14 +388,10 @@ class TrainingsService:
             await self.session.rollback()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Ошибка обновления шага: {str(e)}"
+                detail=f"Ошибка обновления шага: {str(e)}",
             )
 
-    async def delete_step(
-            self,
-            training_uuid: UUID4,
-            step_id: int
-    ) -> bool:
+    async def delete_step(self, training_uuid: UUID4, step_id: int) -> bool:
         """Удаление шага по UUID тренинга и ID шага"""
         try:
             existing_step = await self.repo.get_step_by_id_and_training(
@@ -421,14 +400,14 @@ class TrainingsService:
             if not existing_step:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Шаг {step_id} не найден в тренинге {training_uuid}"
+                    detail=f"Шаг {step_id} не найден в тренинге {training_uuid}",
                 )
 
             success = await self.repo.delete_training_step(step_id)
             if not success:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Шаг {step_id} не найден"
+                    detail=f"Шаг {step_id} не найден",
                 )
 
             await self.session.commit()
@@ -441,13 +420,11 @@ class TrainingsService:
             await self.session.rollback()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Ошибка удаления шага: {str(e)}"
+                detail=f"Ошибка удаления шага: {str(e)}",
             )
 
     async def delete_steps_bulk(
-            self,
-            training_uuid: UUID4,
-            step_ids: List[int]
+        self, training_uuid: UUID4, step_ids: List[int]
     ) -> Dict[str, Any]:
         """Массовое удаление шагов по UUID тренинга и списку ID"""
         try:
@@ -473,20 +450,18 @@ class TrainingsService:
             return {
                 "deleted": deleted_count,
                 "not_found": not_found,
-                "total_requested": len(step_ids)
+                "total_requested": len(step_ids),
             }
 
         except Exception as e:
             await self.session.rollback()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Ошибка удаления шагов: {str(e)}"
+                detail=f"Ошибка удаления шагов: {str(e)}",
             )
 
     async def reorder_steps(
-            self,
-            training_uuid: UUID4,
-            steps_order: List[StepOrderUpdate]
+        self, training_uuid: UUID4, steps_order: List[StepOrderUpdate]
     ) -> Dict[str, Any]:
         """Обновление порядка шагов в тренинге."""
         try:
@@ -494,7 +469,7 @@ class TrainingsService:
             if not training_exists:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Тренинг с UUID {training_uuid} не найден"
+                    detail=f"Тренинг с UUID {training_uuid} не найден",
                 )
 
             if not steps_order:
@@ -508,18 +483,17 @@ class TrainingsService:
             if validated_steps_count != len(step_ids_to_update):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Один или несколько ID шагов не принадлежат указанному тренингу."
+                    detail="Один или несколько ID шагов не принадлежат указанному тренингу.",
                 )
 
             steps_to_update_dict = [step.model_dump() for step in steps_order]
-            updated_count = await self.repo.bulk_update_step_numbers(steps_to_update_dict)
+            updated_count = await self.repo.bulk_update_step_numbers(
+                steps_to_update_dict
+            )
 
             await self.session.commit()
 
-            return {
-                "updated_count": updated_count,
-                "total_requested": len(steps_order)
-            }
+            return {"updated_count": updated_count, "total_requested": len(steps_order)}
 
         except HTTPException:
             await self.session.rollback()
@@ -528,15 +502,15 @@ class TrainingsService:
             await self.session.rollback()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Ошибка обновления порядка шагов: {str(e)}"
+                detail=f"Ошибка обновления порядка шагов: {str(e)}",
             )
 
     async def add_steps_from_video(
-            self,
-            training_uuid: UUID4,
-            video_file: UploadFile,
-            video_service: BatchVideoService,
-            s3_service: S3Service
+        self,
+        training_uuid: UUID4,
+        video_file: UploadFile,
+        video_service: BatchVideoService,
+        s3_service: S3Service,
     ) -> List[Dict]:
         """
         Обрабатывает видео: нарезает на кадры, загружает в S3, создает шаги в БД.
@@ -546,7 +520,7 @@ class TrainingsService:
             if not training_exists:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Тренинг с UUID {training_uuid} не найден"
+                    detail=f"Тренинг с UUID {training_uuid} не найден",
                 )
             frames_bytes = await video_service.extract_slides(video_file)
 
@@ -560,9 +534,13 @@ class TrainingsService:
                 filename = f"video_slide_{i + 1:03d}.png"
                 object_name = s3_service.generate_unique_filename(filename)
 
-                url = await s3_service.upload_file(frame_data, object_name, training_uuid)
+                url = await s3_service.upload_file(
+                    frame_data, object_name, training_uuid
+                )
                 uploaded_urls.append(url)
-            created_steps = await self.create_steps_from_photos(training_uuid, uploaded_urls)
+            created_steps = await self.create_steps_from_photos(
+                training_uuid, uploaded_urls
+            )
 
             return created_steps
 
@@ -572,5 +550,5 @@ class TrainingsService:
             await self.session.rollback()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Ошибка обработки видео и создания шагов: {str(e)}"
+                detail=f"Ошибка обработки видео и создания шагов: {str(e)}",
             )

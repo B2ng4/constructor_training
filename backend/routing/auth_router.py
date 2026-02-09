@@ -14,9 +14,10 @@ from schemas.users import UserRegister, UserResponse, UserLogin, User
 from depends import get_user_service
 from services.user_service import UserService
 
-
-router = APIRouter(prefix="/auth",
-                   tags=["Auth"],)
+router = APIRouter(
+    prefix="/auth",
+    tags=["Auth"],
+)
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 

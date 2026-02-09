@@ -9,11 +9,9 @@ from core.config import get_db_url
 from sqlalchemy import MetaData
 import asyncio
 
-
 DATABASE_URL = get_db_url()
 engine = create_async_engine(DATABASE_URL)
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-
 
 
 class Base(AsyncAttrs, DeclarativeBase):

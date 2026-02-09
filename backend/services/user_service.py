@@ -1,4 +1,3 @@
-
 from fastapi import HTTPException, status, BackgroundTasks
 from typing import Optional
 from jose import jwt
@@ -30,15 +29,14 @@ class UserService:
         background_tasks.add_task(self.email_service.send_email, mail)
         return await self.user_repo.add_user(user_data)
 
-
     async def authenticate(self, email: EmailStr, password: str):
 
         user = await self.user_repo.find_one_or_none(email=email)
-        if not user or not verify_password(plain_password=password, hashed_password=user.password):
+        if not user or not verify_password(
+            plain_password=password, hashed_password=user.password
+        ):
             return None
         return user
-
-
 
     async def login(self, credential: UserLogin) -> Optional[str]:
         # Используем authenticate_user для проверки email и пароля

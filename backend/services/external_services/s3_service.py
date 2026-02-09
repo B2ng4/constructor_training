@@ -17,13 +17,13 @@ import base64
 
 class S3Service:
     def __init__(
-            self,
-            session: AsyncSession,
-            aws_access_key_id: str = configs.AWS_ACCESS_KEY_ID,
-            aws_secret_access_key: str = configs.AWS_SECRET_ACCESS_KEY,
-            region_name: str = configs.S3_REGION_NAME,
-            bucket_name: str = configs.S3_BUCKET_NAME,
-            endpoint_url: str = configs.S3_ENDPOINT_URL,
+        self,
+        session: AsyncSession,
+        aws_access_key_id: str = configs.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key: str = configs.AWS_SECRET_ACCESS_KEY,
+        region_name: str = configs.S3_REGION_NAME,
+        bucket_name: str = configs.S3_BUCKET_NAME,
+        endpoint_url: str = configs.S3_ENDPOINT_URL,
     ):
         self.s3_client = boto3.client(
             "s3",
@@ -44,13 +44,13 @@ class S3Service:
             self.s3_client.head_bucket(Bucket=self.bucket_name)
             print(f"Бакет {self.bucket_name} существует")
         except ClientError as e:
-            error_code = e.response['Error']['Code']
-            if error_code == '404':
+            error_code = e.response["Error"]["Code"]
+            if error_code == "404":
                 try:
                     # Для VK Cloud не нужен CreateBucketConfiguration
                     self.s3_client.create_bucket(
                         Bucket=self.bucket_name,
-                        ACL='public-read'  # Делаем бакет публично читаемым
+                        ACL="public-read",  # Делаем бакет публично читаемым
                     )
                     print(f"Бакет {self.bucket_name} успешно создан")
                 except Exception as create_error:
@@ -66,7 +66,9 @@ class S3Service:
         unique_id = str(uuid.uuid4())
         return f"photos/{unique_id}.{extension}"
 
-    async def upload_file(self, file_content: bytes, object_name: str, training_uuid: UUID4) -> str:
+    async def upload_file(
+        self, file_content: bytes, object_name: str, training_uuid: UUID4
+    ) -> str:
         """Загружает файл в S3, сохраняет в БД и возвращает URL"""
         content_type, _ = mimetypes.guess_type(object_name)
         if content_type is None:
@@ -78,9 +80,8 @@ class S3Service:
                 Key=object_name,
                 Body=file_content,
                 ContentType=content_type,
-                ACL='public-read'
+                ACL="public-read",
             )
-
 
             file_url = f"{self.endpoint_url}/{self.bucket_name}/{object_name}"
 
@@ -96,12 +97,13 @@ class S3Service:
         print(f"Attempting to delete object: {object_name}")
         try:
             response = self.s3_client.delete_objects(
-                Bucket=self.bucket_name,
-                Delete={'Objects': [{'Key': object_name}]}
+                Bucket=self.bucket_name, Delete={"Objects": [{"Key": object_name}]}
             )
-            if 'Deleted' in response:
+            if "Deleted" in response:
                 return True
             else:
                 raise HTTPException(status_code=404, detail="Файл не удалён")
         except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Ошибка при удалении файла: {str(e)}")
+            raise HTTPException(
+                status_code=500, detail=f"Ошибка при удалении файла: {str(e)}"
+            )

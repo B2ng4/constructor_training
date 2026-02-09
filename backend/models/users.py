@@ -11,6 +11,7 @@ class User(Base):
     """
     Таблица пользователя
     """
+
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -20,12 +21,10 @@ class User(Base):
     first_name: Mapped[Optional[str]] = mapped_column(sa.String(50))
     last_name: Mapped[Optional[str]] = mapped_column(sa.String(50))
     registration_at: Mapped[Optional[datetime]] = mapped_column(
-        sa.DateTime,
-        server_default=text("NOW()")
+        sa.DateTime, server_default=text("NOW()")
     )
     photo: Mapped[Optional[str]] = mapped_column(sa.String, nullable=True)
 
     created_trainings: Mapped[List["Training"]] = relationship(
-        "models.trainings.Training",
-        back_populates="creator"
+        "models.trainings.Training", back_populates="creator"
     )
