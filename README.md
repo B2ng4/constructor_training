@@ -17,13 +17,12 @@
 
 ### Для настройки backend
 
-cd backend
-uv sync
-alembic revision --autogenerate -m "Add training_publications table"
-uv run alembic upgrade head 
-uv run main.py         
-
-
+cd backend - переключить директорию на backend
+uv sync - синхронизировать зависимости
+alembic revision --autogenerate -m "Add training_publications table" - создать миграцию таблиц
+uv run alembic upgrade head  - обновить таблицы в локальной бд
+uv run main.py - запустить backend
+taskkill /F /IM python.exe - удалить питоновские процессы
 ## Backend 
 ![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
 ![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens)
