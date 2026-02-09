@@ -8,6 +8,7 @@ from starlette.responses import HTMLResponse
 
 from core.database import get_async_session
 from repositories.users_repository import UserRepository
+from scripts.create_initial_actions import create_initial_actions
 from scripts.create_user import create_test_user
 
 
@@ -25,6 +26,7 @@ def create_base_app(configs):
         """Управление жизненным циклом приложения."""
         logger.info("Инициализация приложения...")
         await create_initial_user()
+        await create_initial_actions()
         yield
         logger.info("Завершение работы приложения...")
 
