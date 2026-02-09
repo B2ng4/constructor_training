@@ -1,3 +1,4 @@
+import uuid
 from typing import List, Optional, Dict, Union, Any
 from pydantic import UUID4
 from sqlalchemy import select
@@ -20,7 +21,7 @@ from schemas.trainings import (
     StepOrderUpdate,
 )
 
-from models.trainings import Training, TrainingStep, TypesAction, Tags
+from models.trainings import Training, TrainingStep, TypesAction, Tags, TrainingPublication
 from sqlalchemy.exc import IntegrityError
 
 from services.BatchVideo_service import BatchVideoService
@@ -105,6 +106,38 @@ class TrainingsService:
         if not training:
             return None
         return TrainingResponse.model_validate(training)
+
+    async def publish_training(self, training_uuid: UUID4) -> str:
+        """
+        Публикует тренинг
+        Возвращает публичный access_token.
+        """
+        training = await self.repo.get_by_uuid_with_relations(training_uuid)
+        if not training:
+            raise HTTPException(status_code=404, detail="Тренинг не найден")
+        training_data = TrainingResponse.model_validate(training).model_dump(mode='json')
+        access_token = str(uuid.uuid4())
+
+        # 4. Сохраняем через репозиторий
+        await self.repo.create_or_update_publication(
+            training_uuid=training.uuid,
+            access_token=access_token,
+            snapshot_data=training_data
+        )
+
+        await self.session.commit()
+
+        return access_token
+
+    async def get_public_training_data(self, access_token: str) -> Dict:
+        """
+        Получает данные тренинга для прохождения (для анонимного пользователя).
+        """
+        publication = await self.repo.get_publication_by_token(access_token)
+
+        if not publication:
+            raise HTTPException(status_code=404, detail="Тренинг не найден или доступ закрыт")
+        return publication.data_snapshot
 
     async def get_trainings_by_params(
         self, skip: int = 0, limit: int = 100

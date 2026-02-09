@@ -19,6 +19,7 @@
 
 cd backend
 uv sync
+alembic revision --autogenerate -m "Add training_publications table"
 uv run alembic upgrade head 
 uv run main.py         
 

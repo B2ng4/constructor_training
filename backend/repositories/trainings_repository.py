@@ -4,7 +4,7 @@ from pydantic import UUID4
 from sqlalchemy.orm import selectinload, joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from models.trainings import Training, TypesAction, TrainingStep
+from models.trainings import Training, TypesAction, TrainingStep, TrainingPublication
 from sqlalchemy import select, delete, update, func, exists
 
 
@@ -293,3 +293,49 @@ class TrainingRepository:
         await self.session.execute(update(TrainingStep), steps_data)
         await self.session.flush()
         return len(steps_data)
+
+
+    async def create_or_update_publication(self, training_uuid: UUID4, access_token: str, snapshot_data: Dict) -> TrainingPublication:
+        """
+        Создает новую публикацию или обновляет старую для данного тренинга.
+        """
+        query = select(TrainingPublication).where(
+            TrainingPublication.training_uuid == training_uuid
+        )
+        result = await self.session.execute(query)
+        publication = result.scalar_one_or_none()
+
+        if publication:
+            publication.data_snapshot = snapshot_data
+        else:
+            publication = TrainingPublication(
+                training_uuid=training_uuid,
+                access_token=access_token,
+                data_snapshot=snapshot_data
+            )
+            self.session.add(publication)
+
+        await self.session.flush()
+        return publication
+
+    async def get_publication_by_token(self, access_token: str) -> Optional[TrainingPublication]:
+        """
+        Получает публикацию по токену. Это очень быстрый запрос.
+        """
+        query = select(TrainingPublication).where(
+            TrainingPublication.access_token == access_token,
+            TrainingPublication.is_active == True
+        )
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()
+
+    async def increment_publication_views(self, publication_id: int):
+        """
+        Атомарно увеличивает счетчик просмотров
+        """
+        stmt = (
+            update(TrainingPublication)
+            .where(TrainingPublication.id == publication_id)
+            .values(views_count=TrainingPublication.views_count + 1)
+        )
+        await self.session.execute(stmt)

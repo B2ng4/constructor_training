@@ -213,3 +213,24 @@ class Levels(Base):
     trainings: Mapped[List["Training"]] = relationship(
         "models.trainings.Training", back_populates="level", lazy="selectin"
     )
+
+
+class TrainingPublication(Base):
+    """
+    Таблица для хранения опубликованных версий тренингов.
+    """
+    __tablename__ = "training_publications"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    training_uuid: Mapped[UUID4] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("trainings.uuid", ondelete="CASCADE")
+    )
+    access_token: Mapped[str] = mapped_column(sa.String(100), unique=True, index=True)
+    data_snapshot: Mapped[Dict] = mapped_column(JSONB, nullable=False)
+    views_count: Mapped[int] = mapped_column(default=0)
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    is_active: Mapped[bool] = mapped_column(default=True)
+    training: Mapped["Training"] = relationship("Training", lazy="selectin")
+
+

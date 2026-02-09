@@ -4,6 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, status
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import UUID4
 from fastapi.responses import JSONResponse
+
+from core.config import configs
 from depends import (
     get_trainings_service,
     get_s3_service,
@@ -289,3 +291,24 @@ async def get_training_steps(
     """Получение всех шагов тренинга"""
     steps = await service.get_training_steps(training_uuid)
     return [TrainingStepResponse.model_validate(step) for step in steps]
+
+
+@router.post("/{training_uuid}/publish", name="Опубликовать тренинг")
+async def publish_training(
+    training_uuid: UUID4,
+    service: TrainingsService = Depends(get_trainings_service),
+):
+    token = await service.publish_training(training_uuid)
+    BASE_URL = "http://localhost:8002/training/public"
+    return {
+        "success": True,
+        "public_link": f"{BASE_URL}/{token}",
+        "access_token": token
+    }
+
+@router.get("/public/{access_token}", name="Получить публичный тренинг")
+async def get_public_training(
+    access_token: str,
+    service: TrainingsService = Depends(get_trainings_service)
+):
+    return await service.get_public_training_data(access_token)
