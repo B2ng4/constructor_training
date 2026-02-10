@@ -7,7 +7,7 @@ import Page403 from "@pages/ui/Page403.vue";
 import PersonalPage from "@pages/ui/PersonalPage.vue";
 import RegistrationPage from "@pages/ui/RegistrationPage.vue";
 import TrainingPage from "@pages/ui/TrainingPage.vue";
-import CompleteTraining from "@pages/ui/CompleteTraining.vue";
+import PassageTraining from "@pages/ui/PassageTraining.vue";
 
 export {
 	EditPage,
@@ -19,5 +19,5 @@ export {
 	PersonalPage,
 	RegistrationPage,
 	TrainingPage,
-	CompleteTraining
+	PassageTraining
 };

@@ -8,7 +8,7 @@ import {
 	PersonalPage,
 	RegistrationPage,
 	TrainingPage,
-	CompleteTraining
+	PassageTraining
 } from "@pages";
 
 export const routes = [
@@ -41,5 +41,5 @@ export const routes = [
 	},
 	{ path: "/403", component: Page403, name: '403' },
 	{ path: "/edit/:uuid", component: EditPage },
-	{ path: '/public/:accessToken', component: CompleteTraining }
+	{ path: '/passage/:accessToken', component: PassageTraining }
 ];
