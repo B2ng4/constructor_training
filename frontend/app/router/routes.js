@@ -41,5 +41,5 @@ export const routes = [
 	},
 	{ path: "/403", component: Page403, name: '403' },
 	{ path: "/edit/:uuid", component: EditPage },
-	{path: '/public/:access-token', component: CompleteTraining}
+	{ path: '/public/:accessToken', component: CompleteTraining }
 ];
