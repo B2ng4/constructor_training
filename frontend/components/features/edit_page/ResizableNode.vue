@@ -45,9 +45,13 @@ const metaText = computed({
 		return store.selectedStep.area?.metaText || '';
 	},
 	set(value) {
-		if (store.selectedStep.area) {
-			store.selectedStep.area.metaText = value;
+		// Создаем объект area, если он не существует
+		if (!store.selectedStep.area) {
+			store.selectedStep.area = {
+				metaText: '',
+			};
 		}
+		store.selectedStep.area.metaText = value;
 	}
 });
 
@@ -56,11 +60,14 @@ const metaKeywords = computed({
 		return store.selectedStep.area?.metaKeywords || [];
 	},
 	set(value) {
-		if (store.selectedStep.area) {
-			store.selectedStep.area.metaKeywords = value;
+		if (!store.selectedStep.area) {
+			store.selectedStep.area = {
+				metaKeywords: []
+			};
 		}
+		store.selectedStep.area.metaKeywords = value;
 	}
-});
+})
 
 //Для отображения кнопки для сохранения зоны
 const saveMode = ref(true);

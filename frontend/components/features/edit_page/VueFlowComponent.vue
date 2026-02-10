@@ -44,26 +44,8 @@ const clearEventNode = () => {
 	}
 };
 
-//TODO: УБРАТЬ ДВОЙНУЮ ЗАГРУЗКУ ИЗОБРАЖЕНИЯ
 const createFullscreenNode = async () => {
-	const getImageSize = (url) => {
-		return new Promise((resolve) => {
-			const img = new Image();
-			img.src = url;
-
-			img.onload = () => {
-				resolve({ width: img.naturalWidth, height: img.naturalHeight });
-			};
-
-			if (img.complete) {
-				resolve({ width: img.naturalWidth, height: img.naturalHeight });
-			}
-		});
-	};
-
-	const { width: imgWidth, height: imgHeight } = await getImageSize(
-		store.selectedStep.image_url,
-	);
+	const { width: imgWidth, height: imgHeight } = store.selectedStep.photo_dimensions;
 	const canvasWidth = window.innerWidth;
 	const canvasHeight = window.innerHeight;
 

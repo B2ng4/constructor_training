@@ -1,8 +1,8 @@
-"""int
+"""init
 
-Revision ID: b3caed272d4d
+Revision ID: d40e0ba09dc7
 Revises: 
-Create Date: 2026-02-09 19:40:10.205919
+Create Date: 2026-02-10 11:33:17.709822
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = 'b3caed272d4d'
+revision: str = 'd40e0ba09dc7'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -88,6 +88,7 @@ def upgrade() -> None:
     sa.Column('meta', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     sa.Column('annotation', sa.Text(), nullable=True),
     sa.Column('image_url', sa.Text(), nullable=True),
+    sa.Column('photo_dimensions', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     sa.ForeignKeyConstraint(['action_type_id'], ['typesactions.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['parent_step_id'], ['training_steps.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['training_uuid'], ['trainings.uuid'], ondelete='CASCADE'),
