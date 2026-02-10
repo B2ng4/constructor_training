@@ -1,6 +1,6 @@
 from sqlalchemy import select
 from core.database import get_async_session
-from repositories.actions_repository import ActionsRepository  # Импортируем твой репозиторий
+from repositories.actions_repository import ActionsRepository
 from models.trainings import TypesAction
 
 INITIAL_ACTIONS = [
