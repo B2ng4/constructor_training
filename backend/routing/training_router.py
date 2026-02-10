@@ -299,7 +299,7 @@ async def publish_training(
     service: TrainingsService = Depends(get_trainings_service),
 ):
     token = await service.publish_training(training_uuid)
-    BASE_URL = "http://localhost:8002/training/public"
+    BASE_URL = "http://localhost:5173/training/passage"
     return {
         "success": True,
         "public_link": f"{BASE_URL}/{token}",

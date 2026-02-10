@@ -8,8 +8,13 @@ from starlette.responses import HTMLResponse
 
 from core.database import get_async_session
 from repositories.users_repository import UserRepository
+
 from scripts.create_initial_actions import create_initial_actions
 from scripts.create_user import create_test_user
+from scripts.create_initial_levels import create_initial_levels
+from scripts.create_initial_tags import create_initial_tags
+
+
 
 
 async def create_initial_user():
@@ -27,6 +32,8 @@ def create_base_app(configs):
         logger.info("Инициализация приложения...")
         await create_initial_user()
         await create_initial_actions()
+        await create_initial_tags()
+        await create_initial_levels()
         yield
         logger.info("Завершение работы приложения...")
 
