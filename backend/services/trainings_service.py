@@ -235,14 +235,13 @@ class TrainingsService:
         return await self.repo.get_training_steps(training_uuid)
 
     async def create_steps_from_photos(
-        self, training_uuid: UUID4, photo_urls: List[str]
+            self, training_uuid: UUID4, photo_urls: List[str]
     ) -> List[Dict]:
         """
         Создание шагов из фотографий с вычислением размеров.
         Этот метод делегирует сохранение в репозиторий.
         """
         try:
-            # 1. Проверяем существование тренинга
             training_exists = await self.repo.check_training_exists(training_uuid)
             if not training_exists:
                 raise HTTPException(
@@ -264,8 +263,10 @@ class TrainingsService:
                         "image_url": photo_url,
                         "meta": {
                             "name": "Шаг без названия",
-                            "image_width": image_meta.get("width", 0),
-                            "image_height": image_meta.get("height", 0),
+                        },
+                        "photo_dimensions": {
+                            "width": image_meta.get("width", 0),
+                            "height": image_meta.get("height", 0)
                         },
                     }
                 )
@@ -278,6 +279,7 @@ class TrainingsService:
                     meta=step_data["meta"],
                     training_uuid=training_uuid,
                     image_url=step_data["image_url"],
+                    photo_dimensions=step_data["photo_dimensions"],
                 )
                 self.session.add(new_step)
 
@@ -286,13 +288,12 @@ class TrainingsService:
                         "step_number": step_data["step_number"],
                         "image_url": step_data["image_url"],
                         "dimensions": {
-                            "width": step_data["meta"]["image_width"],
-                            "height": step_data["meta"]["image_height"],
+                            "width": step_data["photo_dimensions"]["width"],
+                            "height": step_data["photo_dimensions"]["height"],
                         },
                     }
                 )
             await self.session.commit()
-
             return created_steps_info
 
         except HTTPException:

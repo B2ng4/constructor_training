@@ -140,7 +140,7 @@ class TrainingStep(Base):
     meta: Mapped[Optional[Dict]] = mapped_column(JSONB)
     annotation: Mapped[Optional[str]] = mapped_column(sa.Text)
     image_url: Mapped[Optional[str]] = mapped_column(sa.Text)
-
+    photo_dimensions: Mapped[Optional[Dict]] = mapped_column(JSONB)
     training: Mapped["Training"] = relationship(
         "models.trainings.Training", back_populates="steps", lazy="selectin"
     )

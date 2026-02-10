@@ -21,6 +21,7 @@ class TrainingStepBase(BaseModel):
     meta: Optional[Dict[str, Any]] = None
     annotation: Optional[str] = None
     image_url: Optional[str] = None
+    photo_dimensions: Optional[Dict[str, Any]] = None
 
 
 class TrainingStepCreate(TrainingStepBase):
