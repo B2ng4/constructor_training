@@ -37,3 +37,5 @@ export class TrainingApi extends BaseApi {
 		return super.createRequest();
 	}
 }
+
+export const trainingApi = new TrainingApi();
