@@ -63,9 +63,9 @@
 										<q-item-label>Редактировать</q-item-label>
 									</q-item-section>
 								</q-item>
-								<q-item clickable @click="publishTraining(training)">
+								<q-item clickable @click="openPublishModal(training)">
 									<q-item-section>
-										<q-item-label>{{training.publish === true ? 'Закрыть доступ' : 'Опубликовать'}}</q-item-label>
+										<q-item-label>Опубликовать</q-item-label>
 									</q-item-section>
 								</q-item>
 								<q-item clickable @click="deleteTraining(training.uuid)">
@@ -81,6 +81,11 @@
 		</q-card>
 	</div>
 	<training-modal v-model="modal"/>
+	<publish-modal-training
+		v-model="publishModal"
+		:data="publishTrainingData"
+		@update-publish="publishTrainingData.publish = !publishTrainingData.publish"
+	/>
 </template>
 
 <script setup>
@@ -89,12 +94,15 @@ import { onMounted, ref, onUnmounted } from "vue";
 import { useRouter } from 'vue-router';
 import { trainingEvents } from "@utils/eventBus.js";
 import TrainingModal from "@components/features/training_page/TrainingModal.vue";
+import PublishModalTraining from "@components/features/training_page/PublishModalTraining.vue";
 
 const router = useRouter();
 const trainings = ref([]);
 const api = new TrainingApi();
 const status = ref(true);
 const modal = ref(false);
+const publishModal = ref(false);
+const publishTrainingData = ref(null);
 
 async function getTrainings() {
 	try {
@@ -114,19 +122,15 @@ async function getTrainings() {
 	}
 }
 
+const openPublishModal = (training) => {
+	publishModal.value = true;
+	publishTrainingData.value = training;
+}
+
 async function deleteTraining(uuid) {
 	try {
 		await api.deleteTraining(uuid);
 		await getTrainings();
-	} catch (e) {
-		console.error(e);
-	}
-}
-
-async function publishTraining(training) {
-	try {
-		await api.updateTraining(training.uuid, {publish: !training.publish});
-		training.publish = !training.publish;
 	} catch (e) {
 		console.error(e);
 	}
