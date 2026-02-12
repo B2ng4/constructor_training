@@ -23,9 +23,4 @@ export default defineConfig({
 			'@utils': path.join(__dirname, './utils'),
     }
   },
-	server: {
-		allowedHosts: ['creakily-patient-eland.cloudpub.ru'],
-		port: 8008,
-		host: '0.0.0.0',
-	},
 });

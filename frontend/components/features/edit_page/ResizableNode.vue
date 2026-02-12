@@ -3,6 +3,27 @@
 	<NodeToolbar :is-visible="node.data.toolbarVisible">
 		<div class="column">
 			<template v-if="saveMode">
+				<div
+					v-if="selectedMode === 'keyPress'"
+					class="column q-mb-sm hotkey-controls"
+				>
+					<q-btn
+						no-caps
+						outline
+						color="primary"
+						@click="openHotkeyCapture"
+					>
+						Назначить хоткей
+					</q-btn>
+					<div class="row items-center q-gutter-xs q-mt-xs">
+						<div class="text-caption text-grey-8">
+							Хоткей:
+						</div>
+						<div class="text-caption text-grey-8">
+							{{ hotkeyLabel }}
+						</div>
+					</div>
+				</div>
 				<q-btn
 					no-caps
 					color="primary"
@@ -23,6 +44,7 @@
 	<template v-if="selectedMode === 'keyPress'">
 		<watch-key
 			v-model="metaKeywords"
+			v-model:open="isHotkeyDialogOpen"
 		/>
 	</template>
 </template>
@@ -39,6 +61,7 @@ import WatchKey from "@components/features/edit_page/WatchKey.vue";
 
 const props = defineProps(['node', 'position']);
 const store = useTrainingData();
+const isHotkeyDialogOpen = ref(false);
 
 const metaText = computed({
 	get() {
@@ -77,6 +100,14 @@ const selectedMode = computed(() => {
 	return props.node.data.type;
 });
 
+const hotkeyLabel = computed(() => {
+	return metaKeywords.value?.join('+') || 'не назначен';
+});
+
+const openHotkeyCapture = () => {
+	isHotkeyDialogOpen.value = true;
+};
+
 const sendRequest = async () => {
 	try {
 		await trainingStepApi.editStep(
@@ -102,5 +133,9 @@ const sendRequest = async () => {
 
 <style>
 @import "@vue-flow/node-resizer/dist/style.css";
+
+.hotkey-controls {
+	min-width: 180px;
+}
 </style>
 

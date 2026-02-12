@@ -1,64 +1,50 @@
 <template>
-	<div
-		class="cursor-pointer card text-center q-pa-md"
-		:class="{ 'text-primary': isListening }"
-		style="
-		background: rgba(255,255,255,0.68);
-		backdrop-filter: blur(10px);
-		-webkit-backdrop-filter: blur(10px);
-		height: 100%;"
-		@click="handleClick"
+	<q-dialog
+		v-model="isListening"
+		no-backdrop-dismiss
+		no-esc-dismiss
 	>
-		<div
-			v-if="!isListening && displayKeys"
-			class="column items-center justify-center full-height"
-		>
-			<span class="text-caption text-grey-7">
-				Выбранные клавиши
-			</span>
-			<span style="font-size: 1.1rem; font-weight: 500;">
-				{{ displayKeys }}
-			</span>
-		</div>
-
-		<div
-			v-else
-			class="full-height flex items-center justify-center"
-		>
-			<span style="font-size: 1.1rem;">
-				{{ isListening ? 'Нажмите клавишу...' : 'Отследить клавишу' }}
-			</span>
-		</div>
-	</div>
+		<q-card class="watch-key-modal">
+			<q-card-section class="text-center">
+				<div class="text-subtitle1">
+					Ожидание нажатия клавиши
+				</div>
+				<div class="text-caption text-grey-7 q-mt-xs">
+					Нажмите нужную клавишу или комбинацию
+				</div>
+				<div class="watch-key-value q-mt-md">
+					{{ displayKeys || '...' }}
+				</div>
+			</q-card-section>
+			<q-card-actions align="right">
+				<q-btn
+					flat
+					color="primary"
+					label="Отмена"
+					@click="isListening = false"
+				/>
+			</q-card-actions>
+		</q-card>
+	</q-dialog>
 </template>
 
 <script setup>
 import { useMagicKeys } from "@vueuse/core";
-import { ref, watch, computed } from "vue";
+import { computed, watch } from "vue";
 
 const { current } = useMagicKeys();
-const isListening = ref(false);
-const pressedKeys = defineModel();
+const isListening = defineModel('open', { default: false });
+const pressedKeys = defineModel({ default: () => [] });
 
-// Вычисляемое свойство для отображения клавиш
 const displayKeys = computed(() => {
 	return pressedKeys.value?.join('+') || '';
 });
 
-// Обработчик клика
-const handleClick = () => {
-	if (isListening.value) {
-		isListening.value = false;
-	} else {
-		startListening();
+watch(isListening, (value) => {
+	if (value) {
+		pressedKeys.value = [];
 	}
-};
-
-// Функция начала отслеживания
-const startListening = () => {
-	isListening.value = true;
-	pressedKeys.value = [];
-};
+});
 
 // Отслеживаем нажатия клавиш
 watch(current, (keys) => {
@@ -72,8 +58,13 @@ watch(current, (keys) => {
 </script>
 
 <style scoped>
-.full-height {
-	height: 100%;
-	min-height: 30px;
+.watch-key-modal {
+	min-width: 340px;
+	max-width: 90vw;
+}
+
+.watch-key-value {
+	font-size: 1.4rem;
+	font-weight: 600;
 }
 </style>

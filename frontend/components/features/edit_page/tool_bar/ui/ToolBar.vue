@@ -18,7 +18,7 @@
 		<div class="tool-bar shadow-7">
 			<div class="q-gutter-x-md">
 				<q-btn
-					@click="store.selectEvent(event);"
+					@click="selectEvent(event)"
 					dense
 					:key="event.id"
 					v-for="event in events"
@@ -31,6 +31,26 @@
 					<Component :is="event.icon" />
 				</q-btn>
 			</div>
+		</div>
+
+		<div
+			v-if="isKeyPressSelected"
+			class="hotkey-panel shadow-4"
+		>
+			<div class="text-caption text-grey-7">
+				Клавиши
+			</div>
+			<div class="text-body2 q-mt-xs">
+				{{ hotkeyLabel }}
+			</div>
+			<q-btn
+				class="q-mt-sm"
+				no-caps
+				outline
+				color="primary"
+				label="Выбрать клавиши"
+				@click="openHotkeyDialog"
+			/>
 		</div>
 
 		<!-- Правая стрелка -->
@@ -46,6 +66,12 @@
 		>
 			<q-tooltip>Следующий шаг</q-tooltip>
 		</q-btn>
+
+		<watch-key
+			v-if="isKeyPressSelected"
+			v-model="metaKeywords"
+			v-model:open="isHotkeyDialogOpen"
+		/>
 	</div>
 </template>
 
@@ -58,10 +84,13 @@ import {
 	Mouseover,
 	Keyboard,
 } from "@components/features/edit_page/icons_tool_bar/index.js";
+import WatchKey from "@components/features/edit_page/WatchKey.vue";
+import { trainingStepApi } from "@api";
 import { useTrainingData } from "@store/editTraining.js";
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 
 const store = useTrainingData();
+const isHotkeyDialogOpen = ref(false);
 
 // Вычисляемые свойства для навигации
 const hasPreviousStep = computed(() => {
@@ -99,6 +128,74 @@ const goToNextStep = () => {
 		store.selectStep(store.trainingData.steps[currentIndex + 1]);
 	}
 };
+
+const isKeyPressSelected = computed(() => store.selectedEvent?.type === "keyPress");
+
+const metaKeywords = computed({
+	get() {
+		return store.selectedStep?.area?.metaKeywords || [];
+	},
+	set(value) {
+		if (!store.selectedStep) {
+			return;
+		}
+
+		if (!store.selectedStep.area) {
+			store.selectedStep.area = {};
+		}
+
+		store.selectedStep.area.metaKeywords = value;
+	}
+});
+
+const hotkeyLabel = computed(() => {
+	return metaKeywords.value?.length ? metaKeywords.value.join('+') : "не назначены";
+});
+
+const saveKeyPress = async () => {
+	if (!store.trainingData?.uuid || !store.selectedStep?.id || !store.selectedEvent?.id) {
+		return;
+	}
+
+	try {
+		const area = {
+			...(store.selectedStep.area || {}),
+			metaKeywords: metaKeywords.value || []
+		};
+
+		await trainingStepApi.editStep(
+			store.trainingData.uuid,
+			store.selectedStep.id,
+			{
+				action_type_id: store.selectedEvent.id,
+				area
+			}
+		);
+	} catch (e) {
+		console.error(e);
+	}
+};
+
+const openHotkeyDialog = () => {
+	isHotkeyDialogOpen.value = true;
+};
+
+const selectEvent = async (event) => {
+	store.selectEvent(event);
+	if (event.type === "keyPress") {
+		await saveKeyPress();
+		openHotkeyDialog();
+	}
+};
+
+watch(
+	() => isHotkeyDialogOpen.value,
+	async (isOpen) => {
+		if (!isOpen && isKeyPressSelected.value) {
+			await saveKeyPress();
+		}
+	}
+);
 
 // TODO: БРАТЬ ДЕЙСТВИЯ ИЗ БД
 const events = [
@@ -159,6 +256,13 @@ const events = [
 	width: auto;
 	padding: 10px;
 	border-radius: 10px;
+}
+
+.hotkey-panel {
+	background: #ffffff;
+	border-radius: 10px;
+	padding: 10px 12px;
+	min-width: 190px;
 }
 
 .navigation-arrow {

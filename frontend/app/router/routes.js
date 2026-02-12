@@ -2,6 +2,7 @@ import {
 	EditPage,
 	HelpPage,
 	HomePage,
+	LandingPage,
 	LibraryPage,
 	LoginPage,
 	Page403,
@@ -12,7 +13,7 @@ import {
 } from "@pages";
 
 export const routes = [
-	{path: "/", redirect: "/login" },
+	{ path: "/", component: LandingPage, name: 'LandingPage' },
 	{ path: "/login", component: LoginPage, name: 'LoginPage' },
 	{ path: "/registration", component: RegistrationPage},
 	{ 	

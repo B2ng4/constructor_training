@@ -16,6 +16,7 @@ import ResizableNode from "./ResizableNode.vue";
 
 const store = useTrainingData();
 const nodes = ref([]);
+const eventRequiresArea = (event) => event?.type !== "keyPress";
 
 // Computed свойство для вычисления позиции события относительно изображения
 const positionOnImage = computed(() => {
@@ -201,8 +202,7 @@ watch(
 	() => {
 		clearEventNode();
 		createFullscreenNode();
-		if(store.selectedStep.action_type) {
-			console.log(store.selectedStep.action_type);
+		if (store.selectedStep.action_type && eventRequiresArea(store.selectedStep.action_type) && store.selectedStep.area) {
 			createNode(
 				store.selectedStep.action_type,
 				store.selectedStep.area.width,
@@ -223,7 +223,12 @@ watch(
 			return;
 		}
 
-		if (store.selectedStep.action_type && store.selectedStep.area) {
+		if (!eventRequiresArea(store.selectedEvent)) {
+			clearEventNode();
+			return;
+		}
+
+		if (store.selectedStep.action_type && store.selectedStep.area && eventRequiresArea(store.selectedEvent)) {
 			createNode(
 				store.selectedEvent,
 				store.selectedStep.area.width,
