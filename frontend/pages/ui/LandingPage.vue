@@ -9,7 +9,7 @@
             </div>
             <div class="text-h3 text-weight-bold q-mb-md">
               Конструктор тренингов,
-              <span class="text-primary">который любят методологи</span>
+              <span class="text-primary">который любят все</span>
             </div>
             <div class="text-body1 text-grey-7 q-mb-xl">
               Собирайте интерактивные сценарии, проверяйте знания сотрудников и
@@ -34,10 +34,7 @@
                 to="/login"
               />
             </div>
-            <div class="row items-center text-grey-6 text-caption q-gutter-sm">
-              <q-icon name="verified" color="positive" size="18px" />
-              <span>Безопасная авторизация и хранение данных</span>
-            </div>
+
           </div>
 
           <div class="col-12 col-md-5 landing-hero__right q-mt-lg q-mt-md-none">
@@ -68,10 +65,6 @@
                     <q-icon name="timer" size="16px" />
                     <span>Среднее прохождение: 25 минут</span>
                   </div>
-                  <div class="row items-center q-gutter-xs">
-                    <q-icon name="group" size="16px" />
-                    <span>До 500 сотрудников</span>
-                  </div>
                 </div>
               </q-card-section>
             </q-card>
@@ -97,8 +90,7 @@
                     </div>
                   </div>
                   <div class="text-body2 text-grey-7">
-                    Проектируйте сценарии обучения в виде диаграмм: ветвления,
-                    условия, медиа, вопросы и проверки.
+                    Проектируйте сценарии обучения
                   </div>
                 </q-card-section>
               </q-card>
@@ -114,8 +106,7 @@
                     </div>
                   </div>
                   <div class="text-body2 text-grey-7">
-                    Отслеживайте прогресс, конверсию по шагам и проблемные места
-                    в сценариях обучения.
+                    Отслеживайте прогресс
                   </div>
                 </q-card-section>
               </q-card>
@@ -131,8 +122,8 @@
                     </div>
                   </div>
                   <div class="text-body2 text-grey-7">
-                    Раздавайте доступы по ролям и отделам, ограничивайте тренинги
-                    по времени и условиям прохождения.
+                    Раздавайте доступы, ограничивайте тренинги
+                    по времени
                   </div>
                 </q-card-section>
               </q-card>
