@@ -42,6 +42,12 @@ export class TrainingApi extends BaseApi {
 		super.sourceUrl = `/training/${uuid}/publish`;
 		return super.createRequest();
 	}
+
+	getPublicTraining(accessToken) {
+		super.httpMethod = 'get';
+		super.sourceUrl = `/training/public/${accessToken}`;
+		return super.createRequest();
+	}
 }
 
 export const trainingApi = new TrainingApi();
