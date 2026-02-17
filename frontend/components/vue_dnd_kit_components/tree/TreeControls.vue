@@ -4,6 +4,8 @@
     hasChildren?: boolean;
     onArrowClick?: () => void;
     onDragStart?: (event: PointerEvent) => void;
+    /** Номер шага вместо точки для элементов без вложенности */
+    stepNumber?: number | string;
   }
 
   const {
@@ -11,6 +13,7 @@
     hasChildren = false,
     onArrowClick,
     onDragStart,
+    stepNumber,
   } = defineProps<Props>();
 </script>
 
@@ -32,10 +35,7 @@
       >
         <path d="M9 18l6-6-6-6" />
       </svg>
-      <div
-        v-else
-        class="tree-item-dot"
-      ></div>
+      <span v-else-if="stepNumber != null" class="tree-step-number">{{ stepNumber }}</span>
     </div>
 
     <div
@@ -119,11 +119,11 @@
     transform: rotate(90deg);
   }
 
-  .tree-item-dot {
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    background-color: currentColor;
+  .tree-step-number {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--q-primary);
+    min-width: 1.2em;
   }
 
   .tree-drag-handle {

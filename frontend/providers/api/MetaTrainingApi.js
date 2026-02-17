@@ -11,6 +11,13 @@ export class MetaTrainingApi extends BaseApi {
 		return super.createRequest();
 	}
 
+	createTag(label) {
+		super.httpMethod = "post";
+		super.sourceUrl = "/tags/";
+		super.data = { label };
+		return super.createRequest();
+	}
+
 	getLevels() {
 		super.httpMethod = "get";
 		super.sourceUrl = "/levels/";
@@ -21,6 +28,13 @@ export class MetaTrainingApi extends BaseApi {
 		super.httpMethod = "post";
 		super.sourceUrl = `/training/upload-photos/${uuid}`;
 		super.data = data;
+		return super.createRequest();
+	}
+
+	uploadVideo(uuid, formData) {
+		super.httpMethod = "post";
+		super.sourceUrl = `/training/upload-video/${uuid}`;
+		super.data = formData;
 		return super.createRequest();
 	}
 }

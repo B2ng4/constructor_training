@@ -45,6 +45,7 @@
         :has-children="!!children"
         :on-arrow-click="handleArrowClick"
         :on-drag-start="handleDragStart"
+        :step-number="(data as Record<string, unknown>)?.step_number"
       />
       <div class="tree-item-text">
         <slot :item="data" />

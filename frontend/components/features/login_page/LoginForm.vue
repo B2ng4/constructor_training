@@ -63,6 +63,7 @@
 <script>
 import axios from "axios";
 import { BaseCard } from "@components/base_components";
+import { useUserStore } from "@store/userData.js";
 export default {
 	name: "LoginForm",
 	components: { BaseCard },
@@ -83,9 +84,11 @@ export default {
 			form.set("password", this.password);
 			axios
 				.post(`${__BASE__URL__}/auth/login`, form)
-				.then((response) => {
+				.then(async (response) => {
 					localStorage.setItem("tokenAuth", response.data.access_token);
-					this.$router.push("/personal");
+					await useUserStore().fetchUser();
+					const redirect = this.$route.query.redirect || "/personal";
+					this.$router.push(redirect);
 				})
 				.catch(() => {
 					this.$q.notify({

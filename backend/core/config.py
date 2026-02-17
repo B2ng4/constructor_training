@@ -65,6 +65,18 @@ class Configs(BaseSettings):
     )
     S3_REGION_NAME: Optional[str] = Field(default="ru-1", env="S3_REGION_NAME")
 
+    # ------------------- AI Video Analysis ---------------------------------
+    AI_API_KEY: Optional[str] = Field(
+        default="sk-hkR_rAET2Xkgh7-lLoqRSg", env="AI_API_KEY"
+    )
+    AI_BASE_URL: Optional[str] = Field(
+        default="https://api.vsellm.ru/v1", env="AI_BASE_URL"
+    )
+    AI_MODEL: Optional[str] = Field(
+        default="qwen/qwen3-vl-30b-a3b-thinking", env="AI_MODEL"
+    )
+    AI_VIDEO_FPS: int = Field(default=2, env="AI_VIDEO_FPS")
+
     # ------------------- REDIS --------------------------------------------
     # REDIS_URL:Optional[str] = Fiels()
 

@@ -11,10 +11,12 @@ from depends import (
     get_s3_service,
     get_user_service,
     get_batch_video_service,
+    get_video_ai_service,
 )
 from starlette import status
 
 from services.BatchVideo_service import BatchVideoService
+from services.video_ai_service import VideoAIService
 from services.trainings_service import TrainingsService
 from services.external_services.s3_service import S3Service
 from schemas.trainings import (
@@ -154,28 +156,30 @@ async def upload_photos_by_training(
     }
 
 
-@router.post("/upload-video/{training_uuid}", name="Загрузка видео (авто-нарезка)")
+@router.post("/upload-video/{training_uuid}", name="Загрузка видео (AI-анализ)")
 async def upload_video_for_training(
     training_uuid: UUID4,
     file: UploadFile = File(..., description="Видеофайл"),
-    video_service: BatchVideoService = Depends(get_batch_video_service),
+    video_ai_service: VideoAIService = Depends(get_video_ai_service),
     s3_service: S3Service = Depends(get_s3_service),
     trainings_service: TrainingsService = Depends(get_trainings_service),
     token: str = Depends(oauth2_scheme),
 ):
     """
-    Принимает видео, передает его в сервис для обработки.
+    Принимает видео, отправляет в AI-модель для анализа действий.
+    AI определяет таймкоды, описания шагов и координаты областей.
+    По каждому таймкоду извлекается кадр, загружается в S3 и создаётся шаг.
     """
     created_steps = await trainings_service.add_steps_from_video(
         training_uuid=training_uuid,
         video_file=file,
-        video_service=video_service,
+        video_ai_service=video_ai_service,
         s3_service=s3_service,
     )
 
     return {
         "success": True,
-        "message": f"Видео обработано. Создано {len(created_steps)} шагов.",
+        "message": f"Видео обработано AI. Создано {len(created_steps)} шагов.",
         "created_steps": created_steps,
     }
 

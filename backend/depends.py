@@ -13,6 +13,7 @@ from models.users import User
 from repositories.users_repository import UserRepository
 from repositories.trainings_repository import TrainingRepository
 from services.BatchVideo_service import BatchVideoService
+from services.video_ai_service import VideoAIService
 from services.user_service import UserService
 from services.external_services.mail_service import EmailService
 from services.trainings_service import TrainingsService
@@ -129,3 +130,7 @@ async def get_current_user(
 
 def get_batch_video_service() -> BatchVideoService:
     return BatchVideoService()
+
+
+def get_video_ai_service() -> VideoAIService:
+    return VideoAIService()

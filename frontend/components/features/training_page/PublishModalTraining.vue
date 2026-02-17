@@ -26,14 +26,32 @@
 					</div>
 				</q-card>
 
+				<!-- Поле со ссылкой (после публикации) -->
+				<q-input
+					v-if="publicLink"
+					v-model="publicLink"
+					readonly
+					outlined
+					dense
+					class="q-mb-md"
+				>
+					<template #append>
+						<q-btn flat dense round icon="content_copy" @click="copyLink">
+							<q-tooltip>Скопировать ссылку</q-tooltip>
+						</q-btn>
+					</template>
+				</q-input>
+
 				<div class="row">
 					<q-btn
 						color="primary"
-						label="Скопировать"
+						:label="publicLink ? 'Скопировать' : 'Опубликовать'"
 						no-caps
-						icon="content_copy"
+						:icon="publicLink ? 'content_copy' : 'publish'"
 						class="rounded-12"
 						padding="10px"
+						:loading="publishing"
+						@click="publicLink ? copyLink() : publish()"
 					/>
 					<div class="q-ml-xl q-gutter-md">
 						<q-btn
@@ -43,15 +61,23 @@
 							icon="mail"
 							class="rounded-12"
 							padding="10px"
-						/>
+							:disable="!publicLink"
+							@click="shareByEmail"
+						>
+							<q-tooltip>Отправить по почте</q-tooltip>
+						</q-btn>
 						<q-btn
 							color="grey-3"
 							text-color="black"
 							no-caps
-							icon="qr_code"
+							icon="open_in_new"
 							class="rounded-12"
 							padding="10px"
-						/>
+							:disable="!publicLink"
+							@click="openLink"
+						>
+							<q-tooltip>Открыть в новой вкладке</q-tooltip>
+						</q-btn>
 					</div>
 					<q-btn
 						color="grey-3"
@@ -60,8 +86,11 @@
 						icon="link"
 						class="rounded-12 q-ml-auto"
 						padding="10px"
-						@click="publishTraining"
-					/>
+						:disable="!publicLink"
+						@click="copyLink"
+					>
+						<q-tooltip>Скопировать ссылку</q-tooltip>
+					</q-btn>
 				</div>
 			</q-card-section>
 		</q-card>
@@ -69,19 +98,76 @@
 </template>
 
 <script setup>
+import { ref, watch } from "vue";
 import { trainingApi } from "@api/api/TrainingApi.js";
+import { useQuasar } from "quasar";
 
 const model = defineModel();
 const props = defineProps(['data']);
-const emit = defineEmits(['updatePublish']);
+const emit = defineEmits(['published']);
 
-async function publishTraining() {
+const $q = useQuasar();
+const publicLink = ref("");
+const publishing = ref(false);
+
+watch(model, (val) => {
+	if (!val) {
+		publicLink.value = "";
+	}
+});
+
+async function publish() {
+	if (!props.data?.uuid) return;
+	publishing.value = true;
 	try {
-		await trainingApi.updateTraining(props.data.uuid, {publish: !props.data.publish});
-		emit('updatePublish');
+		const { data } = await trainingApi.publishTraining(props.data.uuid);
+		publicLink.value = data.public_link;
+		emit("published");
+		$q.notify({
+			color: "positive",
+			message: "Тренинг опубликован",
+			position: "bottom-right",
+			icon: "check_circle",
+		});
 	} catch (e) {
 		console.error(e);
+		$q.notify({
+			color: "negative",
+			message: "Не удалось опубликовать тренинг",
+			position: "top",
+		});
+	} finally {
+		publishing.value = false;
 	}
+}
+
+async function copyLink() {
+	try {
+		await navigator.clipboard.writeText(publicLink.value);
+		$q.notify({
+			color: "positive",
+			message: "Ссылка скопирована",
+			position: "bottom-right",
+			icon: "content_copy",
+			timeout: 1500,
+		});
+	} catch {
+		$q.notify({
+			color: "negative",
+			message: "Не удалось скопировать",
+			position: "top",
+		});
+	}
+}
+
+function openLink() {
+	window.open(publicLink.value, "_blank");
+}
+
+function shareByEmail() {
+	const subject = encodeURIComponent(props.data?.title ?? "Тренинг");
+	const body = encodeURIComponent(`Пройдите тренинг: ${publicLink.value}`);
+	window.open(`mailto:?subject=${subject}&body=${body}`);
 }
 </script>
 

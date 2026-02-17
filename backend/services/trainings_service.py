@@ -25,6 +25,7 @@ from models.trainings import Training, TrainingStep, TypesAction, Tags, Training
 from sqlalchemy.exc import IntegrityError
 
 from services.BatchVideo_service import BatchVideoService
+from services.video_ai_service import VideoAIService
 from services.external_services.s3_service import S3Service
 
 
@@ -109,16 +110,18 @@ class TrainingsService:
 
     async def publish_training(self, training_uuid: UUID4) -> str:
         """
-        Публикует тренинг
+        Публикует тренинг: ставит publish=True, создаёт/обновляет публикацию.
         Возвращает публичный access_token.
         """
         training = await self.repo.get_by_uuid_with_relations(training_uuid)
         if not training:
             raise HTTPException(status_code=404, detail="Тренинг не найден")
+
+        training.publish = True
+
         training_data = TrainingResponse.model_validate(training).model_dump(mode='json')
         access_token = str(uuid.uuid4())
 
-        # 4. Сохраняем через репозиторий
         await self.repo.create_or_update_publication(
             training_uuid=training.uuid,
             access_token=access_token,
@@ -407,6 +410,17 @@ class TrainingsService:
                 exclude_unset=True, exclude={"id", "steps"}
             )
 
+            # Merge meta and area for partial updates (preserve existing keys)
+            if "meta" in update_data and update_data["meta"] is not None:
+                existing_meta = existing_step.meta or {}
+                if isinstance(existing_meta, dict):
+                    update_data["meta"] = {**existing_meta, **update_data["meta"]}
+
+            if "area" in update_data and update_data["area"] is not None:
+                existing_area = existing_step.area or {}
+                if isinstance(existing_area, dict):
+                    update_data["area"] = {**existing_area, **update_data["area"]}
+
             if update_data:
                 await self.repo.update_training_step(step_id, update_data)
 
@@ -543,11 +557,15 @@ class TrainingsService:
         self,
         training_uuid: UUID4,
         video_file: UploadFile,
-        video_service: BatchVideoService,
+        video_ai_service: VideoAIService,
         s3_service: S3Service,
     ) -> List[Dict]:
         """
-        Обрабатывает видео: нарезает на кадры, загружает в S3, создает шаги в БД.
+        Обрабатывает видео через AI-модель:
+        1. Отправляет видео в AI для анализа действий
+        2. Извлекает кадры по таймкодам
+        3. Загружает кадры в S3
+        4. Создаёт шаги с описанием и координатами области действия
         """
         try:
             training_exists = await self.repo.check_training_exists(training_uuid)
@@ -556,27 +574,68 @@ class TrainingsService:
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail=f"Тренинг с UUID {training_uuid} не найден",
                 )
-            frames_bytes = await video_service.extract_slides(video_file)
 
-            if not frames_bytes:
+            ai_steps = await video_ai_service.analyze_video(video_file)
+
+            if not ai_steps:
                 return []
 
-            uploaded_urls = []
+            # action_type_id=1 — "Левый клик" (по умолчанию для AI-шагов)
+            DEFAULT_ACTION_TYPE_ID = 1
+            action_type = await self.session.get(TypesAction, DEFAULT_ACTION_TYPE_ID)
 
-            # 3. Грузим в S3
-            for i, frame_data in enumerate(frames_bytes):
-                filename = f"video_slide_{i + 1:03d}.png"
+            existing_steps = await self.repo.get_training_steps(training_uuid)
+            next_step_number = len(existing_steps) + 1
+
+            created_steps_info = []
+
+            for i, step_data in enumerate(ai_steps):
+                filename = f"video_ai_step_{i + 1:03d}.png"
                 object_name = s3_service.generate_unique_filename(filename)
-
-                url = await s3_service.upload_file(
-                    frame_data, object_name, training_uuid
+                image_url = await s3_service.upload_file(
+                    step_data.frame_bytes, object_name, training_uuid
                 )
-                uploaded_urls.append(url)
-            created_steps = await self.create_steps_from_photos(
-                training_uuid, uploaded_urls
-            )
 
-            return created_steps
+                bbox = step_data.bbox
+                area = {
+                    "x": bbox[0] * step_data.frame_width,
+                    "y": bbox[1] * step_data.frame_height,
+                    "width": (bbox[2] - bbox[0]) * step_data.frame_width,
+                    "height": (bbox[3] - bbox[1]) * step_data.frame_height,
+                }
+
+                new_step = TrainingStep(
+                    step_number=next_step_number + i,
+                    meta={"name": step_data.question},
+                    training_uuid=training_uuid,
+                    image_url=image_url,
+                    photo_dimensions={
+                        "width": step_data.frame_width,
+                        "height": step_data.frame_height,
+                    },
+                    area=area,
+                    action_type_id=action_type.id if action_type else DEFAULT_ACTION_TYPE_ID,
+                    annotation=f"[AI] Таймкод: {step_data.timecode}",
+                )
+                self.session.add(new_step)
+
+                created_steps_info.append(
+                    {
+                        "step_number": next_step_number + i,
+                        "image_url": image_url,
+                        "name": step_data.question,
+                        "timecode": step_data.timecode,
+                        "area": area,
+                        "action_type_id": action_type.id if action_type else DEFAULT_ACTION_TYPE_ID,
+                        "dimensions": {
+                            "width": step_data.frame_width,
+                            "height": step_data.frame_height,
+                        },
+                    }
+                )
+
+            await self.session.commit()
+            return created_steps_info
 
         except HTTPException:
             raise
@@ -584,5 +643,5 @@ class TrainingsService:
             await self.session.rollback()
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Ошибка обработки видео и создания шагов: {str(e)}",
+                detail=f"Ошибка AI-анализа видео и создания шагов: {str(e)}",
             )

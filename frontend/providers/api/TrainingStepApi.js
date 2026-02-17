@@ -18,6 +18,12 @@ export class TrainingStepApi extends BaseApi {
 		super.data = data;
 		return super.createRequest();
 	}
+
+	deleteStep(trainingUuid, stepId) {
+		super.httpMethod = "delete";
+		super.sourceUrl = `/training/${trainingUuid}/steps/${stepId}`;
+		return super.createRequest();
+	}
 }
 
 export const trainingStepApi = new TrainingStepApi();

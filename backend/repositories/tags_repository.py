@@ -26,8 +26,9 @@ class TagsRepository:
         return await self.session.get(Tags, value)
 
     async def get_by_name(self, label: str) -> Optional[Tags]:
-        """Получение тега по label (имени)"""
-        query = select(Tags).where(Tags.label == label)
+        """Получение тега по label (имени) - регистронезависимый поиск"""
+        normalized_label = label.strip()
+        query = select(Tags).where(func.lower(Tags.label) == func.lower(normalized_label))
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 

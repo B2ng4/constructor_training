@@ -1,35 +1,34 @@
 <template>
 	<NodeResizer min-width="100" min-height="30" />
 	<NodeToolbar :is-visible="node.data.toolbarVisible">
-		<div class="column">
+		<div class="node-toolbar-content">
 			<template v-if="saveMode">
 				<div
 					v-if="selectedMode === 'keyPress'"
-					class="column q-mb-sm hotkey-controls"
+					class="hotkey-controls"
 				>
 					<q-btn
+						dense
 						no-caps
 						outline
+						size="sm"
 						color="primary"
+						icon="keyboard"
+						label="Хоткей"
 						@click="openHotkeyCapture"
-					>
-						Назначить хоткей
-					</q-btn>
-					<div class="row items-center q-gutter-xs q-mt-xs">
-						<div class="text-caption text-grey-8">
-							Хоткей:
-						</div>
-						<div class="text-caption text-grey-8">
-							{{ hotkeyLabel }}
-						</div>
-					</div>
+					/>
+					<span class="hotkey-label">{{ hotkeyLabel }}</span>
 				</div>
 				<q-btn
+					dense
 					no-caps
+					unelevated
 					color="primary"
+					icon="save"
+					label="Сохранить"
 					@click="sendRequest"
 				>
-					Сохранить
+					<q-tooltip>Сохранить область</q-tooltip>
 				</q-btn>
 			</template>
 		</div>
@@ -53,14 +52,17 @@
 import { Handle, Position } from '@vue-flow/core';
 import { NodeResizer } from '@vue-flow/node-resizer';
 import { NodeToolbar } from '@vue-flow/node-toolbar';
-import { computed, ref } from "vue";
+import { computed, inject, nextTick, ref } from "vue";
+import { useQuasar } from "quasar";
 import { trainingStepApi } from "@api";
 import { useTrainingData } from "@store/editTraining.js";
 import InputText from "@components/features/edit_page/InputText.vue";
 import WatchKey from "@components/features/edit_page/WatchKey.vue";
 
-const props = defineProps(['node', 'position']);
+const props = defineProps(['node']);
+const $q = useQuasar();
 const store = useTrainingData();
+const getAreaForSave = inject("getAreaForSave", () => null);
 const isHotkeyDialogOpen = ref(false);
 
 const metaText = computed({
@@ -68,7 +70,6 @@ const metaText = computed({
 		return store.selectedStep.area?.metaText || '';
 	},
 	set(value) {
-		// Создаем объект area, если он не существует
 		if (!store.selectedStep.area) {
 			store.selectedStep.area = {
 				metaText: '',
@@ -92,13 +93,9 @@ const metaKeywords = computed({
 	}
 })
 
-//Для отображения кнопки для сохранения зоны
 const saveMode = ref(true);
 
-const selectedMode = computed(() => {
-	console.log(props.node.data.type);
-	return props.node.data.type;
-});
+const selectedMode = computed(() => props.node.data.type);
 
 const hotkeyLabel = computed(() => {
 	return metaKeywords.value?.join('+') || 'не назначен';
@@ -110,23 +107,41 @@ const openHotkeyCapture = () => {
 
 const sendRequest = async () => {
 	try {
+		await nextTick();
+		const area = getAreaForSave?.();
+		if (!area || !area.width || !area.height) {
+			$q.notify({ color: "negative", message: "Не удалось определить область", position: "top" });
+			return;
+		}
+
 		await trainingStepApi.editStep(
 			store.trainingData.uuid,
 			store.selectedStep.id,
 			{
 				action_type_id: store.selectedEvent.id,
 				area: {
-					width: props.node.dimensions.width,
-					height: props.node.dimensions.height,
-					x: props.position.x,
-					y: props.position.y,
+					...area,
 					metaText: metaText.value,
 					metaKeywords: metaKeywords.value
 				}
 			}
 		);
+		if (!store.selectedStep.area) store.selectedStep.area = {};
+		Object.assign(store.selectedStep.area, area, {
+			metaText: metaText.value,
+			metaKeywords: metaKeywords.value
+		});
+		$q.notify({
+			color: "positive",
+			message: "Область сохранена",
+			position: "bottom-right",
+		});
 	} catch (e) {
-		console.error(e);
+		$q.notify({
+			color: "negative",
+			message: "Не удалось сохранить",
+			position: "top",
+		});
 	}
 };
 </script>
@@ -134,8 +149,28 @@ const sendRequest = async () => {
 <style>
 @import "@vue-flow/node-resizer/dist/style.css";
 
+.node-toolbar-content {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	background: rgba(255, 255, 255, 0.92);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+	padding: 6px 10px;
+	border-radius: 10px;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+	border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
 .hotkey-controls {
-	min-width: 180px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.hotkey-label {
+	font-size: 12px;
+	font-weight: 500;
+	color: #6b7280;
 }
 </style>
-

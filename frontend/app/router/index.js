@@ -7,23 +7,21 @@ const router = createRouter({
 	routes,
 });
 
-// router.beforeEach(async (to, from, next) => {
-//     if (to.href.includes('/personal')) { //в личный кабинет можно перейти только с токеном авторизации
-// 		let tokenAuth = localStorage.getItem('tokenAuth');
-// 		let auth = false;
-//
-// 		if (tokenAuth) {
-// 			auth = await checkAuth(tokenAuth);
-// 		}
-//         if (!auth.status) {
-//             next({ name: '403' });
-//         } else {
-//             next();
-//         }
-//
-//     } else {
-//         next();
-//     }
-// });
+router.beforeEach(async (to, from, next) => {
+	if (to.path.startsWith("/personal")) {
+		const tokenAuth = localStorage.getItem("tokenAuth");
+		let auth = { status: false };
+		if (tokenAuth) {
+			auth = await checkAuth(tokenAuth);
+		}
+		if (!auth.status) {
+			next({ path: "/login", query: { redirect: to.fullPath } });
+		} else {
+			next();
+		}
+	} else {
+		next();
+	}
+});
 
 export default router;

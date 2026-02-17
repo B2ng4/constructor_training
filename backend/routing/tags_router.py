@@ -24,15 +24,22 @@ async def create_tag(
     current_user: User = Depends(get_current_user),
 ):
     """Создать новый тег"""
-    existing = await repo.get_by_name(tag_data.label)
-    if existing:
+    # Нормализуем label: убираем лишние пробелы
+    normalized_label = tag_data.label.strip()
+    
+    if not normalized_label:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"Тег '{tag_data.label}' уже существует",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Название тега не может быть пустым",
         )
+    
+    existing = await repo.get_by_name(normalized_label)
+    if existing:
+        # Возвращаем существующий тег вместо ошибки
+        return TagResponse.model_validate(existing)
 
     try:
-        tag = await repo.create(label=tag_data.label)
+        tag = await repo.create(label=normalized_label)
         return TagResponse.model_validate(tag)
     except IntegrityError:
         raise HTTPException(

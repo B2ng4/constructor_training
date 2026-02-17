@@ -36,6 +36,12 @@ export class TrainingApi extends BaseApi {
 		super.sourceUrl = `/training/${uuid}`;
 		return super.createRequest();
 	}
+
+	publishTraining(uuid) {
+		super.httpMethod = 'post';
+		super.sourceUrl = `/training/${uuid}/publish`;
+		return super.createRequest();
+	}
 }
 
 export const trainingApi = new TrainingApi();
