@@ -19,10 +19,6 @@
 				class="draw-preview"
 				:style="previewStyle"
 			/>
-			<!-- Подсказка -->
-			<div v-if="!isDrawing && !hasDrawnHintValue" class="draw-hint">
-				Выделите область мышью: зажмите и потяните
-			</div>
 		</div>
 	</div>
 </template>
@@ -51,22 +47,12 @@ const currentY = ref(0);
 
 const onAreaDrawn = inject("onAreaDrawn", null);
 const drawingEnabledRef = inject("drawingEnabled", ref(false));
-const hasDrawnHintFn = inject("hasDrawnHint", () => false);
 
 const drawingEnabled = computed(() =>
 	typeof drawingEnabledRef === "object" && drawingEnabledRef?.value !== undefined
 		? drawingEnabledRef.value
 		: !!drawingEnabledRef
 );
-
-const hasDrawnHintValue = computed(() => {
-	try {
-		const v = typeof hasDrawnHintFn === "function" ? hasDrawnHintFn() : hasDrawnHintFn;
-		return !!v;
-	} catch {
-		return false;
-	}
-});
 
 function getImageNode() {
 	return vueFlow.findNode?.('fullscreen-image') ?? null;
@@ -187,20 +173,6 @@ function onMouseLeave() {
 	position: absolute;
 	border: 2px solid var(--q-primary);
 	background: rgba(80, 100, 247, 0.15);
-	pointer-events: none;
-}
-
-.draw-hint {
-	position: absolute;
-	bottom: 12px;
-	left: 50%;
-	transform: translateX(-50%);
-	background: rgba(0, 0, 0, 0.6);
-	color: white;
-	padding: 8px 16px;
-	border-radius: 8px;
-	font-size: 13px;
-	white-space: nowrap;
 	pointer-events: none;
 }
 </style>

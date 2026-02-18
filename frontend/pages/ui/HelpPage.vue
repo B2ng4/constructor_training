@@ -1,6 +1,6 @@
 <template>
 	<div class="help-page">
-		<div class="page-header">
+		<div class="page-header animate-fade-in-up">
 			<h1 class="page-title">Помощь</h1>
 			<p class="page-subtitle">
 				Как пользоваться платформой «Конструктор тренингов»
@@ -8,7 +8,7 @@
 		</div>
 
 		<div class="help-content">
-			<div class="faq-section">
+			<div class="faq-section animate-stagger-children">
 				<q-expansion-item
 					v-for="(item, i) in faq"
 					:key="i"
@@ -24,7 +24,7 @@
 				</q-expansion-item>
 			</div>
 
-			<div class="quick-tips">
+			<div class="quick-tips animate-fade-in-up animate-stagger-5">
 				<div class="tips-icon">
 					<q-icon name="lightbulb" size="24px" />
 				</div>
@@ -118,11 +118,21 @@ const faq = ref([
 	border: 1px solid #e2e8f0;
 	border-radius: 14px;
 	overflow: hidden;
-	transition: border-color 0.2s ease;
+	transition: border-color 0.25s ease, box-shadow 0.25s var(--anim-ease-out);
 }
-
 .faq-item:hover {
 	border-color: #cbd5e1;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+.faq-item :deep(.q-expansion-item__container) {
+	transition: background 0.2s ease;
+}
+.faq-item :deep(.q-item__label) {
+	transition: color 0.2s ease;
+}
+.faq-item[aria-expanded="true"] {
+	border-color: rgba(80, 100, 247, 0.3);
+	box-shadow: 0 2px 12px rgba(80, 100, 247, 0.06);
 }
 
 .faq-item :deep(.faq-header) {
@@ -134,6 +144,10 @@ const faq = ref([
 
 .faq-item :deep(.q-expansion-item__toggle-icon) {
 	color: rgba(80, 100, 247, 0.7);
+	transition: transform 0.3s var(--anim-ease-spring);
+}
+.faq-item[aria-expanded="true"] :deep(.q-expansion-item__toggle-icon) {
+	transform: rotate(180deg);
 }
 
 .faq-answer {
@@ -155,18 +169,27 @@ const faq = ref([
 	border-radius: 16px;
 	padding: 28px 32px;
 	position: relative;
+	transition: border-color 0.25s ease, box-shadow 0.25s var(--anim-ease-out);
+}
+.quick-tips:hover {
+	border-color: rgba(245, 158, 11, 0.3);
+	box-shadow: 0 4px 20px rgba(245, 158, 11, 0.08);
 }
 
 .tips-icon {
 	width: 48px;
 	height: 48px;
 	border-radius: 12px;
-	background: rgba(245, 158, 11, 0.1);
+	background: rgba(245, 158, 11, 0.12);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: rgba(245, 158, 11, 0.9);
+	color: rgba(245, 158, 11, 0.95);
 	margin-bottom: 16px;
+	transition: transform 0.35s var(--anim-ease-spring);
+}
+.quick-tips:hover .tips-icon {
+	transform: scale(1.08);
 }
 
 .tips-title {

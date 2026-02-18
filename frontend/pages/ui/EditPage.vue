@@ -51,7 +51,7 @@ import { UploadPhoto } from "@components/features/edit_page/uploader_photo";
 import { GroupSteps } from "@components/features/edit_page/drop_down_list_steps";
 import { TrainingApi } from "@api";
 import { useRoute, useRouter } from "vue-router";
-import { nextTick, onMounted, ref } from "vue";
+import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useTrainingData } from "@store/editTraining.js";
 import StepTitle from "@components/features/edit_page/StepTitle.vue";
@@ -70,10 +70,37 @@ const { steps: storeSteps, selectedStep } = storeToRefs(store);
 
 const loadingStatus = ref(true);
 const hintHidden = ref(false);
+let hintAutoHideTimer = null;
 
 function hideHint() {
 	hintHidden.value = true;
 }
+
+// Показать подсказку 2–4 сек, затем скрыть
+watch(
+	() => selectedStep.value?.image_url,
+	(hasImage) => {
+		if (hintAutoHideTimer) {
+			clearTimeout(hintAutoHideTimer);
+			hintAutoHideTimer = null;
+		}
+		if (hasImage && !store.selectedEvent) {
+			hintHidden.value = false;
+			const delay = 3000; // 3 секунды (в диапазоне 2–4 сек)
+			hintAutoHideTimer = setTimeout(() => {
+				hintHidden.value = true;
+				hintAutoHideTimer = null;
+			}, delay);
+		}
+	},
+	{ immediate: true }
+);
+
+onUnmounted(() => {
+	if (hintAutoHideTimer) {
+		clearTimeout(hintAutoHideTimer);
+	}
+});
 
 async function getTrainingData() {
 	try {

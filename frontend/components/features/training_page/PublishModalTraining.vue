@@ -1,7 +1,7 @@
 <template>
-	<q-dialog class="custom-dialog" v-model="model">
-		<q-card class="q-pa-xs" style="min-width: 400px; width: 700px; border-radius: 14px">
-			<q-card-section>
+	<q-dialog class="publish-dialog custom-dialog" v-model="model">
+		<q-card class="publish-modal-card q-pa-xs">
+			<q-card-section class="modal-header">
 				<div class="text-h6">Ссылка на тренинг</div>
 			</q-card-section>
 
@@ -172,4 +172,28 @@ function shareByEmail() {
 </script>
 
 <style scoped>
+.publish-modal-card {
+	min-width: 400px;
+	width: 700px;
+	max-width: 95vw;
+	border-radius: 16px;
+	box-shadow: 0 24px 56px rgba(0, 0, 0, 0.14);
+	animation: scaleIn 0.3s var(--anim-ease-spring) forwards;
+}
+.publish-modal-card .modal-header {
+	padding: 20px 24px;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+.publish-modal-card .q-card > .q-card__section:not(.modal-header) {
+	transition: background 0.2s ease;
+}
+.publish-modal-card .q-card.flat.bg-grey-3:hover {
+	background: rgba(80, 100, 247, 0.04) !important;
+}
+.publish-modal-card .rounded-12 {
+	transition: transform 0.25s var(--anim-ease-spring), box-shadow 0.25s ease;
+}
+.publish-modal-card .rounded-12:hover:not(:disabled) {
+	transform: translateY(-1px);
+}
 </style>

@@ -1,23 +1,23 @@
 <template>
 	<div class="training-page">
 		<!-- Заголовок страницы -->
-		<div class="page-header q-pa-lg">
+		<div class="page-header q-pa-lg animate-fade-in-up">
 			<h1 class="page-title text-h4 text-weight-bold q-mb-xs">Мои тренинги</h1>
 			<p class="text-body2 text-grey-7">Создавайте и управляйте интерактивными тренингами</p>
 		</div>
 
 		<!-- Состояние загрузки -->
 		<div v-if="status" class="loading-state q-pa-xl column items-center justify-center">
-			<q-spinner-gears size="48px" color="primary" />
-			<p class="text-grey-7 q-mt-md">Загрузка тренингов...</p>
+			<q-spinner-gears size="48px" color="primary" class="loading-spinner" />
+			<p class="text-grey-7 q-mt-md loading-text">Загрузка тренингов...</p>
 		</div>
 
 		<!-- Пустое состояние -->
 		<div
 			v-else-if="trainings.length === 0"
-			class="empty-state q-pa-xl column items-center justify-center"
+			class="empty-state q-pa-xl column items-center justify-center animate-scale-in"
 		>
-			<q-icon name="school" size="80px" color="grey-4" class="q-mb-lg" />
+			<q-icon name="school" size="80px" color="grey-4" class="q-mb-lg empty-icon" />
 			<p class="text-h6 text-grey-8 q-mb-xs">Пока нет тренингов</p>
 			<p class="text-body2 text-grey-6 text-center q-mb-lg">
 				Создайте первый тренинг и начните обучать с помощью интерактивных скриншотов
@@ -34,7 +34,7 @@
 		</div>
 
 		<!-- Сетка карточек -->
-		<div v-else class="trainings-grid q-px-lg q-pb-xl">
+		<div v-else class="trainings-grid q-px-lg q-pb-xl animate-stagger-children">
 			<!-- Карточка создания -->
 			<q-card class="training-card create-card" flat bordered @click="modal = true">
 				<q-card-section class="create-card-section">
@@ -249,6 +249,18 @@ onUnmounted(() => {
 .empty-state {
 	min-height: 300px;
 }
+.loading-spinner {
+	animation: pulse-soft 1.2s var(--anim-ease-in-out) infinite;
+}
+.loading-text {
+	font-weight: 500;
+}
+.empty-icon {
+	transition: transform 0.4s var(--anim-ease-spring);
+}
+.empty-state:hover .empty-icon {
+	transform: scale(1.05);
+}
 
 .trainings-grid {
 	display: grid;
@@ -257,25 +269,30 @@ onUnmounted(() => {
 }
 
 .training-card {
-	border-radius: 12px;
+	border-radius: 14px;
 	cursor: pointer;
-	transition: transform 0.2s ease, box-shadow 0.2s ease;
+	transition: transform 0.28s var(--anim-ease-spring), box-shadow 0.28s var(--anim-ease-out), border-color 0.2s ease;
 	border: 1px solid rgba(0, 0, 0, 0.08);
 }
-
 .training-card:hover {
-	transform: translateY(-4px);
-	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+	transform: translateY(-5px);
+	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+	border-color: rgba(80, 100, 247, 0.2);
+}
+.training-card:active {
+	transform: translateY(-2px);
 }
 
 .create-card {
 	background: linear-gradient(135deg, #f8f9ff 0%, #f0f4ff 100%);
-	border: 2px dashed rgba(80, 100, 247, 0.3);
+	border: 2px dashed rgba(80, 100, 247, 0.35);
+	transition: border-color 0.25s ease, background 0.3s ease, transform 0.28s var(--anim-ease-spring), box-shadow 0.28s ease;
 }
-
 .create-card:hover {
-	border-color: rgba(80, 100, 247, 0.5);
+	border-color: rgba(80, 100, 247, 0.55);
 	background: linear-gradient(135deg, #f0f4ff 0%, #e8eeff 100%);
+	box-shadow: 0 8px 24px rgba(80, 100, 247, 0.12);
+	transform: translateY(-4px);
 }
 
 .create-card-section {
@@ -294,6 +311,11 @@ onUnmounted(() => {
 	align-items: center;
 	justify-content: center;
 	margin-bottom: 12px;
+	transition: transform 0.35s var(--anim-ease-spring), background 0.3s ease;
+}
+.create-card:hover .create-icon-wrap {
+	transform: scale(1.1);
+	background: rgba(80, 100, 247, 0.18);
 }
 
 .create-title {
@@ -312,12 +334,16 @@ onUnmounted(() => {
 .card-icon {
 	width: 48px;
 	height: 48px;
-	border-radius: 10px;
+	border-radius: 12px;
 	background: rgba(80, 100, 247, 0.1);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	flex-shrink: 0;
+	transition: transform 0.3s var(--anim-ease-spring);
+}
+.training-card:hover .card-icon {
+	transform: scale(1.06);
 }
 
 .card-title {

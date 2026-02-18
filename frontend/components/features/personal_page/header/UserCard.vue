@@ -105,6 +105,14 @@ onMounted(() => {
 <style scoped>
 .user-btn {
 	min-width: 120px;
+	transition: transform 0.25s var(--anim-ease-spring), box-shadow 0.25s ease, opacity 0.2s ease;
+}
+.user-btn:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 4px 12px rgba(98, 116, 248, 0.25);
+}
+.user-btn:active {
+	transform: translateY(0);
 }
 
 .user-name {
@@ -116,10 +124,19 @@ onMounted(() => {
 
 .user-menu-list {
 	min-width: 220px;
+	border-radius: 12px;
+	overflow: hidden;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+.user-menu-list .q-item {
+	transition: background 0.2s ease;
 }
 
 .profile-card {
 	min-width: 360px;
 	max-width: 90vw;
+	border-radius: 16px;
+	box-shadow: 0 24px 56px rgba(0, 0, 0, 0.14);
+	animation: scaleIn 0.3s var(--anim-ease-spring) forwards;
 }
 </style>

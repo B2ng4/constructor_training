@@ -1,6 +1,6 @@
 <template>
 	<div class="library-page">
-		<div class="page-header">
+		<div class="page-header animate-fade-in-up">
 			<h1 class="page-title">Библиотека тренингов</h1>
 			<p class="page-subtitle">
 				Каталог готовых тренингов и материалов для обучения
@@ -8,7 +8,7 @@
 		</div>
 
 		<div class="coming-soon-container">
-			<div class="coming-soon-card">
+			<div class="coming-soon-card animate-scale-in">
 				<div class="icon-wrapper">
 					<q-icon name="library_books" size="56px" />
 				</div>
@@ -19,7 +19,7 @@
 					В библиотеке появятся готовые тренинги, шаблоны и материалы для быстрого старта. Вы сможете просматривать каталог, копировать тренинги и делиться ими с коллегами.
 				</p>
 
-				<div class="features-list">
+				<div class="features-list animate-stagger-children">
 					<div class="feature-item">
 						<q-icon name="content_copy" size="18px" />
 						<span>Копирование тренингов</span>
@@ -111,18 +111,29 @@
 	text-align: center;
 	max-width: 560px;
 	width: 100%;
+	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+	transition: box-shadow 0.3s ease, transform 0.3s var(--anim-ease-spring);
+}
+.coming-soon-card:hover {
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+	transform: translateY(-2px);
 }
 
 .icon-wrapper {
 	width: 96px;
 	height: 96px;
 	border-radius: 24px;
-	background: rgba(80, 100, 247, 0.06);
+	background: rgba(80, 100, 247, 0.08);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	color: rgba(80, 100, 247, 0.7);
 	margin: 0 auto 28px;
+	transition: transform 0.35s var(--anim-ease-spring), background 0.3s ease;
+}
+.coming-soon-card:hover .icon-wrapper {
+	transform: scale(1.05);
+	background: rgba(80, 100, 247, 0.12);
 }
 
 .icon-wrapper .q-icon {
@@ -163,16 +174,16 @@
 	padding: 10px 14px;
 	background: #f8fafc;
 	border: 1px solid #e2e8f0;
-	border-radius: 10px;
+	border-radius: 12px;
 	font-size: 13px;
 	color: #475569;
 	font-weight: 500;
-	transition: all 0.2s ease;
+	transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s var(--anim-ease-spring);
 }
-
 .feature-item:hover {
-	background: rgba(80, 100, 247, 0.04);
-	border-color: rgba(80, 100, 247, 0.2);
+	background: rgba(80, 100, 247, 0.06);
+	border-color: rgba(80, 100, 247, 0.25);
+	transform: translateY(-1px);
 }
 
 .feature-item .q-icon {
@@ -193,21 +204,22 @@
 	padding: 10px 24px;
 	font-size: 14px;
 	font-weight: 500;
-	border-radius: 10px;
-	transition: all 0.2s ease;
+	border-radius: 12px;
+	transition: box-shadow 0.25s ease, transform 0.25s var(--anim-ease-spring), background 0.2s ease;
 }
-
 .action-btn--primary {
 	box-shadow: 0 2px 8px rgba(80, 100, 247, 0.25);
 }
-
 .action-btn--primary:hover {
-	box-shadow: 0 4px 16px rgba(80, 100, 247, 0.35);
-	transform: translateY(-1px);
+	box-shadow: 0 4px 20px rgba(80, 100, 247, 0.35);
+	transform: translateY(-2px);
 }
-
+.action-btn--primary:active {
+	transform: translateY(0);
+}
 .action-btn:not(.action-btn--primary):hover {
-	background: rgba(80, 100, 247, 0.04);
+	background: rgba(80, 100, 247, 0.06);
+	transform: translateY(-1px);
 }
 
 /* ——— Responsive ——— */

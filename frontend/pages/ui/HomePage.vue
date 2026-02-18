@@ -1,6 +1,6 @@
 <template>
 	<div class="home-page">
-		<div class="page-header">
+		<div class="page-header animate-fade-in-up">
 			<h1 class="page-title">
 				Добро пожаловать, {{ userStore.first_name || "Пользователь" }}
 			</h1>
@@ -10,12 +10,13 @@
 		</div>
 
 		<div v-if="loading" class="loading-state">
-			<q-spinner-dots size="40px" color="primary" />
+			<q-spinner-dots size="48px" color="primary" class="loading-spinner" />
+			<p class="loading-text">Загрузка...</p>
 		</div>
 
 		<template v-else>
 			<!-- Статистика -->
-			<div class="stats-grid">
+			<div class="stats-grid animate-stagger-children">
 				<div class="stat-card">
 					<div class="stat-icon">
 						<q-icon name="school" size="20px" />
@@ -46,7 +47,7 @@
 			</div>
 
 			<!-- Быстрые действия -->
-			<div class="quick-actions">
+			<div class="quick-actions animate-stagger-children">
 				<div
 					class="action-item"
 					@click="$router.push('/personal/training')"
@@ -77,7 +78,7 @@
 
 			<!-- Последние тренинги -->
 			<div v-if="recentTrainings.length > 0" class="recent-section">
-				<div class="section-header">
+				<div class="section-header animate-fade-in-up animate-stagger-3">
 					<h2 class="section-title">Недавние тренинги</h2>
 					<q-btn
 						flat
@@ -89,7 +90,7 @@
 						class="section-action"
 					/>
 				</div>
-				<div class="trainings-grid">
+				<div class="trainings-grid animate-stagger-children">
 					<div
 						v-for="training in recentTrainings"
 						:key="training.uuid"
@@ -115,7 +116,7 @@
 				</div>
 			</div>
 
-			<div v-else class="empty-state">
+			<div v-else class="empty-state animate-scale-in">
 				<div class="empty-icon">
 					<q-icon name="school" size="48px" />
 				</div>
@@ -208,9 +209,21 @@ onMounted(async () => {
 /* ——— Loading ——— */
 .loading-state {
 	display: flex;
+	flex-direction: column;
+	align-items: center;
 	justify-content: center;
 	padding: 60px 0;
 	flex: 1;
+	gap: 16px;
+}
+.loading-spinner {
+	animation: pulse-soft 1.2s var(--anim-ease-in-out) infinite;
+}
+.loading-text {
+	font-size: 14px;
+	color: #64748b;
+	margin: 0;
+	font-weight: 500;
 }
 
 /* ——— Stats Grid ——— */
@@ -230,24 +243,31 @@ onMounted(async () => {
 	display: flex;
 	align-items: flex-start;
 	gap: 14px;
-	transition: all 0.2s ease;
+	transition: border-color 0.25s ease, box-shadow 0.25s var(--anim-ease-out), transform 0.25s var(--anim-ease-spring);
 }
-
 .stat-card:hover {
 	border-color: #cbd5e1;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+	transform: translateY(-2px);
+}
+.stat-card:active {
+	transform: translateY(0);
 }
 
 .stat-icon {
 	width: 40px;
 	height: 40px;
-	border-radius: 10px;
+	border-radius: 12px;
 	background: rgba(80, 100, 247, 0.08);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	color: rgba(80, 100, 247, 0.9);
 	flex-shrink: 0;
+	transition: transform 0.3s var(--anim-ease-spring);
+}
+.stat-card:hover .stat-icon {
+	transform: scale(1.08);
 }
 
 .stat-card--success .stat-icon {
@@ -297,29 +317,36 @@ onMounted(async () => {
 	align-items: center;
 	gap: 14px;
 	cursor: pointer;
-	transition: all 0.2s ease;
+	transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s var(--anim-ease-out), transform 0.25s var(--anim-ease-spring);
 }
-
 .action-item:hover {
-	border-color: rgba(80, 100, 247, 0.3);
-	background: rgba(80, 100, 247, 0.02);
+	border-color: rgba(80, 100, 247, 0.35);
+	background: rgba(80, 100, 247, 0.04);
+	box-shadow: 0 4px 16px rgba(80, 100, 247, 0.08);
+	transform: translateY(-2px);
 }
-
+.action-item:active {
+	transform: translateY(0);
+}
 .action-item:hover .action-arrow {
 	transform: translateX(4px);
 	color: rgba(80, 100, 247, 0.9);
+}
+.action-item:hover .action-icon {
+	transform: scale(1.05);
 }
 
 .action-icon {
 	width: 44px;
 	height: 44px;
-	border-radius: 10px;
+	border-radius: 12px;
 	background: rgba(80, 100, 247, 0.06);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	color: rgba(80, 100, 247, 0.9);
 	flex-shrink: 0;
+	transition: transform 0.3s var(--anim-ease-spring);
 }
 
 .action-icon .q-icon {
@@ -391,17 +418,19 @@ onMounted(async () => {
 .training-card {
 	background: white;
 	border: 1px solid #e2e8f0;
-	border-radius: 12px;
+	border-radius: 14px;
 	padding: 16px;
 	cursor: pointer;
-	transition: all 0.2s ease;
+	transition: border-color 0.25s ease, box-shadow 0.25s var(--anim-ease-out), transform 0.25s var(--anim-ease-spring);
 	height: fit-content;
 }
-
 .training-card:hover {
-	border-color: #cbd5e1;
-	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
-	transform: translateY(-2px);
+	border-color: rgba(80, 100, 247, 0.25);
+	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
+	transform: translateY(-3px);
+}
+.training-card:active {
+	transform: translateY(-1px);
 }
 
 .training-header {
@@ -475,13 +504,18 @@ onMounted(async () => {
 .empty-icon {
 	width: 80px;
 	height: 80px;
-	border-radius: 20px;
-	background: rgba(80, 100, 247, 0.06);
+	border-radius: 22px;
+	background: rgba(80, 100, 247, 0.08);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: rgba(80, 100, 247, 0.5);
+	color: rgba(80, 100, 247, 0.6);
 	margin-bottom: 20px;
+	transition: transform 0.4s var(--anim-ease-spring), background 0.3s ease;
+}
+.empty-state:hover .empty-icon {
+	transform: scale(1.05);
+	background: rgba(80, 100, 247, 0.1);
 }
 
 .empty-title {
@@ -498,15 +532,19 @@ onMounted(async () => {
 }
 
 .empty-btn {
-	border-radius: 10px;
+	border-radius: 12px;
 	padding: 10px 24px;
 	font-size: 14px;
 	font-weight: 500;
 	box-shadow: 0 2px 8px rgba(80, 100, 247, 0.25);
+	transition: box-shadow 0.25s ease, transform 0.25s var(--anim-ease-spring);
 }
-
 .empty-btn:hover {
-	box-shadow: 0 4px 16px rgba(80, 100, 247, 0.35);
+	box-shadow: 0 4px 20px rgba(80, 100, 247, 0.35);
+	transform: translateY(-2px);
+}
+.empty-btn:active {
+	transform: translateY(0);
 }
 
 /* ——— Responsive ——— */

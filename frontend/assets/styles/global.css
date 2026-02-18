@@ -1,4 +1,129 @@
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background-color: #F8F9FB;
+:root {
+	--anim-duration-fast: 0.2s;
+	--anim-duration-normal: 0.35s;
+	--anim-duration-slow: 0.5s;
+	--anim-ease-out: cubic-bezier(0.33, 1, 0.68, 1);
+	--anim-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+	--anim-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+	--shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+	--shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+	--shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.12);
 }
+
+body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+	background-color: #f5f6fa;
+	color: #1a1a2e;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+/* ——— Keyframes ——— */
+@keyframes fadeIn {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+	from {
+		opacity: 0;
+		transform: translateY(12px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes fadeInDown {
+	from {
+		opacity: 0;
+		transform: translateY(-8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes scaleIn {
+	from {
+		opacity: 0;
+		transform: scale(0.96);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+@keyframes slideInRight {
+	from {
+		opacity: 0;
+		transform: translateX(8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+@keyframes pulse-soft {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0.7; }
+}
+
+@keyframes shimmer {
+	0% { background-position: -200% 0; }
+	100% { background-position: 200% 0; }
+}
+
+/* ——— Utility animation classes ——— */
+.animate-fade-in {
+	animation: fadeIn var(--anim-duration-normal) var(--anim-ease-out) forwards;
+}
+
+.animate-fade-in-up {
+	animation: fadeInUp var(--anim-duration-normal) var(--anim-ease-out) forwards;
+}
+
+.animate-scale-in {
+	animation: scaleIn var(--anim-duration-normal) var(--anim-ease-spring) forwards;
+}
+
+.animate-stagger-1 { animation-delay: 0.05s; }
+.animate-stagger-2 { animation-delay: 0.1s; }
+.animate-stagger-3 { animation-delay: 0.15s; }
+.animate-stagger-4 { animation-delay: 0.2s; }
+.animate-stagger-5 { animation-delay: 0.25s; }
+.animate-stagger-6 { animation-delay: 0.3s; }
+.animate-stagger-7 { animation-delay: 0.35s; }
+.animate-stagger-8 { animation-delay: 0.4s; }
+
+/* hide until delayed animation starts */
+.animate-fade-in-up.animate-stagger-1,
+.animate-fade-in-up.animate-stagger-2,
+.animate-fade-in-up.animate-stagger-3,
+.animate-fade-in-up.animate-stagger-4,
+.animate-fade-in-up.animate-stagger-5,
+.animate-fade-in-up.animate-stagger-6,
+.animate-fade-in-up.animate-stagger-7,
+.animate-fade-in-up.animate-stagger-8 {
+	opacity: 0;
+}
+
+/* Initial state for staggered children */
+.animate-stagger-children > * {
+	opacity: 0;
+	animation: fadeInUp var(--anim-duration-normal) var(--anim-ease-out) forwards;
+}
+.animate-stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
+.animate-stagger-children > *:nth-child(2) { animation-delay: 0.1s; }
+.animate-stagger-children > *:nth-child(3) { animation-delay: 0.15s; }
+.animate-stagger-children > *:nth-child(4) { animation-delay: 0.2s; }
+.animate-stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
+.animate-stagger-children > *:nth-child(6) { animation-delay: 0.3s; }
+.animate-stagger-children > *:nth-child(7) { animation-delay: 0.35s; }
+.animate-stagger-children > *:nth-child(8) { animation-delay: 0.4s; }
+.animate-stagger-children > *:nth-child(9) { animation-delay: 0.45s; }
+.animate-stagger-children > *:nth-child(10) { animation-delay: 0.5s; }

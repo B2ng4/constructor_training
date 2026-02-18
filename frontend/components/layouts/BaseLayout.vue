@@ -8,10 +8,11 @@
 					dense
 					round
 					icon="menu"
+					class="menu-btn"
 					@click="drawerLeft = !drawerLeft"
 				/>
 				<router-link to="/personal/home" class="layout-brand row items-center q-mr-xl">
-					<q-icon name="school" size="28px" color="primary" />
+					<q-icon name="school" size="28px" color="primary" class="brand-icon" />
 					<span class="brand-text q-ml-sm">Конструктор тренингов</span>
 				</router-link>
 				<q-space />
@@ -30,11 +31,12 @@
 		>
 			<div class="drawer-content">
 				<router-link
-					v-for="nav in navigationButtons"
+					v-for="(nav, idx) in navigationButtons"
 					:key="nav.url"
 					:to="nav.url"
 					class="nav-link"
 					active-class="nav-link-active"
+					:style="{ '--stagger': idx }"
 				>
 					<q-item clickable>
 						<q-item-section avatar>
@@ -89,7 +91,11 @@ export default {
 }
 
 .header {
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+	transition: box-shadow 0.3s var(--anim-ease-out);
+}
+.header:hover {
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .toolbar {
@@ -97,45 +103,83 @@ export default {
 	padding: 0 16px;
 }
 
+.menu-btn {
+	transition: transform 0.25s var(--anim-ease-spring), background 0.2s ease;
+}
+.menu-btn:hover {
+	transform: scale(1.05);
+}
+.menu-btn:active {
+	transform: scale(0.98);
+}
+
 .layout-brand {
 	text-decoration: none;
 	color: inherit;
+	transition: opacity 0.2s ease;
+	border-radius: 8px;
+	padding: 4px 8px;
+	margin: -4px -8px;
+}
+.layout-brand:hover {
+	opacity: 0.9;
+}
+.layout-brand:active {
+	opacity: 0.95;
+}
+
+.brand-icon {
+	transition: transform 0.35s var(--anim-ease-spring);
+}
+.layout-brand:hover .brand-icon {
+	transform: scale(1.08) rotate(-3deg);
 }
 
 .brand-text {
 	font-weight: 600;
 	font-size: 1.1rem;
 	color: #1a1a2e;
+	letter-spacing: -0.01em;
 }
 
 .drawer {
 	background: white;
 }
-
-.drawer-content {
-	padding-top: 8px;
+.drawer :deep(.q-drawer__content) {
+	transition: opacity 0.2s ease;
 }
 
-.drawer-header {
-	border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+.drawer-content {
+	padding-top: 12px;
+	padding-bottom: 16px;
 }
 
 .nav-link {
 	text-decoration: none;
 	color: inherit;
 	display: block;
-	margin: 2px 12px;
-	border-radius: 10px;
+	margin: 4px 12px;
+	border-radius: 12px;
+	transition: background 0.2s ease, transform 0.2s ease;
+	animation: fadeInUp 0.35s var(--anim-ease-out) backwards;
+	animation-delay: calc(0.04s * (var(--stagger, 0) + 1));
+}
+.nav-link:hover {
+	background: rgba(80, 100, 247, 0.06);
+}
+.nav-link:active {
+	transform: scale(0.99);
 }
 
 .nav-link-active .q-item {
-	background: rgba(80, 100, 247, 0.1);
+	background: rgba(80, 100, 247, 0.12);
 	color: #5064f7;
-	border-radius: 10px;
+	border-radius: 12px;
+	transition: background 0.2s ease, box-shadow 0.2s ease;
+	box-shadow: 0 0 0 1px rgba(80, 100, 247, 0.15);
 }
-
 .nav-link-active .q-item-label {
-	font-weight: 500;
+	font-weight: 600;
 }
 
 .page-container {

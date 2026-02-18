@@ -376,9 +376,10 @@ watch(showModal, async (val) => {
 .training-modal-card {
 	width: 520px;
 	max-width: 95vw;
-	border-radius: 16px;
+	border-radius: 18px;
 	overflow: visible;
-	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+	box-shadow: 0 24px 56px rgba(0, 0, 0, 0.14);
+	animation: scaleIn 0.3s var(--anim-ease-spring) forwards;
 }
 
 .modal-header {
@@ -496,11 +497,13 @@ watch(showModal, async (val) => {
 	padding: 10px 24px;
 	font-weight: 500;
 	box-shadow: 0 2px 10px rgba(80, 100, 247, 0.25);
-	transition: box-shadow 0.2s, transform 0.2s;
+	transition: box-shadow 0.25s ease, transform 0.25s var(--anim-ease-spring);
 }
-
 .btn-create-training:hover:not(:disabled) {
-	box-shadow: 0 4px 18px rgba(80, 100, 247, 0.4);
-	transform: translateY(-1px);
+	box-shadow: 0 4px 20px rgba(80, 100, 247, 0.4);
+	transform: translateY(-2px);
+}
+.btn-create-training:active:not(:disabled) {
+	transform: translateY(0);
 }
 </style>
