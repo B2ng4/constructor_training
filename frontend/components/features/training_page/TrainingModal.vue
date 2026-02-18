@@ -68,25 +68,33 @@
 					map-options
 					option-value="value"
 					option-label="label"
-					:options="filteredTags"
+					:options="tagSelectOptions"
 					use-chips
 					use-input
 					@filter="filterTags"
 					@input-value="onInputValue"
 					@popup-show="onPopupShow"
 					new-value-mode="add-unique"
-					@new-value="createNewTag"
+					@new-value="onNewValue"
 					input-debounce="0"
 					label="Теги"
-					placeholder="Введите для поиска или добавьте новый тег (Enter)"
+					placeholder="Введите для поиска или нажмите Enter для создания тега"
 					color="primary"
 					class="form-field tags-select"
+					behavior="menu"
 				>
 					<template v-slot:no-option>
-						<q-item>
+						<q-item v-if="currentInputValue.trim()" clickable @click="createNewTagFromInput">
+							<q-item-section avatar>
+								<q-icon name="add_circle_outline" color="primary" />
+							</q-item-section>
+							<q-item-section>
+								<q-item-label>Создать тег «<strong>{{ currentInputValue.trim() }}</strong>»</q-item-label>
+							</q-item-section>
+						</q-item>
+						<q-item v-else>
 							<q-item-section class="text-grey-7 text-center">
-								<div>Ничего не найдено.</div>
-								<div class="text-caption">Нажмите Enter для создания нового тега "<strong>{{ currentInputValue }}</strong>"</div>
+								<span>Введите название и нажмите Enter или выберите «Создать тег»</span>
 							</q-item-section>
 						</q-item>
 					</template>
@@ -182,7 +190,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import { useQuasar } from "quasar";
 import { TrainingApi } from "@api/api/TrainingApi.js";
 import { MetaTrainingApi } from "@api/api/MetaTrainingApi.js";
@@ -208,99 +216,117 @@ const dataTraining = ref({
 
 const showModal = defineModel();
 const filteredTags = ref([]);
-const currentInputValue = ref('');
+const currentInputValue = ref("");
 const tagSelectRef = ref(null);
+const creatingTag = ref(false);
+
+const tagSelectOptions = computed(() => filteredTags.value);
 
 function onPopupShow() {
-	// При открытии списка показываем все теги
-	filteredTags.value = listTags.value;
-	currentInputValue.value = '';
+	filteredTags.value = [...listTags.value];
+	currentInputValue.value = "";
 }
 
 function filterTags(val, update) {
 	update(() => {
-		if (val === '') {
-			filteredTags.value = listTags.value;
+		const search = (val || "").trim().toLowerCase();
+		if (!search) {
+			filteredTags.value = [...listTags.value];
 		} else {
-			const needle = val.toLowerCase();
-			filteredTags.value = listTags.value.filter(
-				tag => tag.label.toLowerCase().includes(needle)
+			filteredTags.value = listTags.value.filter((tag) =>
+				(tag.label || "").toLowerCase().includes(search)
 			);
 		}
 	});
 }
 
 function onInputValue(val) {
-	currentInputValue.value = val;
+	currentInputValue.value = val ?? "";
 }
 
-async function createNewTag(inputValue, doneFn) {
+/** Создание тега по API и добавление в список и в выбранные */
+async function performCreateTag(label) {
+	const trimmed = (label || "").trim();
+	if (!trimmed) return null;
+	const res = await metaApi.createTag(trimmed);
+	const tag = { value: res.data.value, label: res.data.label };
+	const exists = listTags.value.some((t) => t.value === tag.value);
+	if (!exists) {
+		listTags.value = [...listTags.value, tag].sort((a, b) =>
+			(a.label || "").localeCompare(b.label || "")
+		);
+	}
+	filteredTags.value = [...listTags.value];
+	currentInputValue.value = "";
+	return tag;
+}
+
+/** Обработчик @new-value: пользователь нажал Enter для создания тега */
+async function onNewValue(inputValue, doneFn) {
 	const label = inputValue?.trim();
-	
 	if (!label) {
 		doneFn(null);
 		return;
 	}
-	
-	// Создаём или получаем существующий тег через API
+	if (creatingTag.value) {
+		doneFn(null);
+		return;
+	}
+	creatingTag.value = true;
 	try {
-		const response = await metaApi.createTag(label);
-		const newTag = { value: response.data.value, label: response.data.label };
-		
-		// Проверяем, есть ли уже этот тег в списке
-		const existingIndex = listTags.value.findIndex(t => t.value === newTag.value);
-		
-		if (existingIndex === -1) {
-			// Добавляем новый тег в список
-			listTags.value = [...listTags.value, newTag].sort((a, b) =>
-				(a.label || "").localeCompare(b.label || "")
-			);
-			
+		const newTag = await performCreateTag(label);
+		if (newTag) {
 			$q.notify({
 				color: "positive",
-				message: `Тег "${newTag.label}" создан`,
+				message: `Тег «${newTag.label}» создан`,
 				position: "top",
 				timeout: 1500
 			});
+			doneFn(newTag.value, "add-unique");
 		} else {
-			// Тег уже был в списке
+			doneFn(null);
+		}
+	} catch (e) {
+		console.error("Error creating tag:", e);
+		const msg =
+			e?.response?.status === 401
+				? "Ошибка авторизации. Войдите в систему"
+				: e?.response?.data?.detail || e?.message || "Не удалось создать тег";
+		$q.notify({ color: "negative", message: msg, position: "top", timeout: 3000 });
+		doneFn(null);
+	} finally {
+		creatingTag.value = false;
+	}
+}
+
+/** Создание тега по клику на «Создать тег «…»» в no-option */
+async function createNewTagFromInput() {
+	const label = currentInputValue.value.trim();
+	if (!label || creatingTag.value) return;
+	creatingTag.value = true;
+	try {
+		const newTag = await performCreateTag(label);
+		if (newTag && !dataTraining.value.tag_ids.includes(newTag.value)) {
+			dataTraining.value = {
+				...dataTraining.value,
+				tag_ids: [...dataTraining.value.tag_ids, newTag.value]
+			};
 			$q.notify({
-				color: "info",
-				message: `Тег "${newTag.label}" уже существует`,
+				color: "positive",
+				message: `Тег «${newTag.label}» создан и добавлен`,
 				position: "top",
 				timeout: 1500
 			});
 		}
-		
-		// Обновляем отфильтрованный список
-		filteredTags.value = listTags.value;
-		
-		// Очищаем текущий input
-		currentInputValue.value = '';
-		
-		// Возвращаем value тега в q-select
-		doneFn(newTag.value, 'add-unique');
-		
 	} catch (e) {
-		console.error('Error creating tag:', e);
-		
-		let msg = "Не удалось создать тег";
-		
-		if (e?.response?.status === 401) {
-			msg = "Ошибка авторизации. Пожалуйста, войдите в систему";
-		} else if (e?.response?.data?.detail) {
-			msg = e.response.data.detail;
-		} else if (e?.message) {
-			msg = e.message;
-		}
-		
-		$q.notify({ 
-			color: "negative", 
-			message: msg, 
-			position: "top",
-			timeout: 3000
-		});
-		doneFn(null);
+		console.error("Error creating tag:", e);
+		const msg =
+			e?.response?.status === 401
+				? "Ошибка авторизации. Войдите в систему"
+				: e?.response?.data?.detail || e?.message || "Не удалось создать тег";
+		$q.notify({ color: "negative", message: msg, position: "top", timeout: 3000 });
+	} finally {
+		creatingTag.value = false;
 	}
 }
 
@@ -313,7 +339,7 @@ function resetForm() {
 		level_id: null,
 		skip_steps: false
 	};
-	currentInputValue.value = '';
+	currentInputValue.value = "";
 }
 
 async function createTraining() {

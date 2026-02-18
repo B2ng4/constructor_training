@@ -6,22 +6,28 @@ export class MetaTrainingApi extends BaseApi {
 	}
 
 	getTags() {
-		super.httpMethod = "get";
-		super.sourceUrl = "/tags/";
-		return super.createRequest();
+		this.httpMethod = "get";
+		this.sourceUrl = "/tags/";
+		this.data = {};
+		this.params = {};
+		return this.createRequest();
 	}
 
 	createTag(label) {
-		super.httpMethod = "post";
-		super.sourceUrl = "/tags/";
-		super.data = { label };
-		return super.createRequest();
+		const body = { label: String(label || "").trim() };
+		this.httpMethod = "post";
+		this.sourceUrl = "/tags/";
+		this.data = body;
+		this.params = {};
+		return this.createRequest();
 	}
 
 	getLevels() {
-		super.httpMethod = "get";
-		super.sourceUrl = "/levels/";
-		return super.createRequest();
+		this.httpMethod = "get";
+		this.sourceUrl = "/levels/";
+		this.data = {};
+		this.params = {};
+		return this.createRequest();
 	}
 
 	uploadImages(uuid, data) {
