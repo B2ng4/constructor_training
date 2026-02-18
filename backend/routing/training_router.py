@@ -1,23 +1,18 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, status
-from fastapi.security import OAuth2PasswordBearer
 from pydantic import UUID4
 from fastapi.responses import JSONResponse
 
-from core.config import configs
 from depends import (
     get_trainings_service,
     get_s3_service,
     get_user_service,
-    get_batch_video_service,
     get_video_ai_service,
+    oauth2_scheme,
 )
-from starlette import status
-
-from services.BatchVideo_service import BatchVideoService
-from services.video_ai_service import VideoAIService
 from services.trainings_service import TrainingsService
+from services.video_ai_service import VideoAIService
 from services.external_services.s3_service import S3Service
 from schemas.trainings import (
     TrainingResponse,
@@ -25,18 +20,14 @@ from schemas.trainings import (
     TrainingCreate,
     TrainingListResponse,
     StepsReorderRequest,
-)
-from services.user_service import UserService
-
-from schemas.trainings import (
     TrainingStepResponse,
     TrainingStepCreate,
     StepBulkCreateRequest,
     TrainingStepUpdate,
 )
+from services.user_service import UserService
 
 router = APIRouter(prefix="/training", tags=["Тренинги"])
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 
 @router.post("/create_training", name="Создание тренинга")
@@ -303,7 +294,7 @@ async def publish_training(
     service: TrainingsService = Depends(get_trainings_service),
 ):
     token = await service.publish_training(training_uuid)
-    BASE_URL = "http://localhost:5173/training/passage"
+    BASE_URL = "https://ungraciously-relishing-char.cloudpub.ru/training/passage"
     return {
         "success": True,
         "public_link": f"{BASE_URL}/{token}",

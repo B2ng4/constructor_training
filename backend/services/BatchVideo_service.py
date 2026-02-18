@@ -6,6 +6,8 @@ from skimage.metrics import structural_similarity as compare_ssim
 from typing import List
 from fastapi import UploadFile, HTTPException
 
+from core.logging_config import logger
+
 
 class BatchVideoService:
     def __init__(self):
@@ -100,9 +102,9 @@ class BatchVideoService:
                         last_saved_frame = gray
                         stability_counter = 0
                     else:
-                        print(f"Frame {frame_idx}: Шум (Area: {total_area:.0f})")
+                        logger.debug("Frame {}: Шум (Area: {:.0f})", frame_idx, total_area)
                 else:
-                    print(f"⏸Frame {frame_idx}: Стабильно (SSIM: {score:.3f})")
+                    logger.debug("Frame {}: Стабильно (SSIM: {:.3f})", frame_idx, score)
             prev_gray = gray
         cap.release()
         return saved_frames_bytes

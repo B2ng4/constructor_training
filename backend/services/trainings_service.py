@@ -1,6 +1,8 @@
 import uuid
 from typing import List, Optional, Dict, Union, Any
 from pydantic import UUID4
+
+from core.logging_config import logger
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -322,7 +324,7 @@ class TrainingsService:
                 "height": img.height,
             }
         except Exception as e:
-            print(f"Warning: Не удалось получить размеры для {image_url}: {e}")
+            logger.warning("Не удалось получить размеры для {}: {}", image_url, e)
             return {"width": 0, "height": 0}
 
     async def add_step(

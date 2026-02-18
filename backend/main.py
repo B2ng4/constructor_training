@@ -2,7 +2,7 @@
 Точка входа в backend
 """
 
-from fastapi import FastAPI, APIRouter
+from core.logging_config import setup_logging
 from routing import (
     tags_router,
     levels_router,
@@ -12,6 +12,8 @@ from routing import (
 )
 from core.config import configs
 from core.create_base_app import create_base_app
+
+setup_logging(level=configs.LOG_LEVEL)
 
 app = create_base_app(configs)
 

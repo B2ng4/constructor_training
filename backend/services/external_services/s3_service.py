@@ -1,6 +1,8 @@
 from fastapi import Depends, HTTPException
 import boto3
 from botocore.exceptions import ClientError
+
+from core.logging_config import logger
 import uuid
 from datetime import datetime
 from botocore.config import Config
@@ -42,7 +44,7 @@ class S3Service:
         """Проверяет существование бакета и создает его если не существует"""
         try:
             self.s3_client.head_bucket(Bucket=self.bucket_name)
-            print(f"Бакет {self.bucket_name} существует")
+            logger.info("Бакет {} существует", self.bucket_name)
         except ClientError as e:
             error_code = e.response["Error"]["Code"]
             if error_code == "404":
@@ -52,12 +54,12 @@ class S3Service:
                         Bucket=self.bucket_name,
                         ACL="public-read",  # Делаем бакет публично читаемым
                     )
-                    print(f"Бакет {self.bucket_name} успешно создан")
+                    logger.info("Бакет {} успешно создан", self.bucket_name)
                 except Exception as create_error:
-                    print(f"Ошибка при создании бакета: {create_error}")
+                    logger.error("Ошибка при создании бакета: {}", create_error)
                     raise
             else:
-                print(f"Ошибка при проверке бакета: {e}")
+                logger.error("Ошибка при проверке бакета: {}", e)
                 raise
 
     def generate_unique_filename(self, original_filename: str) -> str:
@@ -87,14 +89,14 @@ class S3Service:
 
             return file_url
         except Exception as e:
-            print(f"Ошибка при загрузке файла: {str(e)}")
+            logger.error("Ошибка при загрузке файла: {}", str(e))
             raise e
 
     async def delete_file(self, object_name: str):
         """Удаляет файл из S3"""
         key = "/".join(object_name.split("/photos/")[-1].split("/"))
         object_name = f"photos/{key}"
-        print(f"Attempting to delete object: {object_name}")
+        logger.debug("Удаление объекта: {}", object_name)
         try:
             response = self.s3_client.delete_objects(
                 Bucket=self.bucket_name, Delete={"Objects": [{"Key": object_name}]}

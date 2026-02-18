@@ -17,6 +17,9 @@ class Configs(BaseSettings):
     HOST: str = "localhost"
     PORT: int = 8002
 
+    # ------------ Логирование ------------
+    LOG_LEVEL: str = Field(default="INFO", env="LOG_LEVEL")
+
     # ------------ Аутентификация ------------
     SECRET_KEY: str = Field(
         default="your-secret-key", env="SECRET_KEY"

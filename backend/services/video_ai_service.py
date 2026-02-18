@@ -1,6 +1,5 @@
 import base64
 import json
-import logging
 import re
 import tempfile
 import os
@@ -13,8 +12,7 @@ from fastapi import UploadFile, HTTPException, status
 from openai import OpenAI
 
 from core.config import configs
-
-logger = logging.getLogger(__name__)
+from core.logging_config import logger
 
 
 ANALYSIS_PROMPT = """

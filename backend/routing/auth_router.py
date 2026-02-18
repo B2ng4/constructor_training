@@ -8,18 +8,15 @@ from fastapi import (
     Form,
     BackgroundTasks,
 )
-from fastapi.security import OAuth2PasswordBearer
 from starlette import status
 from schemas.users import UserRegister, UserResponse, UserLogin, User
-from depends import get_user_service
+from depends import get_user_service, oauth2_scheme
 from services.user_service import UserService
 
 router = APIRouter(
     prefix="/auth",
     tags=["Auth"],
 )
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 
 @router.post("/register", name="регистрация пользователя")
