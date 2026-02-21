@@ -28,6 +28,8 @@ uv run alembic upgrade head  - обновить таблицы в локальн
 uv run main.py - запустить backend
 
 taskkill /F /IM python.exe - удалить питоновские процессы
+taskkill /F /IM node.exe /T - удалить nodejs процессы
+
 
 ## Backend 
 ![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)
