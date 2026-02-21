@@ -111,6 +111,7 @@ class TrainingListResponse(BaseModel):
     skip_steps: Optional[bool] = None
     level: Optional[LevelResponse] = None
     tags: List[TagResponse] = Field(default_factory=list)
+    public_link: Optional[str] = None
 
     class Config:
         from_attributes = True

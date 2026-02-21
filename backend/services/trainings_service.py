@@ -134,6 +134,19 @@ class TrainingsService:
 
         return access_token
 
+    async def unpublish_training(self, training_uuid: UUID4) -> None:
+        """
+        Снимает тренинг с публикации: ставит publish=False,
+        деактивирует все активные публикации.
+        """
+        training = await self.repo.get_by_uuid_with_relations(training_uuid)
+        if not training:
+            raise HTTPException(status_code=404, detail="Тренинг не найден")
+
+        training.publish = False
+        await self.repo.deactivate_publication(training_uuid)
+        await self.session.commit()
+
     async def get_public_training_data(self, access_token: str) -> Dict:
         """
         Получает данные тренинга для прохождения (для анонимного пользователя).
@@ -158,7 +171,17 @@ class TrainingsService:
         trainings = await self.repo.get_by_user_id(user_id)
         if not trainings:
             return None
-        return [TrainingListResponse.model_validate(training) for training in trainings]
+
+        result = []
+        for training in trainings:
+            item = TrainingListResponse.model_validate(training)
+            active_pub = next(
+                (p for p in training.publications if p.is_active), None
+            )
+            if active_pub:
+                item.public_link = f"/training/passage/{active_pub.access_token}"
+            result.append(item)
+        return result
 
     async def patch_training(
         self, training_uuid: UUID4, training_data: TrainingUpdate

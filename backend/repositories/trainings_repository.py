@@ -329,6 +329,27 @@ class TrainingRepository:
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
+    async def deactivate_publication(self, training_uuid: UUID4) -> bool:
+        """
+        Деактивирует все активные публикации тренинга.
+        Возвращает True, если хотя бы одна публикация была деактивирована.
+        """
+        query = select(TrainingPublication).where(
+            TrainingPublication.training_uuid == training_uuid,
+            TrainingPublication.is_active == True
+        )
+        result = await self.session.execute(query)
+        publications = result.scalars().all()
+
+        if not publications:
+            return False
+
+        for pub in publications:
+            pub.is_active = False
+
+        await self.session.flush()
+        return True
+
     async def increment_publication_views(self, publication_id: int):
         """
         Атомарно увеличивает счетчик просмотров

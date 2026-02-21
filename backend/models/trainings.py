@@ -110,6 +110,13 @@ class Training(Base):
         lazy="selectin",
     )
 
+    publications: Mapped[List["TrainingPublication"]] = relationship(
+        "models.trainings.TrainingPublication",
+        back_populates="training",
+        lazy="selectin",
+        cascade="all, delete-orphan",
+    )
+
 
 class TrainingStep(Base):
     """
@@ -232,6 +239,8 @@ class TrainingPublication(Base):
     views_count: Mapped[int] = mapped_column(default=0)
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     is_active: Mapped[bool] = mapped_column(default=True)
-    training: Mapped["Training"] = relationship("Training", lazy="selectin")
+    training: Mapped["Training"] = relationship(
+        "Training", back_populates="publications", lazy="selectin"
+    )
 
 

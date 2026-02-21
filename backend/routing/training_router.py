@@ -301,6 +301,15 @@ async def publish_training(
         "access_token": token
     }
 
+@router.post("/{training_uuid}/unpublish", name="Снять тренинг с публикации")
+async def unpublish_training(
+    training_uuid: UUID4,
+    service: TrainingsService = Depends(get_trainings_service),
+):
+    await service.unpublish_training(training_uuid)
+    return {"success": True, "message": "Тренинг снят с публикации"}
+
+
 @router.get("/public/{access_token}", name="Получить публичный тренинг")
 async def get_public_training(
     access_token: str,
