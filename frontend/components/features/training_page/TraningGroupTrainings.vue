@@ -1,7 +1,7 @@
 <template>
 	<div class="training-page">
 		<!-- Заголовок страницы -->
-		<div class="page-header q-pa-lg animate-fade-in-up">
+		<div class="q-pa-lg animate-fade-in-up">
 			<h1 class="page-title text-h4 text-weight-bold q-mb-xs">Мои тренинги</h1>
 			<p class="text-body2 text-grey-7">Создавайте и управляйте интерактивными тренингами</p>
 		</div>
@@ -90,16 +90,13 @@
 						<q-badge
 							v-if="training.publish"
 							class="status-badge published"
-							:label="'Опубликовано'"
+							label="Опубликовано"
 						/>
 						<span v-else class="status-draft text-caption text-grey-6">Черновик</span>
 						<q-btn-dropdown
 							flat
 							dense
-							round
-							icon="more_vert"
-							dropdown-icon="none"
-							content-class="dropdown-menu"
+							dropdown-icon="more_vert"
 							@click.stop
 						>
 						<q-list dense style="min-width: 180px">
@@ -235,10 +232,6 @@ onUnmounted(() => {
 <style scoped>
 .training-page {
 	min-height: 60vh;
-}
-
-.page-header {
-	border-bottom: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .page-title {
@@ -396,23 +389,5 @@ onUnmounted(() => {
 
 .full-height {
 	height: 100%;
-}
-</style>
-
-<style>
-.dropdown-menu {
-	border-radius: 10px !important;
-	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
-	overflow: hidden;
-}
-
-.dropdown-menu .q-item {
-	border-radius: 6px;
-	margin: 2px 4px;
-	min-height: 40px;
-}
-
-.dropdown-menu .q-item:hover {
-	background: rgba(0, 0, 0, 0.04);
 }
 </style>

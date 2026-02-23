@@ -39,6 +39,8 @@ taskkill /F /IM node.exe /T - удалить nodejs процессы
 
 
 ## Frontend
+### DANGER
+Код написан нейросетью
 
 vue
 vite

@@ -9,7 +9,9 @@ import {
 	PersonalPage,
 	RegistrationPage,
 	TrainingPage,
-	PassageTraining
+	PassageTraining,
+	TrainingWelcomePage,
+	TrainingPlayPage,
 } from "@pages";
 
 export const routes = [
@@ -42,5 +44,21 @@ export const routes = [
 	},
 	{ path: "/403", component: Page403, name: '403' },
 	{ path: "/edit/:uuid", component: EditPage },
-	{ path: '/training/passage/:accessToken', component: PassageTraining }
+	{
+		path: "/training/passage/:accessToken",
+		component: PassageTraining,
+		redirect: (to) => ({ path: `${to.path}/welcome` }),
+		children: [
+			{
+				path: "welcome",
+				name: "TrainingWelcome",
+				component: TrainingWelcomePage,
+			},
+			{
+				path: "play",
+				name: "TrainingPlay",
+				component: TrainingPlayPage,
+			},
+		],
+	},
 ];
