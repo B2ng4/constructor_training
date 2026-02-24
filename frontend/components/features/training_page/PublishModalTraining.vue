@@ -42,7 +42,7 @@
 					</template>
 				</q-input>
 
-				<div class="row">
+				<div class="row flex-wrap">
 					<q-btn
 						color="primary"
 						:label="publicLink ? 'Скопировать' : 'Опубликовать'"
@@ -53,6 +53,20 @@
 						:loading="publishing"
 						@click="publicLink ? copyLink() : publish()"
 					/>
+					<q-btn
+						v-if="publicLink && isAlreadyPublished"
+						flat
+						no-caps
+						color="primary"
+						icon="refresh"
+						class="rounded-12 q-ml-sm"
+						padding="10px"
+						:loading="publishing"
+						label="Создать новую ссылку"
+						@click="republish"
+					>
+						<q-tooltip>Старая ссылка перестанет работать</q-tooltip>
+					</q-btn>
 					<div class="q-ml-xl q-gutter-md">
 						<q-btn
 							color="grey-3"
@@ -98,7 +112,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import { trainingApi } from "@api/api/TrainingApi.js";
 import { useQuasar } from "quasar";
 
@@ -110,8 +124,18 @@ const $q = useQuasar();
 const publicLink = ref("");
 const publishing = ref(false);
 
+const isAlreadyPublished = computed(() => !!props.data?.publish);
+
+function buildFullLink(pathOrUrl) {
+	if (!pathOrUrl) return "";
+	if (pathOrUrl.startsWith("http")) return pathOrUrl;
+	return `${window.location.origin}${pathOrUrl}`;
+}
+
 watch(model, (val) => {
-	if (!val) {
+	if (val && props.data?.publish && props.data?.public_link) {
+		publicLink.value = buildFullLink(props.data.public_link);
+	} else if (!val) {
 		publicLink.value = "";
 	}
 });
@@ -134,6 +158,31 @@ async function publish() {
 		$q.notify({
 			color: "negative",
 			message: "Не удалось опубликовать тренинг",
+			position: "top",
+		});
+	} finally {
+		publishing.value = false;
+	}
+}
+
+async function republish() {
+	if (!props.data?.uuid) return;
+	publishing.value = true;
+	try {
+		const { data } = await trainingApi.publishTraining(props.data.uuid);
+		publicLink.value = data.public_link;
+		emit("published");
+		$q.notify({
+			color: "positive",
+			message: "Создана новая ссылка. Старая больше не действует.",
+			position: "bottom-right",
+			icon: "check_circle",
+		});
+	} catch (e) {
+		console.error(e);
+		$q.notify({
+			color: "negative",
+			message: "Не удалось создать новую ссылку",
 			position: "top",
 		});
 	} finally {

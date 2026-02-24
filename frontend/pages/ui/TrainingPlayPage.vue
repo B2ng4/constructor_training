@@ -11,6 +11,9 @@
 					<p class="completion-text">
 						Поздравляем! Вы успешно завершили тренинг.
 					</p>
+					<p v-if="durationMinutes > 0" class="completion-time">
+						Время: {{ formatTime(totalSecondsSpent) }}
+					</p>
 				</q-card-section>
 				<q-card-actions align="center" class="completion-actions">
 					<q-btn
@@ -42,6 +45,28 @@
 
 		<!-- Прохождение -->
 		<template v-else>
+			<!-- Часы (таймер) — компактный виджет в углу -->
+			<div v-if="durationMinutes > 0" class="timer-clock">
+				<div class="timer-clock__face" :class="{ 'timer-clock__face--over': timeRemaining <= 0 }">
+					<q-icon name="schedule" size="22px" class="timer-clock__icon" />
+					<div class="timer-clock__time">
+						{{ formatTime(timeRemaining > 0 ? timeRemaining : totalSecondsSpent) }}
+					</div>
+					<div class="timer-clock__label">{{ timeRemaining > 0 ? "осталось" : "время" }}</div>
+					<svg class="timer-clock__ring" viewBox="0 0 36 36">
+						<path
+							class="timer-clock__ring-bg"
+							d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+						/>
+						<path
+							class="timer-clock__ring-fill"
+							:stroke-dasharray="`${(1 - timerProgress) * 100}, 100`"
+							d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+						/>
+					</svg>
+				</div>
+			</div>
+
 			<!-- Шаг без скриншота -->
 			<div
 				v-if="selectedStep && !selectedStep.image_url"
@@ -69,10 +94,14 @@
 					@select-step="passage.selectStep"
 				/>
 				<PassageStepTitle :selected-step="selectedStep" />
-				<PassageStepHint :selected-step="selectedStep" />
+				<PassageStepHint
+					:selected-step="selectedStep"
+					:force-show="showHintAfterWrong"
+				/>
 
 				<div class="flow-area">
 					<PassageFlowComponent
+						mode="passage"
 						:selected-step="selectedStep"
 						@action-complete="onActionComplete"
 						@action-wrong="onActionWrong"
@@ -93,7 +122,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, watch, onMounted, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useQuasar } from "quasar";
 import { usePassageData } from "@composables/usePassageData.js";
@@ -123,6 +152,68 @@ const hasNextStep = computed(() => passage.hasNextStep.value);
 
 const showCompletionModal = ref(false);
 
+/** Неверные попытки на текущем шаге; после 3 показываем подсказку */
+const wrongAttempts = ref(0);
+const showHintAfterWrong = computed(() => wrongAttempts.value >= 3);
+
+watch(
+	() => selectedStep.value?.id,
+	() => {
+		wrongAttempts.value = 0;
+	}
+);
+
+/** Таймер: duration_minutes в секундах */
+const durationMinutes = computed(() => props.trainingData?.duration_minutes ?? 0);
+const totalDurationSeconds = computed(() => Math.max(0, durationMinutes.value * 60));
+
+const timeRemaining = ref(0);
+const totalSecondsSpent = ref(0);
+let timerInterval = null;
+
+function formatTime(seconds) {
+	const m = Math.floor(Math.abs(seconds) / 60);
+	const s = Math.floor(Math.abs(seconds) % 60);
+	return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+const timerProgress = computed(() => {
+	if (totalDurationSeconds.value <= 0) return 1;
+	const spent = totalDurationSeconds.value - timeRemaining.value;
+	return Math.min(1, Math.max(0, spent / totalDurationSeconds.value));
+});
+
+function startTimer() {
+	if (totalDurationSeconds.value <= 0) return;
+	timeRemaining.value = totalDurationSeconds.value;
+	totalSecondsSpent.value = 0;
+	timerInterval = setInterval(() => {
+		timeRemaining.value = Math.max(0, timeRemaining.value - 1);
+		totalSecondsSpent.value = totalDurationSeconds.value - timeRemaining.value;
+		if (timeRemaining.value <= 0) {
+			clearInterval(timerInterval);
+			timerInterval = null;
+			$q.notify({
+				color: "warning",
+				message: "Время вышло",
+				position: "top",
+				icon: "schedule",
+			});
+		}
+	}, 1000);
+}
+
+onMounted(() => {
+	startTimer();
+});
+
+onUnmounted(() => {
+	if (timerInterval) {
+		clearInterval(timerInterval);
+		timerInterval = null;
+	}
+});
+
 function onActionComplete() {
 	$q.notify({
 		color: "positive",
@@ -134,17 +225,32 @@ function onActionComplete() {
 }
 
 function onActionWrong() {
-	$q.notify({
-		color: "negative",
-		message: "Неверно, попробуйте ещё раз",
-		position: "top",
-	});
+	wrongAttempts.value += 1;
+	const count = wrongAttempts.value;
+	if (count >= 3) {
+		$q.notify({
+			color: "info",
+			message: "Показана подсказка",
+			position: "top",
+			icon: "lightbulb",
+		});
+	} else {
+		$q.notify({
+			color: "negative",
+			message: `Неверно. Попробуйте ещё раз${count === 2 ? " (после следующей ошибки будет подсказка)" : ""}`,
+			position: "top",
+		});
+	}
 }
 
 function goNext() {
 	if (passage.hasNextStep.value) {
 		passage.nextStep();
 	} else {
+		if (timerInterval) {
+			clearInterval(timerInterval);
+			timerInterval = null;
+		}
 		showCompletionModal.value = true;
 	}
 }
@@ -170,6 +276,94 @@ function goToWelcome() {
 	min-height: 0;
 	overflow: hidden;
 	background: #f0f1f5;
+}
+
+/* ——— Часы (таймер) ——— */
+.timer-clock {
+	position: absolute;
+	top: 16px;
+	right: 16px;
+	z-index: 15;
+}
+
+.timer-clock__face {
+	position: relative;
+	width: 72px;
+	height: 72px;
+	border-radius: 50%;
+	background: #fff;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+	border: 1px solid rgba(0, 0, 0, 0.06);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
+.timer-clock__face--over {
+	background: rgba(239, 68, 68, 0.08);
+	border-color: rgba(239, 68, 68, 0.2);
+}
+
+.timer-clock__icon {
+	color: var(--q-primary);
+	opacity: 0.9;
+	margin-bottom: 2px;
+}
+
+.timer-clock__face--over .timer-clock__icon {
+	color: #ef4444;
+}
+
+.timer-clock__time {
+	font-size: 13px;
+	font-weight: 700;
+	color: #1a1a2e;
+	line-height: 1.2;
+}
+
+.timer-clock__face--over .timer-clock__time {
+	color: #b91c1c;
+}
+
+.timer-clock__label {
+	font-size: 9px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+	color: #64748b;
+}
+
+.timer-clock__face--over .timer-clock__label {
+	color: #dc2626;
+}
+
+.timer-clock__ring {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 100%;
+	height: 100%;
+	transform: translate(-50%, -50%) rotate(-90deg);
+	pointer-events: none;
+}
+
+.timer-clock__ring-bg {
+	fill: none;
+	stroke: rgba(0, 0, 0, 0.06);
+	stroke-width: 2;
+}
+
+.timer-clock__ring-fill {
+	fill: none;
+	stroke: var(--q-primary);
+	stroke-width: 2;
+	stroke-linecap: round;
+	transition: stroke-dasharray 0.3s ease;
+}
+
+.timer-clock__face--over .timer-clock__ring-fill {
+	stroke: #ef4444;
 }
 
 .step-list-absolute {
@@ -251,6 +445,13 @@ function goToWelcome() {
 	color: #64748b;
 	margin: 0;
 	line-height: 1.5;
+}
+
+.completion-time {
+	font-size: 14px;
+	font-weight: 600;
+	color: #334155;
+	margin: 8px 0 0 0;
 }
 
 .completion-actions {

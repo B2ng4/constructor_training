@@ -81,6 +81,7 @@ import {
 	Keyboard,
 } from "@components/features/edit_page/icons_tool_bar/index.js";
 import WatchKey from "@components/features/edit_page/WatchKey.vue";
+import { eventRequiresArea, isKeyPressType } from "@utils/actionTypes.js";
 import { trainingStepApi } from "@api";
 import { useTrainingData } from "@store/editTraining.js";
 import { computed, ref, watch } from "vue";
@@ -112,7 +113,7 @@ const goToNextStep = () => {
 	if (idx < store.trainingData.steps.length - 1) store.selectStep(store.trainingData.steps[idx + 1]);
 };
 
-const isKeyPressSelected = computed(() => store.selectedEvent?.type === "keyPress");
+const isKeyPressSelected = computed(() => isKeyPressType(store.selectedEvent));
 
 const metaKeywords = computed({
 	get() { return store.selectedStep?.area?.metaKeywords || []; },
@@ -135,7 +136,7 @@ const saveKeyPress = async () => {
 			store.selectedStep.id,
 			{
 				action_type_id: store.selectedEvent.id,
-				area: { ...(store.selectedStep.area || {}), metaKeywords: metaKeywords.value || [] }
+				area: { metaKeywords: metaKeywords.value || [] }
 			}
 		);
 	} catch (e) {
@@ -147,7 +148,7 @@ const openHotkeyDialog = () => { isHotkeyDialogOpen.value = true; };
 
 const selectEvent = async (event) => {
 	store.selectEvent(event);
-	if (event.type === "keyPress") {
+	if (isKeyPressType(event)) {
 		await saveKeyPress();
 		openHotkeyDialog();
 	}

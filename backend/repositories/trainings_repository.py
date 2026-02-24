@@ -297,7 +297,8 @@ class TrainingRepository:
 
     async def create_or_update_publication(self, training_uuid: UUID4, access_token: str, snapshot_data: Dict) -> TrainingPublication:
         """
-        Создает новую публикацию или обновляет старую для данного тренинга.
+        Создает новую публикацию или обновляет существующую для данного тренинга.
+        При обновлении задаётся новый access_token и is_active=True (повторная публикация после снятия).
         """
         query = select(TrainingPublication).where(
             TrainingPublication.training_uuid == training_uuid
@@ -306,7 +307,9 @@ class TrainingRepository:
         publication = result.scalar_one_or_none()
 
         if publication:
+            publication.access_token = access_token
             publication.data_snapshot = snapshot_data
+            publication.is_active = True
         else:
             publication = TrainingPublication(
                 training_uuid=training_uuid,

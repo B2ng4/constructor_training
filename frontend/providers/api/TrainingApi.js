@@ -43,6 +43,12 @@ export class TrainingApi extends BaseApi {
 		return super.createRequest();
 	}
 
+	unpublishTraining(uuid) {
+		super.httpMethod = 'post';
+		super.sourceUrl = `/training/${uuid}/unpublish`;
+		return super.createRequest();
+	}
+
 	getPublicTraining(accessToken) {
 		super.httpMethod = 'get';
 		super.sourceUrl = `/training/public/${accessToken}`;

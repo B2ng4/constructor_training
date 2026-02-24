@@ -4,6 +4,8 @@
 			:label="hintLabel"
 			:icon="selectedStep?.hint ? 'lightbulb' : 'lightbulb_outline'"
 			:class="{ 'has-hint': selectedStep?.hint }"
+			:default-opened="forceShow"
+			v-model="hintExpanded"
 			dense
 			dense-toggle
 			expand-icon-class="text-grey-6"
@@ -21,11 +23,30 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 
 const props = defineProps({
 	selectedStep: { type: Object, default: null },
+	/** После 3 неверных попыток подсказка показывается автоматически */
+	forceShow: { type: Boolean, default: false },
 });
+
+const hintExpanded = ref(false);
+
+watch(
+	() => props.forceShow,
+	(force) => {
+		if (force) hintExpanded.value = true;
+	},
+	{ immediate: true }
+);
+
+watch(
+	() => props.selectedStep?.id,
+	() => {
+		hintExpanded.value = props.forceShow;
+	}
+);
 
 const hintLabel = computed(() =>
 	props.selectedStep?.hint ? "Показать подсказку" : "Подсказки нет"

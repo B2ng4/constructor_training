@@ -30,6 +30,9 @@ from services.BatchVideo_service import BatchVideoService
 from services.video_ai_service import VideoAIService
 from services.external_services.s3_service import S3Service
 
+# ID типа действия «Нажатие клавиши» — область хранит только metaKeywords
+ACTION_TYPE_KEY_PRESS_ID = 6
+
 
 class TrainingsService:
     def __init__(self, session: AsyncSession):
@@ -445,6 +448,13 @@ class TrainingsService:
                 existing_area = existing_step.area or {}
                 if isinstance(existing_area, dict):
                     update_data["area"] = {**existing_area, **update_data["area"]}
+
+            # keyPress: область только metaKeywords, без координат
+            if update_data.get("action_type_id") == ACTION_TYPE_KEY_PRESS_ID:
+                area_src = update_data.get("area") or {}
+                update_data["area"] = {
+                    "metaKeywords": area_src.get("metaKeywords") if isinstance(area_src.get("metaKeywords"), list) else []
+                }
 
             if update_data:
                 await self.repo.update_training_step(step_id, update_data)

@@ -56,6 +56,7 @@ import { computed, inject, nextTick, ref } from "vue";
 import { useQuasar } from "quasar";
 import { trainingStepApi } from "@api";
 import { useTrainingData } from "@store/editTraining.js";
+import { eventRequiresAreaCoordinates, isKeyPressType } from "@utils/actionTypes.js";
 import InputText from "@components/features/edit_page/InputText.vue";
 import WatchKey from "@components/features/edit_page/WatchKey.vue";
 
@@ -95,7 +96,8 @@ const metaKeywords = computed({
 
 const saveMode = ref(true);
 
-const selectedMode = computed(() => props.node.data.type);
+const selectedMode = computed(() => props.node?.data?.type);
+const isKeyPressMode = computed(() => isKeyPressType({ type: selectedMode.value }));
 
 const hotkeyLabel = computed(() => {
 	return metaKeywords.value?.join('+') || 'не назначен';
@@ -108,8 +110,23 @@ const openHotkeyCapture = () => {
 const sendRequest = async () => {
 	try {
 		await nextTick();
+		const eventType = store.selectedEvent;
+		if (isKeyPressMode.value && eventType) {
+			await trainingStepApi.editStep(
+				store.trainingData.uuid,
+				store.selectedStep.id,
+				{
+					action_type_id: eventType.id,
+					area: { metaKeywords: metaKeywords.value || [] }
+				}
+			);
+			if (!store.selectedStep.area) store.selectedStep.area = {};
+			store.selectedStep.area.metaKeywords = metaKeywords.value || [];
+			$q.notify({ color: "positive", message: "Клавиша сохранена", position: "bottom-right" });
+			return;
+		}
 		const area = getAreaForSave?.();
-		if (!area || !area.width || !area.height) {
+		if (eventRequiresAreaCoordinates(store.selectedEvent) && (!area || !area.width || !area.height)) {
 			$q.notify({ color: "negative", message: "Не удалось определить область", position: "top" });
 			return;
 		}

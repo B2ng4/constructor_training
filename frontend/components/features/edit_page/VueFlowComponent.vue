@@ -14,6 +14,7 @@
 <script setup>
 import { ref, watch, onMounted, computed, provide } from "vue";
 import { VueFlow, Position } from "@vue-flow/core";
+import { eventRequiresArea } from "@utils/actionTypes.js";
 import { useTrainingData } from "@store/editTraining.js";
 import ResizableNode from "./ResizableNode.vue";
 import ScreenshotNode from "./ScreenshotNode.vue";
@@ -24,10 +25,10 @@ const flowContainerRef = ref(null);
 const nodeTypes = { screenshot: ScreenshotNode };
 const DEFAULT_ZOOM = 0.7;
 
-const eventRequiresArea = (event) => event?.type !== "keyPress";
+const eventRequiresAreaOpt = (event) => eventRequiresArea(event);
 
 const drawingEnabled = computed(() => {
-	return !!store.selectedEvent && eventRequiresArea(store.selectedEvent);
+	return !!store.selectedEvent && eventRequiresAreaOpt(store.selectedEvent);
 });
 
 const hasDrawnHint = () => !!store.selectedStep?.area;
@@ -227,7 +228,7 @@ watch(
 	() => {
 		clearEventNode();
 		createFullscreenNode();
-		if (store.selectedStep.action_type && eventRequiresArea(store.selectedStep.action_type) && store.selectedStep.area) {
+		if (store.selectedStep.action_type && eventRequiresAreaOpt(store.selectedStep.action_type) && store.selectedStep.area) {
 			createNode(
 				store.selectedStep.action_type,
 				store.selectedStep.area.width,
@@ -247,12 +248,12 @@ watch(
 			return;
 		}
 
-		if (!eventRequiresArea(store.selectedEvent)) {
+		if (!eventRequiresAreaOpt(store.selectedEvent)) {
 			clearEventNode();
 			return;
 		}
 
-		if (store.selectedStep.action_type && store.selectedStep.area && eventRequiresArea(store.selectedEvent)) {
+		if (store.selectedStep.action_type && store.selectedStep.area && eventRequiresAreaOpt(store.selectedEvent)) {
 			createNode(
 				store.selectedEvent,
 				store.selectedStep.area.width,

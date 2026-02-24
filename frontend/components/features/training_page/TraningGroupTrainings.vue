@@ -112,6 +112,12 @@
 								</q-item-section>
 								<q-item-section>{{ training.publish ? 'Поделиться' : 'Опубликовать' }}</q-item-section>
 							</q-item>
+							<q-item v-if="training.publish" clickable v-close-popup @click="confirmUnpublish(training)">
+								<q-item-section avatar>
+									<q-icon name="link_off" size="sm" color="grey-7" />
+								</q-item-section>
+								<q-item-section>Снять с публикации</q-item-section>
+							</q-item>
 							<q-separator class="q-my-xs" />
 							<q-item clickable v-close-popup @click="confirmDelete(training)">
 								<q-item-section avatar>
@@ -178,6 +184,37 @@ function openPublishModal(training) {
 
 async function onPublished() {
 	await getTrainings();
+}
+
+function confirmUnpublish(training) {
+	$q.dialog({
+		title: "Снять с публикации?",
+		message: `Ссылка на тренинг «${training.title}» перестанет работать. Вы сможете опубликовать его снова и получить новую ссылку.`,
+		cancel: { label: "Отмена", flat: true },
+		ok: { label: "Снять", color: "primary", flat: true },
+		persistent: true,
+	}).onOk(async () => {
+		await unpublishTraining(training.uuid);
+	});
+}
+
+async function unpublishTraining(uuid) {
+	try {
+		await api.unpublishTraining(uuid);
+		$q.notify({
+			message: "Тренинг снят с публикации",
+			type: "positive",
+			position: "top-right",
+		});
+		await getTrainings();
+	} catch (e) {
+		console.error(e);
+		$q.notify({
+			message: "Не удалось снять с публикации",
+			type: "negative",
+			position: "top",
+		});
+	}
 }
 
 function confirmDelete(training) {
