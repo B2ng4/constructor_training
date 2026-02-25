@@ -17,21 +17,27 @@
 				@contextmenu.prevent="onWrapContextMenu"
 				@mouseenter="onWrapMouseEnter"
 				@mouseleave="onWrapMouseLeave"
+				@mousemove="onWrapMouseMove"
 			>
 				<div
-					ref="zoomPanRef"
-					class="screenshot-zoom-pan"
-					:style="zoomPanStyle"
+					class="screenshot-aspect"
+					:style="screenshotAspectStyle"
 				>
-					<img
-						:src="selectedStep.image_url"
-						alt=""
-						class="screenshot-img"
-						draggable="false"
-					/>
-					<!-- Область действия: для keyPress/inputText показываем подсказку (keyPress без координат — только оверлей) -->
 					<div
-						v-if="showAreaOnImage && area && (area.width > 0 && area.height > 0)"
+						ref="zoomPanRef"
+						class="screenshot-zoom-pan"
+						:style="zoomPanStyle"
+					>
+						<img
+							ref="imgRef"
+							:src="selectedStep.image_url"
+							alt=""
+							class="screenshot-img"
+							draggable="false"
+						/>
+					<!-- Область действия: в прохождении подсвечиваем только через 10 сек без верного ответа -->
+					<div
+						v-if="showAreaVisible && area && (area.width > 0 && area.height > 0)"
 						class="action-area"
 						:class="areaClass"
 						:style="areaStyle"
@@ -49,6 +55,7 @@
 							<q-icon name="edit" size="20px" />
 							<span>Введите текст ниже</span>
 						</div>
+					</div>
 					</div>
 				</div>
 			</div>
@@ -77,18 +84,10 @@
 				</q-input>
 			</div>
 
-			<!-- Оверлей ожидания keyPress -->
-			<div
-				v-if="needsKeyOverlay"
-				class="keypress-overlay"
-				@keydown="onKeyDown"
-				tabindex="0"
-				ref="keyOverlayRef"
-			>
-				<div class="keypress-hint">
-					<q-icon name="keyboard" size="32px" />
-					<span>Нажмите: {{ hotkeyLabel }}</span>
-				</div>
+			<!-- Подсказка для keyPress (компактная, не на весь экран) -->
+			<div v-if="needsKeyOverlay" class="keypress-hint-pill">
+				<q-icon name="keyboard" size="18px" />
+				<span>Нажмите: {{ hotkeyLabel }}</span>
 			</div>
 		</div>
 	</div>
@@ -113,8 +112,8 @@ const emit = defineEmits(["action-complete", "action-wrong"]);
 const flowRef = ref(null);
 const imageWrapRef = ref(null);
 const zoomPanRef = ref(null);
+const imgRef = ref(null);
 const inputRef = ref(null);
-const keyOverlayRef = ref(null);
 const inputValue = ref("");
 const hoverTimer = ref(null);
 
@@ -141,12 +140,27 @@ const actionType = computed(() => props.selectedStep?.action_type);
 
 const isPassageMode = computed(() => props.mode === "passage");
 
-/** В режиме прохождения показываем область только для keyPress/inputText; для клика — проверяем по координатам */
+/** В прохождении область показываем только через 10 сек без верного ответа */
+const HINT_AREA_DELAY_MS = 10000;
+const showAreaHintAfterDelay = ref(false);
+let areaHintTimeoutId = null;
+
+/** Реально показывать область: в режиме прохождения — только после задержки */
+const showAreaVisible = computed(() => {
+	if (!showAreaOnImage.value || !area.value) return false;
+	if (!isPassageMode.value) return true;
+	return showAreaHintAfterDelay.value;
+});
+
+/** В режиме прохождения показываем область для keyPress/inputText/hover; для кликов — проверяем по координатам без отображения области */
 const showAreaOnImage = computed(() => {
 	if (isPassageMode.value) {
 		const at = actionType.value;
+		const a = area.value;
 		if (!at) return false;
 		if (isKeyPressType(at) || isInputTextType(at)) return true;
+		// hover: показываем область и проверяем по mouseenter/mouseleave на ней
+		if (at.type === "hover" && a && a.width > 0 && a.height > 0) return true;
 		return false;
 	}
 	const at = actionType.value;
@@ -190,14 +204,16 @@ const areaClass = computed(() => {
 	return `action-${at.type}`;
 });
 
-const screenshotStyle = computed(() => {
+/** Обёртка с aspect-ratio под изображение, чтобы overlay с % совпадал с картинкой */
+const screenshotAspectStyle = computed(() => {
 	const step = props.selectedStep;
-	if (!step?.image_url) return {};
+	const dims = step?.photo_dimensions ?? {};
+	const w = dims.width || 1;
+	const h = dims.height || 1;
 	return {
-		backgroundImage: `url(${step.image_url})`,
-		backgroundSize: "contain",
-		backgroundPosition: "center",
-		backgroundRepeat: "no-repeat",
+		width: "100%",
+		maxHeight: "100%",
+		aspectRatio: `${w} / ${h}`,
 	};
 });
 
@@ -263,29 +279,21 @@ const hotkeyLabel = computed(() => {
 	return kw.join(" + ");
 });
 
-/** Преобразует клик по обёртке в координаты исходного изображения (photo_dimensions) с учётом зума и пана */
+/** Клик в координаты изображения: используем rect самого img (уже с учётом зума/пана) */
 function getClickInImageCoords(e) {
-	const wrap = imageWrapRef.value;
+	const img = imgRef.value;
 	const step = props.selectedStep;
-	if (!wrap || !step?.photo_dimensions || !area.value) return null;
-	const rect = wrap.getBoundingClientRect();
-	const centerX = rect.width / 2;
-	const centerY = rect.height / 2;
-	const clickInWrapX = e.clientX - rect.left;
-	const clickInWrapY = e.clientY - rect.top;
-	const localX = centerX + (clickInWrapX - centerX - pan.value.x) / zoom.value;
-	const localY = centerY + (clickInWrapY - centerY - pan.value.y) / zoom.value;
-	const imgW = step.photo_dimensions.width || 1;
-	const imgH = step.photo_dimensions.height || 1;
-	const scale = Math.min(rect.width / imgW, rect.height / imgH);
-	const renderedW = imgW * scale;
-	const renderedH = imgH * scale;
-	const offsetLeft = (rect.width - renderedW) / 2;
-	const offsetTop = (rect.height - renderedH) / 2;
-	if (localX < offsetLeft || localY < offsetTop || localX > offsetLeft + renderedW || localY > offsetTop + renderedH) return null;
+	if (!img || !step?.photo_dimensions || !area.value) return null;
+	const rect = img.getBoundingClientRect();
+	const dims = step.photo_dimensions;
+	const w = dims.width || 1;
+	const h = dims.height || 1;
+	const x = e.clientX - rect.left;
+	const y = e.clientY - rect.top;
+	if (x < 0 || y < 0 || x > rect.width || y > rect.height) return null;
 	return {
-		x: (localX - offsetLeft) / scale,
-		y: (localY - offsetTop) / scale,
+		x: (x / rect.width) * w,
+		y: (y / rect.height) * h,
 	};
 }
 
@@ -302,10 +310,8 @@ function onWrapClick(e) {
 	}
 	if (!canClickToValidate.value) return;
 	if (!isClickValidatedType(actionType.value)) return;
-	if (actionType.value?.type !== "leftClick") {
-		emit("action-wrong");
-		return;
-	}
+	// Обрабатываем только левый клик; при doubleClick первый клик не считаем ошибкой
+	if (actionType.value?.type !== "leftClick") return;
 	const coords = getClickInImageCoords(e);
 	if (!coords) return;
 	if (isPointInArea(coords.x, coords.y)) {
@@ -322,10 +328,7 @@ function onWrapContextMenu(e) {
 		return;
 	}
 	if (!canClickToValidate.value) return;
-	if (actionType.value?.type !== "rightClick") {
-		emit("action-wrong");
-		return;
-	}
+	if (actionType.value?.type !== "rightClick") return;
 	const coords = getClickInImageCoords(e);
 	if (!coords) return;
 	if (isPointInArea(coords.x, coords.y)) {
@@ -342,10 +345,7 @@ function onWrapDblClick(e) {
 		return;
 	}
 	if (!canClickToValidate.value) return;
-	if (actionType.value?.type !== "doubleClick") {
-		emit("action-wrong");
-		return;
-	}
+	if (actionType.value?.type !== "doubleClick") return;
 	const coords = getClickInImageCoords(e);
 	if (!coords) return;
 	if (isPointInArea(coords.x, coords.y)) {
@@ -356,7 +356,29 @@ function onWrapDblClick(e) {
 	}
 }
 
+/** Hover при прохождении: когда область не показана, проверяем по координатам на mousemove */
+function onWrapMouseMove(e) {
+	if (!isPassageMode.value || actionType.value?.type !== "hover" || showAreaVisible.value) return;
+	if (!canClickToValidate.value || !area.value) return;
+	const coords = getClickInImageCoords(e);
+	if (coords && isPointInArea(coords.x, coords.y)) {
+		if (!hoverTimer.value) {
+			hoverTimer.value = setTimeout(() => {
+				hoverTimer.value = null;
+				emit("action-complete");
+			}, 800);
+		}
+	} else {
+		if (hoverTimer.value) {
+			clearTimeout(hoverTimer.value);
+			hoverTimer.value = null;
+		}
+	}
+}
+
 function onWrapMouseEnter() {
+	// hover при прохождении: если область уже показана — проверяем по ней (onAreaMouseEnter)
+	if (isPassageMode.value && actionType.value?.type === "hover" && showAreaVisible.value) return;
 	if (!canClickToValidate.value || actionType.value?.type !== "hover") return;
 	hoverTimer.value = setTimeout(() => {
 		hoverTimer.value = null;
@@ -365,6 +387,7 @@ function onWrapMouseEnter() {
 }
 
 function onWrapMouseLeave() {
+	if (isPassageMode.value && actionType.value?.type === "hover" && showAreaVisible.value) return;
 	if (hoverTimer.value) {
 		clearTimeout(hoverTimer.value);
 		hoverTimer.value = null;
@@ -429,6 +452,9 @@ function onKeyDown(e) {
 	if (!isKeyPress.value) return;
 	const kw = area.value?.metaKeywords || [];
 	if (!kw.length) return;
+	// Не перехватывать, если фокус в поле ввода
+	const tag = e.target?.tagName?.toUpperCase();
+	if (tag === "INPUT" || tag === "TEXTAREA") return;
 
 	const key = e.key ?? "";
 	const ctrl = e.ctrlKey;
@@ -458,11 +484,21 @@ watch(
 		inputValue.value = "";
 		zoom.value = 1;
 		pan.value = { x: 0, y: 0 };
-		setTimeout(() => {
-			if (needsKeyOverlay.value && keyOverlayRef.value) {
-				keyOverlayRef.value.focus();
-			}
-		}, 100);
+		showAreaHintAfterDelay.value = false;
+		if (areaHintTimeoutId) {
+			clearTimeout(areaHintTimeoutId);
+			areaHintTimeoutId = null;
+		}
+		if (isPassageMode.value) {
+			areaHintTimeoutId = setTimeout(() => {
+				areaHintTimeoutId = null;
+				if (hoverTimer.value) {
+					clearTimeout(hoverTimer.value);
+					hoverTimer.value = null;
+				}
+				showAreaHintAfterDelay.value = true;
+			}, HINT_AREA_DELAY_MS);
+		}
 	},
 	{ immediate: true }
 );
@@ -470,15 +506,15 @@ watch(
 onMounted(() => {
 	document.addEventListener("mousemove", onDocumentMouseMove);
 	document.addEventListener("mouseup", onDocumentMouseUp);
-	if (needsKeyOverlay.value && keyOverlayRef.value) {
-		setTimeout(() => keyOverlayRef.value?.focus(), 150);
-	}
+	document.addEventListener("keydown", onKeyDown);
 });
 
 onUnmounted(() => {
 	document.removeEventListener("mousemove", onDocumentMouseMove);
 	document.removeEventListener("mouseup", onDocumentMouseUp);
+	document.removeEventListener("keydown", onKeyDown);
 	if (hoverTimer.value) clearTimeout(hoverTimer.value);
+	if (areaHintTimeoutId) clearTimeout(areaHintTimeoutId);
 });
 </script>
 
@@ -509,6 +545,17 @@ onUnmounted(() => {
 	min-height: 0;
 	background-color: #f0f1f5;
 	overflow: hidden;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.screenshot-aspect {
+	position: relative;
+	width: 100%;
+	height: 100%;
+	max-width: 100%;
+	max-height: 100%;
 }
 
 .screenshot-wrap--clickable {
@@ -537,25 +584,12 @@ onUnmounted(() => {
 
 .screenshot-img {
 	display: block;
-	max-width: 100%;
-	max-height: 100%;
-	width: auto;
-	height: auto;
+	width: 100%;
+	height: 100%;
 	object-fit: contain;
 	object-position: center;
 	pointer-events: none;
 	user-select: none;
-}
-
-.screenshot-bg {
-	position: absolute;
-	inset: 0;
-	width: 100%;
-	height: 100%;
-	background-color: #f0f1f5;
-	background-size: contain;
-	background-position: center;
-	background-repeat: no-repeat;
 }
 
 .action-area {
@@ -601,32 +635,27 @@ onUnmounted(() => {
 	border-radius: 12px;
 }
 
-.keypress-overlay {
-	position: fixed;
-	inset: 0;
-	background: rgba(0, 0, 0, 0.4);
+.keypress-hint-pill {
+	position: absolute;
+	bottom: 80px;
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 10;
 	display: flex;
 	align-items: center;
-	justify-content: center;
-	z-index: 100;
-	outline: none;
-}
-
-.keypress-overlay:focus {
-	outline: none;
-}
-
-.keypress-hint {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 12px;
-	padding: 24px 32px;
-	background: white;
-	border-radius: 16px;
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-	font-size: 16px;
+	gap: 8px;
+	padding: 10px 18px;
+	background: rgba(255, 255, 255, 0.95);
+	backdrop-filter: blur(12px);
+	border-radius: 12px;
+	box-shadow: 0 2px 16px rgba(0, 0, 0, 0.12);
+	font-size: 14px;
 	font-weight: 600;
 	color: #334155;
+	border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.keypress-hint-pill .q-icon {
+	color: var(--q-primary);
 }
 </style>
