@@ -150,15 +150,21 @@ class TrainingsService:
         await self.repo.deactivate_publication(training_uuid)
         await self.session.commit()
 
-    async def get_public_training_data(self, access_token: str) -> Dict:
+    async def get_public_training_data(self, access_token: str):
         """
         Получает данные тренинга для прохождения (для анонимного пользователя).
+        Возвращает те же данные, что и GET /training/{uuid} — по training_uuid из публикации.
         """
         publication = await self.repo.get_publication_by_token(access_token)
 
         if not publication:
             raise HTTPException(status_code=404, detail="Тренинг не найден или доступ закрыт")
-        return publication.data_snapshot
+
+        training = await self.repo.get_by_uuid_with_relations(publication.training_uuid)
+        if not training:
+            raise HTTPException(status_code=404, detail="Тренинг не найден или доступ закрыт")
+
+        return TrainingResponse.model_validate(training)
 
     async def get_trainings_by_params(
         self, skip: int = 0, limit: int = 100

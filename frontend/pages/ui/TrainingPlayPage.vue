@@ -12,7 +12,7 @@
 						Поздравляем! Вы успешно завершили тренинг.
 					</p>
 					<p v-if="durationMinutes > 0" class="completion-time">
-						Время: {{ formatTime(totalSecondsSpent) }}
+						Время: {{ timer.formatTime(timer.totalSecondsSpent.value) }}
 					</p>
 				</q-card-section>
 				<q-card-actions align="center" class="completion-actions">
@@ -45,14 +45,14 @@
 
 		<!-- Прохождение -->
 		<template v-else>
-			<!-- Часы (таймер) — компактный виджет в углу -->
+			<!-- Таймер -->
 			<div v-if="durationMinutes > 0" class="timer-clock">
-				<div class="timer-clock__face" :class="{ 'timer-clock__face--over': timeRemaining <= 0 }">
+				<div class="timer-clock__face" :class="{ 'timer-clock__face--over': timer.timeRemaining.value <= 0 }">
 					<q-icon name="schedule" size="22px" class="timer-clock__icon" />
 					<div class="timer-clock__time">
-						{{ formatTime(timeRemaining > 0 ? timeRemaining : totalSecondsSpent) }}
+						{{ timer.formatTime(timer.timeRemaining.value > 0 ? timer.timeRemaining.value : timer.totalSecondsSpent.value) }}
 					</div>
-					<div class="timer-clock__label">{{ timeRemaining > 0 ? "осталось" : "время" }}</div>
+					<div class="timer-clock__label">{{ timer.timeRemaining.value > 0 ? "осталось" : "время" }}</div>
 					<svg class="timer-clock__ring" viewBox="0 0 36 36">
 						<path
 							class="timer-clock__ring-bg"
@@ -60,7 +60,7 @@
 						/>
 						<path
 							class="timer-clock__ring-fill"
-							:stroke-dasharray="`${(1 - timerProgress) * 100}, 100`"
+							:stroke-dasharray="`${(1 - timer.timerProgress.value) * 100}, 100`"
 							d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
 						/>
 					</svg>
@@ -122,10 +122,11 @@
 </template>
 
 <script setup>
-import { computed, ref, watch, onMounted, onUnmounted } from "vue";
+import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useQuasar } from "quasar";
 import { usePassageData } from "@composables/usePassageData.js";
+import { usePassageTimer } from "@composables/usePassageTimer.js";
 import {
 	PassageFlowComponent,
 	PassageStepList,
@@ -151,8 +152,6 @@ const hasPreviousStep = computed(() => passage.hasPreviousStep.value);
 const hasNextStep = computed(() => passage.hasNextStep.value);
 
 const showCompletionModal = ref(false);
-
-/** Неверные попытки на текущем шаге; после 3 показываем подсказку */
 const wrongAttempts = ref(0);
 const showHintAfterWrong = computed(() => wrongAttempts.value >= 3);
 
@@ -163,55 +162,14 @@ watch(
 	}
 );
 
-/** Таймер: duration_minutes в секундах */
 const durationMinutes = computed(() => props.trainingData?.duration_minutes ?? 0);
-const totalDurationSeconds = computed(() => Math.max(0, durationMinutes.value * 60));
-
-const timeRemaining = ref(0);
-const totalSecondsSpent = ref(0);
-let timerInterval = null;
-
-function formatTime(seconds) {
-	const m = Math.floor(Math.abs(seconds) / 60);
-	const s = Math.floor(Math.abs(seconds) % 60);
-	return `${m}:${s.toString().padStart(2, "0")}`;
-}
-
-const timerProgress = computed(() => {
-	if (totalDurationSeconds.value <= 0) return 1;
-	const spent = totalDurationSeconds.value - timeRemaining.value;
-	return Math.min(1, Math.max(0, spent / totalDurationSeconds.value));
-});
-
-function startTimer() {
-	if (totalDurationSeconds.value <= 0) return;
-	timeRemaining.value = totalDurationSeconds.value;
-	totalSecondsSpent.value = 0;
-	timerInterval = setInterval(() => {
-		timeRemaining.value = Math.max(0, timeRemaining.value - 1);
-		totalSecondsSpent.value = totalDurationSeconds.value - timeRemaining.value;
-		if (timeRemaining.value <= 0) {
-			clearInterval(timerInterval);
-			timerInterval = null;
-			$q.notify({
-				color: "warning",
-				message: "Время вышло",
-				position: "top",
-				icon: "schedule",
-			});
-		}
-	}, 1000);
-}
-
-onMounted(() => {
-	startTimer();
-});
-
-onUnmounted(() => {
-	if (timerInterval) {
-		clearInterval(timerInterval);
-		timerInterval = null;
-	}
+const timer = usePassageTimer(durationMinutes, () => {
+	$q.notify({
+		color: "warning",
+		message: "Время вышло",
+		position: "top",
+		icon: "schedule",
+	});
 });
 
 function onActionComplete() {
@@ -247,10 +205,7 @@ function goNext() {
 	if (passage.hasNextStep.value) {
 		passage.nextStep();
 	} else {
-		if (timerInterval) {
-			clearInterval(timerInterval);
-			timerInterval = null;
-		}
+		timer.stop();
 		showCompletionModal.value = true;
 	}
 }
