@@ -2,11 +2,13 @@
 	<div class="passage-toolbar">
 		<q-btn
 			v-if="hasPreviousStep"
-			round
-			dense
-			icon="chevron_left"
-			color="white"
-			class="nav-btn"
+			unelevated
+			no-caps
+			rounded
+			icon="arrow_back"
+			color="grey-8"
+			label="Предыдущий шаг"
+			class="nav-btn prev-btn"
 			@click="$emit('prev')"
 		>
 			<q-tooltip>Предыдущий шаг</q-tooltip>
@@ -73,6 +75,12 @@ const showNextButton = computed(() => {
 .nav-btn {
 	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 	border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.prev-btn {
+	padding: 10px 16px;
+	font-weight: 600;
+	background: rgba(255, 255, 255, 0.96);
 }
 
 .next-btn {

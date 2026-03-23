@@ -92,7 +92,7 @@ const metaKeywords = computed({
 		}
 		store.selectedStep.area.metaKeywords = value;
 	}
-})
+});
 
 const saveMode = ref(true);
 
@@ -107,12 +107,20 @@ const openHotkeyCapture = () => {
 	isHotkeyDialogOpen.value = true;
 };
 
+function mergeStepAreaFromResponse(resp) {
+	const serverArea = resp?.data?.area;
+	if (serverArea && typeof serverArea === "object") {
+		if (!store.selectedStep.area) store.selectedStep.area = {};
+		Object.assign(store.selectedStep.area, serverArea);
+	}
+}
+
 const sendRequest = async () => {
 	try {
 		await nextTick();
 		const eventType = store.selectedEvent;
 		if (isKeyPressMode.value && eventType) {
-			await trainingStepApi.editStep(
+			const resp = await trainingStepApi.editStep(
 				store.trainingData.uuid,
 				store.selectedStep.id,
 				{
@@ -120,6 +128,7 @@ const sendRequest = async () => {
 					area: { metaKeywords: metaKeywords.value || [] }
 				}
 			);
+			mergeStepAreaFromResponse(resp);
 			if (!store.selectedStep.area) store.selectedStep.area = {};
 			store.selectedStep.area.metaKeywords = metaKeywords.value || [];
 			$q.notify({ color: "positive", message: "Клавиша сохранена", position: "bottom-right" });
@@ -131,7 +140,7 @@ const sendRequest = async () => {
 			return;
 		}
 
-		await trainingStepApi.editStep(
+		const resp = await trainingStepApi.editStep(
 			store.trainingData.uuid,
 			store.selectedStep.id,
 			{
@@ -148,12 +157,14 @@ const sendRequest = async () => {
 			metaText: metaText.value,
 			metaKeywords: metaKeywords.value
 		});
+		mergeStepAreaFromResponse(resp);
 		$q.notify({
 			color: "positive",
 			message: "Область сохранена",
 			position: "bottom-right",
 		});
-	} catch (e) {
+	} catch (err) {
+		console.error(err);
 		$q.notify({
 			color: "negative",
 			message: "Не удалось сохранить",

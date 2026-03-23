@@ -81,6 +81,7 @@
 			<div
 				v-if="needsKeyOverlay"
 				class="keypress-overlay"
+				@mousedown.self="focusKeyOverlay"
 				@keydown="onKeyDown"
 				tabindex="0"
 				ref="keyOverlayRef"
@@ -95,7 +96,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
 import {
 	eventRequiresArea,
 	isKeyPressType,
@@ -188,17 +189,6 @@ const areaClass = computed(() => {
 	const at = actionType.value;
 	if (!at) return "";
 	return `action-${at.type}`;
-});
-
-const screenshotStyle = computed(() => {
-	const step = props.selectedStep;
-	if (!step?.image_url) return {};
-	return {
-		backgroundImage: `url(${step.image_url})`,
-		backgroundSize: "contain",
-		backgroundPosition: "center",
-		backgroundRepeat: "no-repeat",
-	};
 });
 
 function onWheel(e) {
@@ -300,8 +290,14 @@ function onWrapClick(e) {
 		didPanThisGesture.value = false;
 		return;
 	}
+	// Только основная кнопка; вспомогательные клики не валидируем как ЛКМ
+	if (e.button !== 0) return;
 	if (!canClickToValidate.value) return;
 	if (!isClickValidatedType(actionType.value)) return;
+	// Двойной клик: до dblclick приходят одиночные click — не считаем их ошибкой
+	if (actionType.value?.type === "doubleClick") return;
+	// Hover проверяется по mouseenter, не по click
+	if (actionType.value?.type === "hover") return;
 	if (actionType.value?.type !== "leftClick") {
 		emit("action-wrong");
 		return;
@@ -425,10 +421,10 @@ function normalizeKey(k) {
 	return KEY_ALIASES[s] ?? s;
 }
 
-function onKeyDown(e) {
-	if (!isKeyPress.value) return;
+function matchKeyPressStep(e) {
+	if (!isKeyPress.value) return false;
 	const kw = area.value?.metaKeywords || [];
-	if (!kw.length) return;
+	if (!kw.length) return false;
 
 	const key = e.key ?? "";
 	const ctrl = e.ctrlKey;
@@ -449,6 +445,26 @@ function onKeyDown(e) {
 	if (pressed === expected) {
 		e.preventDefault();
 		emit("action-complete");
+		return true;
+	}
+	return false;
+}
+
+function onKeyDown(e) {
+	matchKeyPressStep(e);
+}
+
+/** Фокус на оверлее (keydown без фокуса не приходит на div) */
+function focusKeyOverlay() {
+	nextTick(() => {
+		keyOverlayRef.value?.focus({ preventScroll: true });
+	});
+}
+
+function onWindowKeyDownCapture(e) {
+	if (!needsKeyOverlay.value) return;
+	if (matchKeyPressStep(e)) {
+		e.stopPropagation();
 	}
 }
 
@@ -458,26 +474,32 @@ watch(
 		inputValue.value = "";
 		zoom.value = 1;
 		pan.value = { x: 0, y: 0 };
-		setTimeout(() => {
-			if (needsKeyOverlay.value && keyOverlayRef.value) {
-				keyOverlayRef.value.focus();
-			}
-		}, 100);
+		setTimeout(() => focusKeyOverlay(), 100);
 	},
 	{ immediate: true }
+);
+
+watch(
+	needsKeyOverlay,
+	(v) => {
+		if (v) {
+			setTimeout(() => focusKeyOverlay(), 50);
+			setTimeout(() => focusKeyOverlay(), 200);
+		}
+	}
 );
 
 onMounted(() => {
 	document.addEventListener("mousemove", onDocumentMouseMove);
 	document.addEventListener("mouseup", onDocumentMouseUp);
-	if (needsKeyOverlay.value && keyOverlayRef.value) {
-		setTimeout(() => keyOverlayRef.value?.focus(), 150);
-	}
+	window.addEventListener("keydown", onWindowKeyDownCapture, true);
+	setTimeout(() => focusKeyOverlay(), 150);
 });
 
 onUnmounted(() => {
 	document.removeEventListener("mousemove", onDocumentMouseMove);
 	document.removeEventListener("mouseup", onDocumentMouseUp);
+	window.removeEventListener("keydown", onWindowKeyDownCapture, true);
 	if (hoverTimer.value) clearTimeout(hoverTimer.value);
 });
 </script>

@@ -204,10 +204,9 @@ class VideoAIService:
     ) -> List[VideoStepData]:
         """
         Извлекает кадры из видео по таймкодам из AI-ответа.
-        Кадр берётся за FRAME_OFFSET_SEC секунд ДО указанного таймкода,
-        чтобы показать состояние экрана перед действием.
+        Кадр берётся в момент таймкода (ММ:СС) из ответа LLM.
         """
-        FRAME_OFFSET_SEC = 2.5
+        FRAME_OFFSET_SEC = float(getattr(configs, "AI_VIDEO_FRAME_OFFSET_SEC", 0.0) or 0.0)
 
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
@@ -233,12 +232,25 @@ class VideoAIService:
             if target_seconds > duration:
                 target_seconds = max(0, duration - 0.5)
 
-            target_ms = target_seconds * 1000.0
-            cap.set(cv2.CAP_PROP_POS_MSEC, target_ms)
+            # OpenCV часто округляет/аппроксимирует POS_MSEC, поэтому сначала двигаемся по кадрам.
+            frame_number = int(round(target_seconds * fps))
+            frame_number = max(0, min(frame_number, total_frames - 1))
+            cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
             ret, frame = cap.read()
 
             if not ret or frame is None:
-                frame_number = int(target_seconds * fps)
+                target_ms = target_seconds * 1000.0
+                cap.set(cv2.CAP_PROP_POS_MSEC, target_ms)
+                ret, frame = cap.read()
+                if not ret or frame is None:
+                    # Последняя попытка: вычислить кадр и прочитать ещё раз
+                    frame_number = int(round(target_seconds * fps))
+                    frame_number = max(0, min(frame_number, total_frames - 1))
+                    cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
+                    ret, frame = cap.read()
+
+            if not ret or frame is None:
+                frame_number = int(round(target_seconds * fps))
                 frame_number = max(0, min(frame_number, total_frames - 1))
                 cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
                 ret, frame = cap.read()

@@ -44,15 +44,29 @@ const pressedKeys = defineModel({ default: () => [] });
 
 const displayKeys = computed(() => pressedKeys.value?.join(' + ') || '');
 
+/** Debounce закрытия, чтобы chord из нескольких keydown не обрывался */
+let finalizeTimer = null;
+
 watch(isListening, (value) => {
-	if (value) pressedKeys.value = [];
+	if (value) {
+		pressedKeys.value = [];
+		return;
+	}
+	if (finalizeTimer) {
+		clearTimeout(finalizeTimer);
+		finalizeTimer = null;
+	}
 });
 
+// Даём время добрать комбинацию (модификаторы + основная клавиша)
 watch(current, (keys) => {
-	if (isListening.value && keys.size > 0) {
-		pressedKeys.value = Array.from(keys);
-		setTimeout(() => { isListening.value = false; }, 150);
-	}
+	if (!isListening.value || keys.size === 0) return;
+	pressedKeys.value = Array.from(keys);
+	if (finalizeTimer) clearTimeout(finalizeTimer);
+	finalizeTimer = setTimeout(() => {
+		finalizeTimer = null;
+		isListening.value = false;
+	}, 450);
 }, { deep: true });
 </script>
 

@@ -3,6 +3,17 @@
 		<base-loader size="100px" v-model="loadingStatus" />
 
 		<template v-if="!loadingStatus">
+			<q-btn
+				flat
+				no-caps
+				rounded
+				color="primary"
+				icon="home"
+				label="На главный экран"
+				class="home-btn"
+				@click="goHome"
+			/>
+
 			<!-- Пустое состояние: нет шагов -->
 			<div v-if="!storeSteps || storeSteps.length === 0" class="empty-state">
 				<upload-photo />
@@ -76,6 +87,10 @@ function hideHint() {
 	hintHidden.value = true;
 }
 
+function goHome() {
+	router.push("/personal/training");
+}
+
 // Показать подсказку 2–4 сек, затем скрыть
 watch(
 	() => selectedStep.value?.image_url,
@@ -130,6 +145,16 @@ onMounted(() => {
 	position: relative;
 	width: 100%;
 	height: 100%;
+}
+
+.home-btn {
+	position: absolute;
+	top: 16px;
+	right: 16px;
+	left: auto;
+	z-index: 120;
+	background: rgba(255, 255, 255, 0.92);
+	border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .empty-state {

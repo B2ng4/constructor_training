@@ -12,7 +12,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, computed, provide } from "vue";
+import { ref, watch, onMounted, onUnmounted, computed, provide } from "vue";
 import { VueFlow, Position } from "@vue-flow/core";
 import { eventRequiresArea } from "@utils/actionTypes.js";
 import { useTrainingData } from "@store/editTraining.js";
@@ -49,8 +49,21 @@ const onNodeDragStop = () => {
 provide("onAreaDrawn", onAreaDrawn);
 provide("drawingEnabled", drawingEnabled);
 provide("hasDrawnHint", hasDrawnHint);
+const fallbackAreaFromStore = () => {
+	const a = store.selectedStep?.area;
+	if (!a || !a.width || !a.height) return null;
+	return {
+		x: Math.max(0, Math.round(Number(a.x) || 0)),
+		y: Math.max(0, Math.round(Number(a.y) || 0)),
+		width: Math.round(Number(a.width) || 0),
+		height: Math.round(Number(a.height) || 0),
+	};
+};
+
 provide("getAreaForSave", () => {
-	if (nodes.value.length < 2) return null;
+	if (nodes.value.length < 2) {
+		return fallbackAreaFromStore();
+	}
 	const imageNode = nodes.value[0];
 	const eventNode = nodes.value[1];
 	const imgPos = imageNode.computedPosition ?? imageNode.position ?? { x: 0, y: 0 };
@@ -81,13 +94,28 @@ provide("getAreaForSave", () => {
 		}
 	}
 
-	if (!width || !height) return null;
-	return {
+	if (!width || !height) {
+		return fallbackAreaFromStore();
+	}
+	const fromNodes = {
 		x: Math.max(0, Math.round(relX)),
 		y: Math.max(0, Math.round(relY)),
 		width,
 		height,
 	};
+	// Если VueFlow ещё не обновил позицию (0,0 при том же размере, что в store), берём координаты из шага
+	const fb = fallbackAreaFromStore();
+	if (
+		fb &&
+		fromNodes.x === 0 &&
+		fromNodes.y === 0 &&
+		(fb.x > 0 || fb.y > 0) &&
+		Math.abs(fb.width - fromNodes.width) <= 2 &&
+		Math.abs(fb.height - fromNodes.height) <= 2
+	) {
+		return fb;
+	}
+	return fromNodes;
 });
 
 const clearEventNode = () => {
@@ -223,22 +251,19 @@ const updateNodePositionOnResize = () => {
 	nodes.value = [...nodes.value];
 };
 
-watch(
-	() => store.selectedStep.image_url,
-	() => {
-		clearEventNode();
-		createFullscreenNode();
-		if (store.selectedStep.action_type && eventRequiresAreaOpt(store.selectedStep.action_type) && store.selectedStep.area) {
-			createNode(
-				store.selectedStep.action_type,
-				store.selectedStep.area.width,
-				store.selectedStep.area.height,
-				store.selectedStep.area.x,
-				store.selectedStep.area.y,
-			);
-		}
-	},
-);
+function hydrateFlowFromSelectedStep() {
+	if (!store.selectedStep?.image_url || !store.selectedStep?.photo_dimensions) return;
+	clearEventNode();
+	createFullscreenNode();
+	const at = store.selectedStep.action_type;
+	const a = store.selectedStep.area;
+	if (at && eventRequiresAreaOpt(at) && a?.width > 0 && a?.height > 0) {
+		createNode(at, a.width, a.height, a.x, a.y);
+	}
+}
+
+watch(() => store.selectedStep?.image_url, hydrateFlowFromSelectedStep);
+watch(() => store.selectedStep?.id, hydrateFlowFromSelectedStep);
 
 watch(
 	() => store.selectedEvent,
@@ -269,7 +294,11 @@ watch(
 
 onMounted(() => {
 	createFullscreenNode();
-	window.addEventListener('resize', updateNodePositionOnResize);
+	window.addEventListener("resize", updateNodePositionOnResize);
+});
+
+onUnmounted(() => {
+	window.removeEventListener("resize", updateNodePositionOnResize);
 });
 </script>
 

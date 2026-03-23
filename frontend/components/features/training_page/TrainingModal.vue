@@ -64,12 +64,14 @@
 					dense
 					rounded
 					multiple
+					options-dense
 					emit-value
 					map-options
 					option-value="value"
 					option-label="label"
 					:options="tagSelectOptions"
 					use-chips
+					max-values="3"
 					use-input
 					@filter="filterTags"
 					@input-value="onInputValue"
@@ -82,9 +84,18 @@
 					color="primary"
 					class="form-field tags-select"
 					behavior="menu"
+					menu-shrink
+					menu-anchor="bottom left"
+					menu-self="top left"
+					:menu-offset="[0, 8]"
 				>
 					<template v-slot:no-option>
-						<q-item v-if="currentInputValue.trim()" clickable @click="createNewTagFromInput">
+						<q-item
+							v-if="currentInputValue.trim()"
+							clickable
+							class="tags-create-item"
+							@click.prevent.stop="createNewTagFromInput"
+						>
 							<q-item-section avatar>
 								<q-icon name="add_circle_outline" color="primary" />
 							</q-item-section>
@@ -264,28 +275,41 @@ async function performCreateTag(label) {
 /** Обработчик @new-value: пользователь нажал Enter для создания тега */
 async function onNewValue(inputValue, doneFn) {
 	const label = inputValue?.trim();
-	if (!label) {
-		doneFn(null);
+	if (!label || creatingTag.value) {
+		doneFn?.(null);
 		return;
 	}
-	if (creatingTag.value) {
-		doneFn(null);
-		return;
-	}
+
 	creatingTag.value = true;
 	try {
-		const newTag = await performCreateTag(label);
-		if (newTag) {
-			$q.notify({
-				color: "positive",
-				message: `Тег «${newTag.label}» создан`,
-				position: "top",
-				timeout: 1500
-			});
-			doneFn(newTag.value, "add-unique");
-		} else {
-			doneFn(null);
+		// Если тег уже существует — добавляем его в выбранные без повторного создания
+		const existing = listTags.value.find(
+			(t) => (t.label || "").trim().toLowerCase() === label.toLowerCase()
+		);
+
+		const newTag = existing ?? (await performCreateTag(label));
+		if (!newTag) {
+			doneFn?.(null);
+			return;
 		}
+
+		// Гарантируем корректность v-model для multiple + emit-value.
+		const nextIds = Array.from(
+			new Set([...(dataTraining.value.tag_ids || []), newTag.value])
+		);
+		dataTraining.value = { ...dataTraining.value, tag_ids: nextIds };
+
+		$q.notify({
+			color: "positive",
+			message: existing
+				? `Тег «${newTag.label}» добавлен`
+				: `Тег «${newTag.label}» создан`,
+			position: "top",
+			timeout: 1500,
+		});
+
+		// Модель уже обновлена вручную — чтобы Quasar не делал двойное добавление
+		doneFn?.(null);
 	} catch (e) {
 		console.error("Error creating tag:", e);
 		const msg =
@@ -293,7 +317,7 @@ async function onNewValue(inputValue, doneFn) {
 				? "Ошибка авторизации. Войдите в систему"
 				: e?.response?.data?.detail || e?.message || "Не удалось создать тег";
 		$q.notify({ color: "negative", message: msg, position: "top", timeout: 3000 });
-		doneFn(null);
+		doneFn?.(null);
 	} finally {
 		creatingTag.value = false;
 	}
@@ -306,18 +330,22 @@ async function createNewTagFromInput() {
 	creatingTag.value = true;
 	try {
 		const newTag = await performCreateTag(label);
-		if (newTag && !dataTraining.value.tag_ids.includes(newTag.value)) {
-			dataTraining.value = {
-				...dataTraining.value,
-				tag_ids: [...dataTraining.value.tag_ids, newTag.value]
-			};
+		if (newTag) {
+			const nextIds = Array.from(
+				new Set([...(dataTraining.value.tag_ids || []), newTag.value])
+			);
+			dataTraining.value = { ...dataTraining.value, tag_ids: nextIds };
+
 			$q.notify({
 				color: "positive",
 				message: `Тег «${newTag.label}» создан и добавлен`,
 				position: "top",
-				timeout: 1500
+				timeout: 1500,
 			});
 		}
+		currentInputValue.value = "";
+		// Пытаемся корректно скрыть меню (если метод доступен)
+		tagSelectRef.value?.hidePopup?.();
 	} catch (e) {
 		console.error("Error creating tag:", e);
 		const msg =
@@ -498,9 +526,31 @@ watch(showModal, async (val) => {
 	z-index: 1;
 }
 
+.tags-select :deep(.q-field__native) {
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+
 .tags-select :deep(.q-chip) {
 	border-radius: 8px;
 	background: rgba(80, 100, 247, 0.1);
+}
+
+.tags-select :deep(.q-chip__content) {
+	font-size: 12px;
+}
+
+.tags-select :deep(.q-menu) {
+	z-index: 3000;
+}
+
+.tags-select :deep(.q-menu__content) {
+	max-height: 320px;
+	overflow: auto;
+}
+
+.tags-create-item :deep(.q-item__section) {
+	white-space: normal;
 }
 
 .tags-select :deep(.q-chip__icon) {
