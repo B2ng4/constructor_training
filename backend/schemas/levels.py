@@ -1,6 +1,7 @@
 # schemas/levels.py
-from pydantic import BaseModel, Field
 from typing import Optional
+
+from pydantic import BaseModel, Field
 
 
 class LevelBase(BaseModel):

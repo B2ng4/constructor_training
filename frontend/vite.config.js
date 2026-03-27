@@ -9,7 +9,7 @@ export default defineConfig({
     quasar(),
   ],
   define: {
-    __BASE__URL__: JSON.stringify('http://localhost:8002'),
+    __BASE__URL__: JSON.stringify('https://perceptibly-evolving-gurnard.cloudpub.ru'),
   },
   resolve: {
     alias: {
@@ -17,10 +17,13 @@ export default defineConfig({
       '@components': path.join(__dirname, './components'),
       '@pages': path.join(__dirname, './pages'),
       '@api': path.join(__dirname, './providers'),
-			'@store': path.join(__dirname, './store'),
-			'@config': path.join(__dirname, './config'),
-			'@composables': path.join(__dirname, './composables'),
-			'@utils': path.join(__dirname, './utils'),
+      '@store': path.join(__dirname, './store'),
+      '@config': path.join(__dirname, './config'),
+      '@composables': path.join(__dirname, './composables'),
+      '@utils': path.join(__dirname, './utils'),
     }
   },
+  server: {
+    allowedHosts: ['ungraciously-relishing-char.cloudpub.ru']
+  }
 });

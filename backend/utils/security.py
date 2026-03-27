@@ -1,7 +1,9 @@
-from passlib.context import CryptContext
-from jose import jwt
 from datetime import datetime, timedelta, timezone
-from core.config import get_auth_data, configs
+
+from jose import jwt
+from passlib.context import CryptContext
+
+from core.config import configs, get_auth_data
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

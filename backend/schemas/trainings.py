@@ -1,9 +1,10 @@
 # Файл: schemas/trainings.py
 
 from datetime import datetime
-from typing import List, Optional, Dict, Any, Union
-from pydantic import BaseModel, UUID4, Field, field_validator
+from typing import Any, Dict, List, Optional, Union
 from uuid import UUID
+
+from pydantic import UUID4, BaseModel, Field, field_validator
 
 from schemas.actions import ActionResponse
 from schemas.levels import LevelResponse
@@ -67,6 +68,9 @@ class TrainingBase(BaseModel):
     publish: bool = Field(default=False, description="Опубликован ли тренинг")
 
     skip_steps: Optional[bool] = Field(default=True, description="Пропускать шаги?")
+    hints_enabled: Optional[bool] = Field(
+        default=True, description="Разрешены ли подсказки в прохождении"
+    )
 
     @field_validator("duration_minutes")
     @classmethod
@@ -89,6 +93,8 @@ class TrainingUpdate(BaseModel):
         None, ge=0, description="Ожидаемое время прохождения тренинга в минутах"
     )
     publish: Optional[bool] = Field(None, description="Опубликован ли тренинг")
+    skip_steps: Optional[bool] = None
+    hints_enabled: Optional[bool] = None
     tag_ids: Optional[List[int]] = None
 
     class Config:
@@ -109,6 +115,7 @@ class TrainingListResponse(BaseModel):
     created_at: Optional[datetime] = None
     publish: bool = False
     skip_steps: Optional[bool] = None
+    hints_enabled: Optional[bool] = None
     level: Optional[LevelResponse] = None
     tags: List[TagResponse] = Field(default_factory=list)
     public_link: Optional[str] = None
@@ -132,6 +139,7 @@ class TrainingResponse(BaseModel):
     created_at: Optional[datetime] = None
     publish: bool = False
     skip_steps: Optional[bool] = None
+    hints_enabled: Optional[bool] = None
     level: Optional[LevelResponse] = None
     tags: List[TagResponse] = Field(default_factory=list)
     steps: List[TrainingStepResponse] = Field(default_factory=list)
@@ -169,3 +177,35 @@ class StepsReorderRequest(BaseModel):
     """Запрос на обновление порядка шагов."""
 
     steps: List[StepOrderUpdate]
+
+
+# --- Публичное прохождение (анонимные попытки) ---
+
+
+class PassageCompleteRequest(BaseModel):
+    attempt_id: int
+    is_completed: bool
+    duration_seconds: Optional[int] = Field(None, ge=0)
+    wrong_attempts_total: Optional[int] = Field(None, ge=0)
+
+
+class PassageStartResponse(BaseModel):
+    attempt_id: int
+
+
+class PassageAnalyticsResponse(BaseModel):
+    total_starts: int
+    total_completions: int
+    avg_duration_seconds: Optional[float] = None
+    completion_rate: float
+
+
+class PassageHistoryItemResponse(BaseModel):
+    started_at: datetime
+    finished_at: Optional[datetime] = None
+    is_completed: bool
+    duration_seconds: Optional[int] = None
+    wrong_attempts_total: Optional[int] = None
+
+    class Config:
+        from_attributes = True

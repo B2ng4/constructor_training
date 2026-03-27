@@ -1,9 +1,10 @@
+import asyncio
 import smtplib
-from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
 from core.config import configs
 from schemas.mail import mail_send
-import asyncio
 
 
 class EmailService:

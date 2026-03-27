@@ -2,13 +2,15 @@
 
 import uuid
 from datetime import datetime
-from typing import Optional, List, Dict
+from typing import Dict, List, Optional
+
+import sqlalchemy as sa
 from pydantic import UUID4
-from sqlalchemy import ForeignKey, JSON, Enum, text, func, Table, Column, Integer
+from sqlalchemy import JSON, Column, Enum, ForeignKey, Integer, Table, func, text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from core.database import Base
-import sqlalchemy as sa
 
 # ==========================================================================
 # Таблица тегов многие-ко-многим
@@ -77,6 +79,14 @@ class Training(Base):
         default=True,
         server_default=sa.true(),
         comment="Пропуск шагов",
+    )
+
+    hints_enabled: Mapped[bool] = mapped_column(
+        sa.Boolean,
+        nullable=False,
+        default=True,
+        server_default=sa.true(),
+        comment="Разрешены ли подсказки в прохождении",
     )
 
     created_at: Mapped[Optional[datetime]] = mapped_column(
@@ -227,12 +237,12 @@ class TrainingPublication(Base):
     """
     Таблица для хранения опубликованных версий тренингов.
     """
+
     __tablename__ = "training_publications"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     training_uuid: Mapped[UUID4] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("trainings.uuid", ondelete="CASCADE")
+        UUID(as_uuid=True), ForeignKey("trainings.uuid", ondelete="CASCADE")
     )
     access_token: Mapped[str] = mapped_column(sa.String(100), unique=True, index=True)
     data_snapshot: Mapped[Dict] = mapped_column(JSONB, nullable=False)
@@ -242,5 +252,31 @@ class TrainingPublication(Base):
     training: Mapped["Training"] = relationship(
         "Training", back_populates="publications", lazy="selectin"
     )
+    passage_attempts: Mapped[List["TrainingPassageAttempt"]] = relationship(
+        "TrainingPassageAttempt",
+        back_populates="publication",
+        lazy="selectin",
+    )
 
 
+class TrainingPassageAttempt(Base):
+    """Анонимная попытка прохождения публичной публикации."""
+
+    __tablename__ = "training_passage_attempts"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    publication_id: Mapped[int] = mapped_column(
+        ForeignKey("training_publications.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    started_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    finished_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
+    is_completed: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
+    duration_seconds: Mapped[Optional[int]] = mapped_column(nullable=True)
+    wrong_attempts_total: Mapped[Optional[int]] = mapped_column(nullable=True)
+
+    publication: Mapped["TrainingPublication"] = relationship(
+        back_populates="passage_attempts",
+        lazy="selectin",
+    )

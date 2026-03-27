@@ -1,31 +1,34 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, status
-from pydantic import UUID4
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from fastapi.responses import JSONResponse
+from pydantic import UUID4
 
 from depends import (
-    get_trainings_service,
     get_s3_service,
+    get_trainings_service,
     get_user_service,
     get_video_ai_service,
     oauth2_scheme,
 )
-from services.trainings_service import TrainingsService
-from services.video_ai_service import VideoAIService
-from services.external_services.s3_service import S3Service
 from schemas.trainings import (
-    TrainingResponse,
-    TrainingUpdate,
+    PassageAnalyticsResponse,
+    PassageCompleteRequest,
+    PassageHistoryItemResponse,
+    StepBulkCreateRequest,
+    StepsReorderRequest,
     TrainingCreate,
     TrainingListResponse,
-    StepsReorderRequest,
-    TrainingStepResponse,
+    TrainingResponse,
     TrainingStepCreate,
-    StepBulkCreateRequest,
+    TrainingStepResponse,
     TrainingStepUpdate,
+    TrainingUpdate,
 )
+from services.external_services.s3_service import S3Service
+from services.trainings_service import TrainingsService
 from services.user_service import UserService
+from services.video_ai_service import VideoAIService
 
 router = APIRouter(prefix="/training", tags=["Тренинги"])
 
@@ -298,8 +301,9 @@ async def publish_training(
     return {
         "success": True,
         "public_link": f"{BASE_URL}/{token}",
-        "access_token": token
+        "access_token": token,
     }
+
 
 @router.post("/{training_uuid}/unpublish", name="Снять тренинг с публикации")
 async def unpublish_training(
@@ -310,9 +314,65 @@ async def unpublish_training(
     return {"success": True, "message": "Тренинг снят с публикации"}
 
 
+@router.post(
+    "/public/{access_token}/passage/start",
+    name="Начать анонимную попытку прохождения",
+)
+async def start_passage_attempt(
+    access_token: str,
+    service: TrainingsService = Depends(get_trainings_service),
+):
+    return await service.start_public_passage_attempt(access_token)
+
+
+@router.post(
+    "/public/{access_token}/passage/complete",
+    name="Завершить попытку прохождения",
+)
+async def complete_passage_attempt(
+    access_token: str,
+    body: PassageCompleteRequest,
+    service: TrainingsService = Depends(get_trainings_service),
+):
+    return await service.complete_public_passage_attempt(access_token, body)
+
+
+@router.get(
+    "/{training_uuid}/passage-analytics",
+    response_model=PassageAnalyticsResponse,
+    name="Статистика прохождений (автор)",
+)
+async def get_passage_analytics(
+    training_uuid: UUID4,
+    token: str = Depends(oauth2_scheme),
+    service: TrainingsService = Depends(get_trainings_service),
+    user_service: UserService = Depends(get_user_service),
+):
+    user = await user_service.get_current_user(token)
+    return await service.get_passage_analytics_for_creator(training_uuid, user.id)
+
+
+@router.get(
+    "/{training_uuid}/passage-history",
+    response_model=list[PassageHistoryItemResponse],
+    name="История прохождений (автор)",
+)
+async def get_passage_history(
+    training_uuid: UUID4,
+    skip: int = 0,
+    limit: int = 20,
+    token: str = Depends(oauth2_scheme),
+    service: TrainingsService = Depends(get_trainings_service),
+    user_service: UserService = Depends(get_user_service),
+):
+    user = await user_service.get_current_user(token)
+    return await service.get_passage_history_for_creator(
+        training_uuid, user.id, skip=skip, limit=limit
+    )
+
+
 @router.get("/public/{access_token}", name="Получить публичный тренинг")
 async def get_public_training(
-    access_token: str,
-    service: TrainingsService = Depends(get_trainings_service)
+    access_token: str, service: TrainingsService = Depends(get_trainings_service)
 ):
     return await service.get_public_training_data(access_token)

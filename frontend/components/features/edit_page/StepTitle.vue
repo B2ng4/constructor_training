@@ -4,7 +4,7 @@
 		class="step-title-card absolute cursor-pointer"
 	>
 		<q-tooltip anchor="top middle" :offset="[0, 8]">
-			Нажмите, чтобы изменить название шага
+			Краткое имя для списка шагов (не полное задание)
 		</q-tooltip>
 		<div class="step-title-text">
 			<q-icon name="edit_note" size="18px" class="step-title-icon" />
@@ -24,7 +24,7 @@
 				autofocus
 				counter
 				:maxlength="100"
-				placeholder="Название шага"
+				placeholder="Краткое название шага"
 				@keyup.enter="scope.set"
 				@blur="scope.set"
 			/>
@@ -44,7 +44,14 @@ const store = useTrainingData();
 const { selectedStep, trainingData } = storeToRefs(store);
 const $q = useQuasar();
 
-const displayName = computed(() => selectedStep.value?.meta?.name || "Шаг без названия");
+function stepDisplayName(step) {
+	if (!step) return "";
+	const n = (step.meta?.name ?? "").trim();
+	if (n && n !== "Шаг без названия") return n;
+	return `Шаг ${step.step_number ?? ""}`.trim();
+}
+
+const displayName = computed(() => stepDisplayName(selectedStep.value));
 const metaName = computed({
 	get: () => selectedStep.value?.meta?.name ?? "",
 	set: (v) => {
@@ -58,7 +65,7 @@ const saveNewName = async (value) => {
 	if (!trainingData.value?.uuid || !selectedStep.value?.id) return;
 	const nameToSave = (value ?? selectedStep.value?.meta?.name ?? "").trim();
 	if (!nameToSave && value === "") {
-		await persistName("Шаг без названия");
+		await persistName(`Шаг ${selectedStep.value.step_number}`);
 		return;
 	}
 	await persistName(nameToSave);

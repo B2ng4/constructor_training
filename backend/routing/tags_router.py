@@ -1,13 +1,14 @@
 # routing/tags_router.py
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.exc import IntegrityError
 
-from schemas.tags import TagCreate, TagUpdate, TagResponse, TagWithTrainingsCount
-from schemas.trainings import TrainingListResponse
-from repositories.tags_repository import TagsRepository
-from depends import get_tags_repository, get_current_user
+from depends import get_current_user, get_tags_repository
 from models.users import User
+from repositories.tags_repository import TagsRepository
+from schemas.tags import TagCreate, TagResponse, TagUpdate, TagWithTrainingsCount
+from schemas.trainings import TrainingListResponse
 
 router = APIRouter(prefix="/tags", tags=["Теги"])
 
@@ -26,13 +27,13 @@ async def create_tag(
     """Создать новый тег"""
     # Нормализуем label: убираем лишние пробелы
     normalized_label = tag_data.label.strip()
-    
+
     if not normalized_label:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Название тега не может быть пустым",
         )
-    
+
     existing = await repo.get_by_name(normalized_label)
     if existing:
         # Возвращаем существующий тег вместо ошибки

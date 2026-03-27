@@ -143,7 +143,8 @@ function onMouseUp(e) {
 	const w = Math.abs(currentX.value - startX.value);
 	const h = Math.abs(currentY.value - startY.value);
 
-	if (w < 20 || h < 20) return;
+	const MIN = 6;
+	if (w < MIN || h < MIN) return;
 
 	onAreaDrawn({ x: Math.round(x1), y: Math.round(y1), width: Math.round(w), height: Math.round(h) });
 }

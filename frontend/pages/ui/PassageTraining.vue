@@ -58,6 +58,18 @@ async function loadTraining() {
 		const { data } = await trainingApi.getPublicTraining(accessToken);
 
 		trainingData.value = data;
+
+		const attemptKey = `passage_attempt_${accessToken}`;
+		if (!sessionStorage.getItem(attemptKey)) {
+			try {
+				const startRes = await trainingApi.startPassageAttempt(accessToken);
+				if (startRes.data?.attempt_id != null) {
+					sessionStorage.setItem(attemptKey, String(startRes.data.attempt_id));
+				}
+			} catch (e) {
+				console.warn("[passage] start attempt", e);
+			}
+		}
 	} catch (e) {
 		error.value = true;
 		if (e?.response?.status === 404) {

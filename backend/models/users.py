@@ -1,10 +1,11 @@
 from datetime import datetime
 from typing import List, Optional
 
-from sqlalchemy import text, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from core.database import Base
 import sqlalchemy as sa
+from sqlalchemy import ForeignKey, text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from core.database import Base
 
 
 class User(Base):

@@ -2,13 +2,14 @@ import asyncio
 import os
 from logging.config import fileConfig
 
-from sqlalchemy import pool, engine_from_config
+from sqlalchemy import engine_from_config, pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
-from alembic import context
-from core.database import Base, DATABASE_URL
 
-from models.trainings import Training, TrainingStep, TypesAction, Tags, Levels
+from alembic import context
+from core.database import DATABASE_URL, Base
+from models.courses import Course, course_trainings
+from models.trainings import Levels, Tags, Training, TrainingStep, TypesAction
 from models.users import User
 
 # this is the Alembic Config object

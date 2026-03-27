@@ -1,7 +1,9 @@
 # repositories/base_repository.py
-from typing import Generic, TypeVar, Type, List, Optional
-from sqlalchemy import select, delete, update, func
+from typing import Generic, List, Optional, Type, TypeVar
+
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from core.database import Base
 
 ModelType = TypeVar("ModelType", bound=Base)

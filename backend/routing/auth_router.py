@@ -1,16 +1,10 @@
 from typing import Optional
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    Body,
-    Form,
-    BackgroundTasks,
-)
+from fastapi import APIRouter, BackgroundTasks, Body, Depends, Form, HTTPException
 from starlette import status
-from schemas.users import UserRegister, UserResponse, UserLogin, User
+
 from depends import get_user_service, oauth2_scheme
+from schemas.users import User, UserLogin, UserRegister, UserResponse
 from services.user_service import UserService
 
 router = APIRouter(

@@ -2,23 +2,25 @@
 import boto3
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.ext.asyncio import AsyncSession
 from jose import JWTError, jwt
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from repositories.actions_repository import ActionsRepository
-from repositories.levels_repository import LevelsRepository
-from repositories.tags_repository import TagsRepository
+from core.config import Configs, configs
 from core.database import get_async_session
 from models.users import User
-from repositories.users_repository import UserRepository
+from repositories.actions_repository import ActionsRepository
+from repositories.courses_repository import CoursesRepository
+from repositories.levels_repository import LevelsRepository
+from repositories.tags_repository import TagsRepository
 from repositories.trainings_repository import TrainingRepository
+from repositories.users_repository import UserRepository
 from services.BatchVideo_service import BatchVideoService
-from services.video_ai_service import VideoAIService
-from services.user_service import UserService
+from services.courses_service import CoursesService
 from services.external_services.mail_service import EmailService
-from services.trainings_service import TrainingsService
-from core.config import configs, Configs
 from services.external_services.s3_service import S3Service
+from services.trainings_service import TrainingsService
+from services.user_service import UserService
+from services.video_ai_service import VideoAIService
 
 """
 Файл внедрения зависимостей
@@ -65,6 +67,13 @@ async def get_actions_repository(
     return ActionsRepository(session)
 
 
+async def get_courses_repository(
+    session: AsyncSession = Depends(get_async_session),
+) -> CoursesRepository:
+    """Получение репозитория курсов"""
+    return CoursesRepository(session)
+
+
 # === Сервисы ===
 
 
@@ -82,6 +91,13 @@ async def get_trainings_service(
 ) -> TrainingsService:
     """Получение сервиса тренингов"""
     return TrainingsService(session)
+
+
+async def get_courses_service(
+    session: AsyncSession = Depends(get_async_session),
+) -> CoursesService:
+    """Получение сервиса курсов"""
+    return CoursesService(session)
 
 
 async def get_s3_service(

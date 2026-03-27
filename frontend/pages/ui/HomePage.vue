@@ -1,139 +1,192 @@
 <template>
 	<div class="home-page">
-		<div class="page-header animate-fade-in-up">
-			<h1 class="page-title">
-				Добро пожаловать, {{ userStore.first_name || "Пользователь" }}
-			</h1>
-			<p class="page-subtitle">
-				Управляйте тренингами и следите за прогрессом
-			</p>
-		</div>
+		<div class="home-inner">
+			<header class="home-hero animate-fade-in-up">
+				<h1 class="home-hero__title">
+					Добро пожаловать, {{ userStore.first_name || "Пользователь" }}
+				</h1>
+				<p class="home-hero__subtitle">
+					Управляйте тренингами и следите за прогрессом
+				</p>
+			</header>
 
-		<div v-if="loading" class="loading-state">
-			<q-spinner-dots size="48px" color="primary" class="loading-spinner" />
-			<p class="loading-text">Загрузка...</p>
-		</div>
-
-		<template v-else>
-			<!-- Статистика -->
-			<div class="stats-grid animate-stagger-children">
-				<div class="stat-card">
-					<div class="stat-icon">
-						<q-icon name="school" size="20px" />
-					</div>
-					<div class="stat-content">
-						<div class="stat-value">{{ stats.totalTrainings }}</div>
-						<div class="stat-label">Всего тренингов</div>
-					</div>
-				</div>
-				<div class="stat-card stat-card--success">
-					<div class="stat-icon">
-						<q-icon name="check_circle" size="20px" />
-					</div>
-					<div class="stat-content">
-						<div class="stat-value">{{ stats.publishedTrainings }}</div>
-						<div class="stat-label">Опубликовано</div>
-					</div>
-				</div>
-				<div class="stat-card stat-card--draft">
-					<div class="stat-icon">
-						<q-icon name="edit_note" size="20px" />
-					</div>
-					<div class="stat-content">
-						<div class="stat-value">{{ stats.draftTrainings }}</div>
-						<div class="stat-label">Черновиков</div>
-					</div>
-				</div>
+			<div v-if="loading" class="home-loading">
+				<q-spinner-dots size="48px" color="primary" class="home-loading__spinner" />
+				<p class="home-loading__text">Загрузка...</p>
 			</div>
 
-			<!-- Быстрые действия -->
-			<div class="quick-actions animate-stagger-children">
-				<div
-					class="action-item"
-					@click="$router.push('/personal/training')"
-				>
-					<div class="action-icon">
-						<q-icon name="add_circle_outline" size="24px" />
+			<div v-else class="home-stack animate-stagger-children">
+				<!-- Сводка -->
+				<section class="home-panel" aria-labelledby="home-summary-heading">
+					<div class="home-panel__head">
+						<h2 id="home-summary-heading" class="home-panel__title">
+							<q-icon name="insights" size="18px" class="home-panel__title-icon" />
+							Сводка
+						</h2>
 					</div>
-					<div class="action-content">
-						<div class="action-title">Создать тренинг</div>
-						<div class="action-desc">Добавить новый интерактивный тренинг</div>
-					</div>
-					<q-icon name="arrow_forward" size="20px" class="action-arrow" />
-				</div>
-				<div
-					class="action-item"
-					@click="$router.push('/personal/library')"
-				>
-					<div class="action-icon">
-						<q-icon name="library_books" size="24px" />
-					</div>
-					<div class="action-content">
-						<div class="action-title">Библиотека</div>
-						<div class="action-desc">Каталог всех тренингов</div>
-					</div>
-					<q-icon name="arrow_forward" size="20px" class="action-arrow" />
-				</div>
-			</div>
-
-			<!-- Последние тренинги -->
-			<div v-if="recentTrainings.length > 0" class="recent-section">
-				<div class="section-header animate-fade-in-up animate-stagger-3">
-					<h2 class="section-title">Недавние тренинги</h2>
-					<q-btn
-						flat
-						dense
-						no-caps
-						color="grey-8"
-						label="Все тренинги"
-						to="/personal/training"
-						class="section-action"
-					/>
-				</div>
-				<div class="trainings-grid animate-stagger-children">
-					<div
-						v-for="training in recentTrainings"
-						:key="training.uuid"
-						class="training-card"
-						@click="openEdit(training.uuid)"
-					>
-						<div class="training-header">
-							<div class="training-title">{{ training.title }}</div>
-							<div
-								class="training-status"
-								:class="training.publish ? 'training-status--published' : 'training-status--draft'"
-							>
-								{{ training.publish ? 'Опубликован' : 'Черновик' }}
+					<div class="stats-grid">
+						<div class="stat-card">
+							<div class="stat-icon">
+								<q-icon name="school" size="20px" />
+							</div>
+							<div class="stat-content">
+								<div class="stat-value">{{ stats.totalTrainings }}</div>
+								<div class="stat-label">Всего тренингов</div>
 							</div>
 						</div>
-						<div class="training-meta">
-							<div class="training-meta-item">
-								<q-icon name="layers" size="14px" />
-								<span>{{ training.steps?.length || 0 }} шагов</span>
+						<div class="stat-card stat-card--success">
+							<div class="stat-icon">
+								<q-icon name="check_circle" size="20px" />
+							</div>
+							<div class="stat-content">
+								<div class="stat-value">{{ stats.publishedTrainings }}</div>
+								<div class="stat-label">Опубликовано</div>
+							</div>
+						</div>
+						<div class="stat-card stat-card--draft">
+							<div class="stat-icon">
+								<q-icon name="edit_note" size="20px" />
+							</div>
+							<div class="stat-content">
+								<div class="stat-value">{{ stats.draftTrainings }}</div>
+								<div class="stat-label">Черновиков</div>
 							</div>
 						</div>
 					</div>
-				</div>
-			</div>
+				</section>
 
-			<div v-else class="empty-state animate-scale-in">
-				<div class="empty-icon">
-					<q-icon name="school" size="48px" />
-				</div>
-				<div class="empty-title">У вас пока нет тренингов</div>
-				<div class="empty-desc">Создайте первый тренинг, чтобы начать работу</div>
-				<q-btn
-					unelevated
-					no-caps
-					rounded
-					color="primary"
-					icon="add"
-					label="Создать тренинг"
-					class="empty-btn"
-					@click="$router.push('/personal/training')"
-				/>
+				<!-- Быстрые действия -->
+				<section class="home-panel" aria-labelledby="home-actions-heading">
+					<div class="home-panel__head">
+						<h2 id="home-actions-heading" class="home-panel__title">
+							<q-icon name="bolt" size="18px" class="home-panel__title-icon" />
+							Быстрые действия
+						</h2>
+					</div>
+					<div class="quick-actions">
+						<div
+							class="action-item"
+							role="button"
+							tabindex="0"
+							@click="$router.push('/personal/training')"
+							@keydown.enter="$router.push('/personal/training')"
+						>
+							<div class="action-icon">
+								<q-icon name="add_circle_outline" size="24px" />
+							</div>
+							<div class="action-content">
+								<div class="action-title">Создать тренинг</div>
+								<div class="action-desc">Добавить новый интерактивный тренинг</div>
+							</div>
+							<q-icon name="arrow_forward" size="20px" class="action-arrow" />
+						</div>
+						<div
+							class="action-item"
+							role="button"
+							tabindex="0"
+							@click="$router.push('/personal/library')"
+							@keydown.enter="$router.push('/personal/library')"
+						>
+							<div class="action-icon">
+								<q-icon name="library_books" size="24px" />
+							</div>
+							<div class="action-content">
+								<div class="action-title">Библиотека</div>
+								<div class="action-desc">Каталог всех тренингов</div>
+							</div>
+							<q-icon name="arrow_forward" size="20px" class="action-arrow" />
+						</div>
+						<div
+							class="action-item"
+							role="button"
+							tabindex="0"
+							@click="$router.push('/personal/courses')"
+							@keydown.enter="$router.push('/personal/courses')"
+						>
+							<div class="action-icon">
+								<q-icon name="school" size="24px" />
+							</div>
+							<div class="action-content">
+								<div class="action-title">Мои курсы</div>
+								<div class="action-desc">Собрать и управлять курсами</div>
+							</div>
+							<q-icon name="arrow_forward" size="20px" class="action-arrow" />
+						</div>
+					</div>
+				</section>
+
+				<!-- Недавние или пустое состояние -->
+				<section
+					v-if="recentTrainings.length > 0"
+					class="home-panel home-panel--grow"
+					aria-labelledby="home-recent-heading"
+				>
+					<div class="home-panel__head">
+						<h2 id="home-recent-heading" class="home-panel__title">
+							<q-icon name="history" size="18px" class="home-panel__title-icon" />
+							Недавние тренинги
+						</h2>
+						<q-btn
+							flat
+							dense
+							no-caps
+							color="primary"
+							label="Все тренинги"
+							to="/personal/training"
+							class="home-panel__link"
+						/>
+					</div>
+					<div class="trainings-grid">
+						<div
+							v-for="training in recentTrainings"
+							:key="training.uuid"
+							class="training-card"
+							@click="openEdit(training.uuid)"
+						>
+							<div class="training-header">
+								<div class="training-title">{{ training.title }}</div>
+								<div
+									class="training-status"
+									:class="training.publish ? 'training-status--published' : 'training-status--draft'"
+								>
+									{{ training.publish ? "Опубликован" : "Черновик" }}
+								</div>
+							</div>
+							<div class="training-meta">
+								<div class="training-meta-item">
+									<q-icon name="layers" size="14px" />
+									<span>{{ training.steps?.length || 0 }} шагов</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</section>
+
+				<section
+					v-else
+					class="home-panel home-panel--empty animate-scale-in"
+					aria-labelledby="home-empty-heading"
+				>
+					<div class="empty-inner">
+						<div class="empty-icon" aria-hidden="true">
+							<q-icon name="school" size="48px" />
+						</div>
+						<h2 id="home-empty-heading" class="empty-title">У вас пока нет тренингов</h2>
+						<p class="empty-desc">Создайте первый тренинг, чтобы начать работу</p>
+						<q-btn
+							unelevated
+							no-caps
+							rounded
+							color="primary"
+							icon="add"
+							label="Создать тренинг"
+							class="empty-btn"
+							@click="$router.push('/personal/training')"
+						/>
+					</div>
+				</section>
 			</div>
-		</template>
+		</div>
 	</div>
 </template>
 
@@ -155,9 +208,7 @@ const stats = computed(() => ({
 	draftTrainings: trainings.value.filter((t) => !t.publish).length,
 }));
 
-const recentTrainings = computed(() =>
-	trainings.value.slice(0, 6)
-);
+const recentTrainings = computed(() => trainings.value.slice(0, 6));
 
 function openEdit(uuid) {
 	const route = router.resolve(`/edit/${uuid}`);
@@ -178,106 +229,158 @@ onMounted(async () => {
 
 <style scoped>
 .home-page {
-	padding: 32px 40px 24px;
-	height: calc(100vh - 56px);
-	overflow-y: auto;
-	display: flex;
-	flex-direction: column;
+	padding: 24px 24px 40px;
+	min-height: 100%;
+	box-sizing: border-box;
 }
 
-/* ——— Header ——— */
-.page-header {
-	margin-bottom: 32px;
-	flex-shrink: 0;
+/* Вровень с шапкой и списком тренингов: колонка слева, без «острова» по центру экрана */
+.home-inner {
+	max-width: 960px;
+	margin-left: 0;
+	margin-right: auto;
+	width: 100%;
 }
 
-.page-title {
-	font-size: 28px;
-	font-weight: 600;
-	color: #0f172a;
-	margin: 0 0 6px 0;
+/* ——— Hero ——— */
+.home-hero {
+	margin-bottom: 24px;
+}
+
+.home-hero__title {
+	font-size: 26px;
+	font-weight: 700;
+	color: #1a1a2e;
+	margin: 0 0 8px 0;
 	letter-spacing: -0.02em;
+	line-height: 1.2;
 }
 
-.page-subtitle {
+.home-hero__subtitle {
 	font-size: 15px;
 	color: #64748b;
 	margin: 0;
 	font-weight: 400;
+	line-height: 1.45;
+	max-width: 36em;
 }
 
 /* ——— Loading ——— */
-.loading-state {
+.home-loading {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	padding: 60px 0;
-	flex: 1;
+	padding: 56px 0;
 	gap: 16px;
 }
-.loading-spinner {
+
+.home-loading__spinner {
 	animation: pulse-soft 1.2s var(--anim-ease-in-out) infinite;
 }
-.loading-text {
+
+.home-loading__text {
 	font-size: 14px;
 	color: #64748b;
 	margin: 0;
 	font-weight: 500;
 }
 
-/* ——— Stats Grid ——— */
+/* ——— Stack & panels ——— */
+.home-stack {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
+
+.home-panel {
+	background: #fafbfc;
+	border: 1px solid rgba(26, 26, 46, 0.08);
+	border-radius: 14px;
+	padding: 20px 22px 22px;
+	box-shadow: none;
+}
+
+.home-panel--grow {
+	flex: 1;
+	min-height: 0;
+}
+
+.home-panel__head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin-bottom: 18px;
+	flex-wrap: wrap;
+}
+
+.home-panel__title {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0;
+	font-size: 13px;
+	font-weight: 600;
+	color: #374151;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.home-panel__title-icon {
+	color: #5064f7;
+	opacity: 0.9;
+}
+
+.home-panel__link {
+	font-size: 13px;
+	font-weight: 600;
+	margin: -4px -8px -4px 0;
+}
+
+/* ——— Stats ——— */
 .stats-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-	gap: 12px;
-	margin-bottom: 32px;
-	flex-shrink: 0;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 14px;
 }
 
 .stat-card {
-	background: white;
-	border: 1px solid #e2e8f0;
-	border-radius: 14px;
-	padding: 20px;
+	background: #f5f6fa;
+	border: 1px solid rgba(26, 26, 46, 0.06);
+	border-radius: 12px;
+	padding: 16px;
 	display: flex;
 	align-items: flex-start;
-	gap: 14px;
-	transition: border-color 0.25s ease, box-shadow 0.25s var(--anim-ease-out), transform 0.25s var(--anim-ease-spring);
+	gap: 12px;
+	transition: border-color 0.2s ease, background 0.2s ease;
 }
+
 .stat-card:hover {
-	border-color: #cbd5e1;
-	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-	transform: translateY(-2px);
-}
-.stat-card:active {
-	transform: translateY(0);
+	border-color: rgba(26, 26, 46, 0.1);
+	background: #f0f2f6;
 }
 
 .stat-icon {
 	width: 40px;
 	height: 40px;
-	border-radius: 12px;
-	background: rgba(80, 100, 247, 0.08);
+	border-radius: 10px;
+	background: rgba(80, 100, 247, 0.1);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: rgba(80, 100, 247, 0.9);
+	color: #5064f7;
 	flex-shrink: 0;
-	transition: transform 0.3s var(--anim-ease-spring);
-}
-.stat-card:hover .stat-icon {
-	transform: scale(1.08);
 }
 
 .stat-card--success .stat-icon {
-	background: rgba(34, 197, 94, 0.08);
-	color: rgba(34, 197, 94, 0.9);
+	background: rgba(16, 185, 129, 0.12);
+	color: #059669;
 }
 
 .stat-card--draft .stat-icon {
-	background: rgba(148, 163, 184, 0.08);
-	color: rgba(100, 116, 139, 0.9);
+	background: rgba(148, 163, 184, 0.15);
+	color: #64748b;
 }
 
 .stat-content {
@@ -286,9 +389,9 @@ onMounted(async () => {
 }
 
 .stat-value {
-	font-size: 24px;
+	font-size: 22px;
 	font-weight: 700;
-	color: #0f172a;
+	color: #1a1a2e;
 	line-height: 1.2;
 	margin-bottom: 2px;
 }
@@ -297,56 +400,55 @@ onMounted(async () => {
 	font-size: 12px;
 	color: #64748b;
 	font-weight: 500;
+	line-height: 1.3;
 }
 
-/* ——— Quick Actions ——— */
+/* ——— Quick actions ——— */
 .quick-actions {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+	grid-template-columns: repeat(3, 1fr);
 	gap: 12px;
-	margin-bottom: 32px;
-	flex-shrink: 0;
 }
 
 .action-item {
-	background: white;
-	border: 1px solid #e2e8f0;
-	border-radius: 14px;
-	padding: 18px 20px;
+	background: #f5f6fa;
+	border: 1px solid rgba(26, 26, 46, 0.06);
+	border-radius: 12px;
+	padding: 16px 18px;
 	display: flex;
 	align-items: center;
 	gap: 14px;
 	cursor: pointer;
-	transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s var(--anim-ease-out), transform 0.25s var(--anim-ease-spring);
+	transition: border-color 0.2s ease, background 0.2s ease;
+	outline: none;
 }
-.action-item:hover {
-	border-color: rgba(80, 100, 247, 0.35);
-	background: rgba(80, 100, 247, 0.04);
-	box-shadow: 0 4px 16px rgba(80, 100, 247, 0.08);
-	transform: translateY(-2px);
+
+.action-item:hover,
+.action-item:focus-visible {
+	border-color: rgba(80, 100, 247, 0.3);
+	background: rgba(80, 100, 247, 0.06);
 }
-.action-item:active {
-	transform: translateY(0);
+
+.action-item:focus-visible {
+	box-shadow: 0 0 0 2px rgba(80, 100, 247, 0.22);
 }
-.action-item:hover .action-arrow {
-	transform: translateX(4px);
-	color: rgba(80, 100, 247, 0.9);
-}
-.action-item:hover .action-icon {
-	transform: scale(1.05);
+
+.action-item:hover .action-arrow,
+.action-item:focus-visible .action-arrow {
+	transform: translateX(3px);
+	color: #5064f7;
 }
 
 .action-icon {
 	width: 44px;
 	height: 44px;
 	border-radius: 12px;
-	background: rgba(80, 100, 247, 0.06);
+	background: rgba(80, 100, 247, 0.1);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: rgba(80, 100, 247, 0.9);
+	color: #5064f7;
 	flex-shrink: 0;
-	transition: transform 0.3s var(--anim-ease-spring);
 }
 
 .action-icon .q-icon {
@@ -361,8 +463,8 @@ onMounted(async () => {
 .action-title {
 	font-size: 14px;
 	font-weight: 600;
-	color: #0f172a;
-	margin-bottom: 3px;
+	color: #1a1a2e;
+	margin-bottom: 4px;
 }
 
 .action-desc {
@@ -373,63 +475,29 @@ onMounted(async () => {
 
 .action-arrow {
 	color: #cbd5e1;
-	transition: all 0.2s ease;
+	transition: transform 0.2s ease, color 0.2s ease;
 	flex-shrink: 0;
 }
 
-/* ——— Recent Section ——— */
-.recent-section {
-	margin-bottom: 24px;
-	flex: 1;
-	min-height: 0;
-	display: flex;
-	flex-direction: column;
-}
-
-.section-header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	margin-bottom: 16px;
-	flex-shrink: 0;
-}
-
-.section-title {
-	font-size: 18px;
-	font-weight: 600;
-	color: #0f172a;
-	margin: 0;
-}
-
-.section-action {
-	font-size: 14px;
-	font-weight: 500;
-}
-
+/* ——— Recent trainings ——— */
 .trainings-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
 	gap: 12px;
-	overflow-y: auto;
-	flex: 1;
-	align-content: start;
 }
 
 .training-card {
-	background: white;
-	border: 1px solid #e2e8f0;
-	border-radius: 14px;
-	padding: 16px;
+	background: #f5f6fa;
+	border: 1px solid rgba(26, 26, 46, 0.06);
+	border-radius: 12px;
+	padding: 14px 16px;
 	cursor: pointer;
-	transition: border-color 0.25s ease, box-shadow 0.25s var(--anim-ease-out), transform 0.25s var(--anim-ease-spring);
-	height: fit-content;
+	transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
 }
+
 .training-card:hover {
-	border-color: rgba(80, 100, 247, 0.25);
-	box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07);
-	transform: translateY(-3px);
-}
-.training-card:active {
+	border-color: rgba(80, 100, 247, 0.28);
+	background: #eef0f4;
 	transform: translateY(-1px);
 }
 
@@ -445,8 +513,8 @@ onMounted(async () => {
 	flex: 1;
 	font-size: 14px;
 	font-weight: 600;
-	color: #0f172a;
-	line-height: 1.4;
+	color: #1a1a2e;
+	line-height: 1.35;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	display: -webkit-box;
@@ -457,20 +525,20 @@ onMounted(async () => {
 .training-status {
 	font-size: 11px;
 	font-weight: 600;
-	padding: 4px 10px;
+	padding: 4px 8px;
 	border-radius: 6px;
 	white-space: nowrap;
 	flex-shrink: 0;
 }
 
 .training-status--published {
-	background: rgba(34, 197, 94, 0.1);
-	color: rgba(34, 197, 94, 0.9);
+	background: rgba(16, 185, 129, 0.12);
+	color: #059669;
 }
 
 .training-status--draft {
-	background: rgba(148, 163, 184, 0.1);
-	color: rgba(100, 116, 139, 0.9);
+	background: rgba(148, 163, 184, 0.15);
+	color: #64748b;
 }
 
 .training-meta {
@@ -487,99 +555,74 @@ onMounted(async () => {
 	color: #64748b;
 }
 
-/* ——— Empty State ——— */
-.empty-state {
-	background: white;
-	border: 1px solid #e2e8f0;
-	border-radius: 16px;
-	padding: 48px 32px;
+/* ——— Empty ——— */
+.home-panel--empty {
+	padding: 40px 28px;
+}
+
+.empty-inner {
+	max-width: 400px;
+	margin: 0 auto;
 	text-align: center;
-	flex: 1;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	justify-content: center;
 }
 
 .empty-icon {
 	width: 80px;
 	height: 80px;
-	border-radius: 22px;
-	background: rgba(80, 100, 247, 0.08);
+	border-radius: 20px;
+	background: rgba(80, 100, 247, 0.1);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: rgba(80, 100, 247, 0.6);
+	color: #5064f7;
+	opacity: 0.85;
 	margin-bottom: 20px;
-	transition: transform 0.4s var(--anim-ease-spring), background 0.3s ease;
-}
-.empty-state:hover .empty-icon {
-	transform: scale(1.05);
-	background: rgba(80, 100, 247, 0.1);
 }
 
 .empty-title {
-	font-size: 18px;
+	font-size: 17px;
 	font-weight: 600;
-	color: #0f172a;
-	margin-bottom: 8px;
+	color: #1a1a2e;
+	margin: 0 0 8px 0;
 }
 
 .empty-desc {
 	font-size: 14px;
 	color: #64748b;
-	margin-bottom: 24px;
+	margin: 0 0 22px 0;
+	line-height: 1.45;
 }
 
 .empty-btn {
 	border-radius: 12px;
-	padding: 10px 24px;
-	font-size: 14px;
-	font-weight: 500;
-	box-shadow: 0 2px 8px rgba(80, 100, 247, 0.25);
-	transition: box-shadow 0.25s ease, transform 0.25s var(--anim-ease-spring);
-}
-.empty-btn:hover {
-	box-shadow: 0 4px 20px rgba(80, 100, 247, 0.35);
-	transform: translateY(-2px);
-}
-.empty-btn:active {
-	transform: translateY(0);
+	padding: 10px 22px;
+	font-weight: 600;
 }
 
 /* ——— Responsive ——— */
-@media (max-width: 768px) {
+@media (max-width: 640px) {
 	.home-page {
-		padding: 24px 16px 20px;
+		padding: 20px 16px 32px;
 	}
-	
-	.page-header {
-		margin-bottom: 24px;
+
+	.home-hero__title {
+		font-size: 22px;
 	}
-	
-	.page-title {
-		font-size: 24px;
-	}
-	
-	.page-subtitle {
-		font-size: 14px;
-	}
-	
+
 	.stats-grid {
 		grid-template-columns: 1fr;
-		gap: 10px;
-		margin-bottom: 24px;
 	}
-	
+
 	.quick-actions {
 		grid-template-columns: 1fr;
-		gap: 10px;
-		margin-bottom: 24px;
 	}
-	
+
 	.trainings-grid {
 		grid-template-columns: 1fr;
-		gap: 10px;
 	}
 }
+
 </style>

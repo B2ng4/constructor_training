@@ -56,10 +56,10 @@ const hintLabel = computed(() =>
 <style scoped>
 .passage-step-hint {
 	position: absolute;
-	top: 64px;
+	bottom: 96px;
 	left: 50%;
 	transform: translateX(-50%);
-	z-index: 5;
+	z-index: 6;
 	min-width: 200px;
 	max-width: 400px;
 	background: rgba(255, 255, 255, 0.9);

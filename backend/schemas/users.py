@@ -1,7 +1,8 @@
-from enum import Enum
-from fastapi import Form
-from pydantic import BaseModel, EmailStr, Field, validator, field_validator
 import re
+from enum import Enum
+
+from fastapi import Form
+from pydantic import BaseModel, EmailStr, Field, field_validator, validator
 
 
 class User(BaseModel):

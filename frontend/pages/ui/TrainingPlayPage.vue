@@ -85,44 +85,48 @@
 				/>
 			</div>
 
-			<!-- Основная область: скриншот + интерактив -->
+			<!-- Скрин слева, задание справа — как окно программы -->
 			<template v-else>
-				<PassageStepList
-					:steps="steps"
-					:current-index="currentIndex"
-					class="step-list-absolute"
-					@select-step="passage.selectStep"
-				/>
-				<PassageStepTitle :selected-step="selectedStep" />
-				<PassageStepHint
-					:selected-step="selectedStep"
-					:force-show="showHintAfterWrong"
-				/>
-
-				<div class="flow-area">
-					<PassageFlowComponent
-						mode="passage"
-						:selected-step="selectedStep"
-						@action-complete="onActionComplete"
-						@action-wrong="onActionWrong"
-					/>
+				<div class="play-layout">
+					<div class="play-layout__viewport">
+						<PassageStepList
+							:steps="steps"
+							:current-index="currentIndex"
+							class="step-list-absolute"
+							@select-step="passage.selectStep"
+						/>
+						<div class="flow-area">
+							<PassageFlowComponent
+								mode="passage"
+								:selected-step="selectedStep"
+								:show-hint-highlight="hintVisible"
+								@action-complete="onActionComplete"
+								@action-wrong="onActionWrong"
+							/>
+						</div>
+						<PassageToolbar
+							:has-previous-step="hasPreviousStep"
+							:has-next-step="hasNextStep"
+							:selected-step="selectedStep"
+							:skip-steps="passage.skipSteps"
+							:hints-enabled="hintsEnabled"
+							:hints-available="hintsAvailable"
+							@prev="passage.prevStep"
+							@next="goNext"
+							@toggle-hints="hintsEnabled = hintsAvailable ? !hintsEnabled : false"
+						/>
+					</div>
+					<aside class="play-layout__task">
+						<PassageTaskPanel :selected-step="selectedStep" />
+					</aside>
 				</div>
-
-				<PassageToolbar
-					:has-previous-step="hasPreviousStep"
-					:has-next-step="hasNextStep"
-					:selected-step="selectedStep"
-					:skip-steps="passage.skipSteps"
-					@prev="passage.prevStep"
-					@next="goNext"
-				/>
 			</template>
 		</template>
 	</div>
 </template>
 
 <script setup>
-import { computed, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useQuasar } from "quasar";
 import { usePassageData } from "@composables/usePassageData.js";
@@ -130,10 +134,11 @@ import { usePassageTimer } from "@composables/usePassageTimer.js";
 import {
 	PassageFlowComponent,
 	PassageStepList,
-	PassageStepTitle,
-	PassageStepHint,
+	PassageTaskPanel,
 	PassageToolbar,
 } from "@components/features/passage_page";
+import { TrainingApi } from "@api";
+import { isInputTextType } from "@utils/actionTypes.js";
 
 const props = defineProps({
 	trainingData: { type: Object, default: null },
@@ -142,6 +147,7 @@ const props = defineProps({
 const route = useRoute();
 const router = useRouter();
 const $q = useQuasar();
+const trainingApi = new TrainingApi();
 
 const passage = usePassageData(computed(() => props.trainingData));
 
@@ -153,13 +159,32 @@ const hasNextStep = computed(() => passage.hasNextStep.value);
 
 const showCompletionModal = ref(false);
 const wrongAttempts = ref(0);
-const showHintAfterWrong = computed(() => wrongAttempts.value >= 3);
+const totalWrongSession = ref(0);
+const playStartedAtMs = ref(0);
+/** Подсказки (подсветка области / автозаполнение текста) после ошибки, если включено */
+const hintsEnabled = ref(false);
+const hintsAvailable = computed(() => props.trainingData?.hints_enabled !== false);
+const hintVisible = computed(
+	() => hintsAvailable.value && hintsEnabled.value && wrongAttempts.value > 0
+);
+
+onMounted(() => {
+	playStartedAtMs.value = Date.now();
+});
 
 watch(
 	() => selectedStep.value?.id,
 	() => {
 		wrongAttempts.value = 0;
 	}
+);
+
+watch(
+	() => hintsAvailable.value,
+	(v) => {
+		if (!v) hintsEnabled.value = false;
+	},
+	{ immediate: true }
 );
 
 const durationMinutes = computed(() => props.trainingData?.duration_minutes ?? 0);
@@ -173,32 +198,56 @@ const timer = usePassageTimer(durationMinutes, () => {
 });
 
 function onActionComplete() {
-	$q.notify({
-		color: "positive",
-		message: "Верно!",
-		position: "top",
-		timeout: 800,
-	});
+	if (isInputTextType(selectedStep.value?.action_type)) {
+		$q.notify({
+			color: "positive",
+			message: "Правильно!",
+			position: "top",
+			timeout: 900,
+		});
+	}
 	goNext();
 }
 
 function onActionWrong() {
 	wrongAttempts.value += 1;
-	const count = wrongAttempts.value;
-	if (count >= 3) {
-		$q.notify({
-			color: "info",
-			message: "Показана подсказка",
-			position: "top",
-			icon: "lightbulb",
+	totalWrongSession.value += 1;
+	$q.notify({
+		color: "negative",
+		message: !hintsAvailable.value
+			? "Неверно. Попробуйте ещё раз."
+			: hintsEnabled.value
+			? "Неверно. Включены подсказки — смотрите выделение на скрине или поле ввода."
+			: "Неверно. Попробуйте ещё раз. Можно включить подсказки кнопкой снизу.",
+		position: "top",
+	});
+}
+
+function reportPassageComplete() {
+	const token = route.params.accessToken;
+	if (!token) return;
+	const key = `passage_attempt_${token}`;
+	const raw = sessionStorage.getItem(key);
+	if (raw == null) return;
+	const attemptId = parseInt(raw, 10);
+	const durMin = durationMinutes.value;
+	const durationSec =
+		durMin > 0
+			? Math.round(timer.totalSecondsSpent.value)
+			: Math.max(0, Math.round((Date.now() - playStartedAtMs.value) / 1000));
+	void trainingApi
+		.completePassageAttempt(token, {
+			attempt_id: attemptId,
+			is_completed: true,
+			duration_seconds: durationSec,
+			wrong_attempts_total: totalWrongSession.value,
+		})
+		.then(() => {
+			sessionStorage.removeItem(key);
+		})
+		.catch((e) => {
+			console.warn("[passage] complete", e);
 		});
-	} else {
-		$q.notify({
-			color: "negative",
-			message: `Неверно. Попробуйте ещё раз${count === 2 ? " (после следующей ошибки будет подсказка)" : ""}`,
-			position: "top",
-		});
-	}
 }
 
 function goNext() {
@@ -206,6 +255,7 @@ function goNext() {
 		passage.nextStep();
 	} else {
 		timer.stop();
+		reportPassageComplete();
 		showCompletionModal.value = true;
 	}
 }
@@ -230,14 +280,56 @@ function goToWelcome() {
 	height: 100%;
 	min-height: 0;
 	overflow: hidden;
+	background: #e8eaef;
+}
+
+.play-layout {
+	display: flex;
+	flex-direction: row-reverse;
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	align-items: stretch;
+}
+
+.play-layout__viewport {
+	position: relative;
+	flex: 1;
+	min-width: 0;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
 	background: #f0f1f5;
+}
+
+.play-layout__task {
+	width: min(420px, 38vw);
+	flex-shrink: 0;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	background: #fafbfc;
+	border-right: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+@media (max-width: 900px) {
+	.play-layout {
+		flex-direction: column;
+	}
+
+	.play-layout__task {
+		width: 100%;
+		max-height: min(40vh, 320px);
+		border-right: none;
+		border-top: 1px solid rgba(15, 23, 42, 0.08);
+	}
 }
 
 /* ——— Часы (таймер) ——— */
 .timer-clock {
 	position: absolute;
-	top: 16px;
-	right: 16px;
+	top: 12px;
+	right: 12px;
 	z-index: 15;
 }
 
@@ -333,6 +425,10 @@ function goToWelcome() {
 	inset: 0;
 	z-index: 1;
 	overflow: hidden;
+}
+
+.play-layout__viewport .flow-area {
+	bottom: 72px;
 }
 
 .empty-state {

@@ -1,7 +1,8 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field
-from typing import Optional
 import os
+from typing import Optional
+
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Configs(BaseSettings):
@@ -70,7 +71,7 @@ class Configs(BaseSettings):
 
     # ------------------- AI Video Analysis ---------------------------------
     AI_API_KEY: Optional[str] = Field(
-        default="sk-hkR_rAET2Xkgh7-lLoqRSg", env="AI_API_KEY"
+        default="sk-0PWoTdVy-7yVufovIDCEVA", env="AI_API_KEY"
     )
     AI_BASE_URL: Optional[str] = Field(
         default="https://api.vsellm.ru/v1", env="AI_BASE_URL"

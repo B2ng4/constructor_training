@@ -1,10 +1,9 @@
 # routing/levels_router.py
-from routing.base_router import BaseRouter
-from depends import get_current_user, get_actions_repository
+from depends import get_actions_repository, get_current_user
 from models.trainings import TypesAction
-
 from repositories.actions_repository import ActionsRepository
-from schemas.actions import ActionResponse, ActionCreate, ActionUpdate
+from routing.base_router import BaseRouter
+from schemas.actions import ActionCreate, ActionResponse, ActionUpdate
 
 
 class ActionsRouter(

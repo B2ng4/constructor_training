@@ -1,16 +1,22 @@
-from fastapi import HTTPException, status, BackgroundTasks
 from typing import Optional
+
+from fastapi import BackgroundTasks, HTTPException, status
 from jose import jwt
 from pydantic import EmailStr
-from schemas.users import UserRegister, UserLogin, User, UserResponse
-from repositories.users_repository import UserRepository
-from utils.security import verify_password, get_password_hash, create_access_token
-from schemas import mail
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from core.config import configs
+from repositories.users_repository import UserRepository
+from schemas import mail
 from schemas.mail import mail_send
+from schemas.users import User, UserLogin, UserRegister, UserResponse
 from services.external_services.mail_service import EmailService
-from utils.security import create_access_token, decode_access_token
+from utils.security import (
+    create_access_token,
+    decode_access_token,
+    get_password_hash,
+    verify_password,
+)
 
 
 class UserService:
@@ -30,7 +36,6 @@ class UserService:
         return await self.user_repo.add_user(user_data)
 
     async def authenticate(self, email: EmailStr, password: str):
-
         user = await self.user_repo.find_one_or_none(email=email)
         if not user or not verify_password(
             plain_password=password, hashed_password=user.password

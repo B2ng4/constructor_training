@@ -1,10 +1,11 @@
+import os
+import tempfile
+from typing import List
+
 import cv2
 import numpy as np
-import tempfile
-import os
+from fastapi import HTTPException, UploadFile
 from skimage.metrics import structural_similarity as compare_ssim
-from typing import List
-from fastapi import UploadFile, HTTPException
 
 from core.logging_config import logger
 
@@ -102,7 +103,9 @@ class BatchVideoService:
                         last_saved_frame = gray
                         stability_counter = 0
                     else:
-                        logger.debug("Frame {}: Шум (Area: {:.0f})", frame_idx, total_area)
+                        logger.debug(
+                            "Frame {}: Шум (Area: {:.0f})", frame_idx, total_area
+                        )
                 else:
                     logger.debug("Frame {}: Стабильно (SSIM: {:.3f})", frame_idx, score)
             prev_gray = gray

@@ -12,7 +12,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, computed, provide } from "vue";
+import { ref, watch, onMounted, onUnmounted, computed, provide, nextTick } from "vue";
 import { VueFlow, Position } from "@vue-flow/core";
 import { eventRequiresArea } from "@utils/actionTypes.js";
 import { useTrainingData } from "@store/editTraining.js";
@@ -129,9 +129,8 @@ const createFullscreenNode = async () => {
 		selectable: false,
 	};
 
-	if (store.selectedStep.action_type) {
-		store.selectEvent(store.selectedStep.action_type);
-	}
+	/* Не трогаем selectedEvent здесь: иначе при смене действия в тулбаре watch пересобирает сцену
+	   и снова подставляет action_type с сервера, сбрасывая выбор пользователя. */
 };
 
 const createNode = (
@@ -193,17 +192,40 @@ const createNode = (
 	nodes.value = [...nodes.value];
 };
 
+/** Пересборка сцены при смене шага, картинки или выбранного действия в тулбаре */
+async function syncFlowFromStep() {
+	const step = store.selectedStep;
+	if (!step?.image_url || !step.photo_dimensions) {
+		nodes.value = [];
+		return;
+	}
+	lastDrawnArea.value = null;
+	clearEventNode();
+	await createFullscreenNode();
+	await nextTick();
+	await nextTick();
+	const ev = store.selectedEvent;
+	if (!ev || !eventRequiresAreaOpt(ev)) return;
+	const a = step.area;
+	const savedMatchesToolbar = step.action_type?.id === ev.id;
+	if (savedMatchesToolbar && a?.width > 0 && a?.height > 0) {
+		createNode(ev, a.width, a.height, a.x, a.y);
+	} else {
+		createNode(ev);
+	}
+}
+
 const updateNodePositionOnResize = () => {
-	if (nodes.value.length < 2) return;
+	if (nodes.value.length < 1) return;
 
 	const imageNode = nodes.value[0];
-	const eventNode = nodes.value[1];
-
-	if (!imageNode || !eventNode) return;
+	if (!imageNode) return;
 
 	const el = flowContainerRef.value;
 	const canvasWidth = el ? el.clientWidth : window.innerWidth;
 	const canvasHeight = el ? el.clientHeight : window.innerHeight;
+	if (canvasWidth < 80 || canvasHeight < 80) return;
+
 	const imgWidth = imageNode.dimensions.width;
 	const imgHeight = imageNode.dimensions.height;
 	const viewFlowW = canvasWidth / DEFAULT_ZOOM;
@@ -211,65 +233,68 @@ const updateNodePositionOnResize = () => {
 	const newImageX = (viewFlowW - imgWidth) / 2;
 	const newImageY = (viewFlowH - imgHeight) / 2;
 
+	if (nodes.value.length < 2) {
+		nodes.value[0].position = { x: newImageX, y: newImageY };
+		nodes.value = [...nodes.value];
+		return;
+	}
+
+	const eventNode = nodes.value[1];
 	const relativeX = eventNode.position.x - imageNode.position.x;
 	const relativeY = eventNode.position.y - imageNode.position.y;
 
 	nodes.value[0].position = { x: newImageX, y: newImageY };
 	nodes.value[1].position = {
 		x: newImageX + relativeX,
-		y: newImageY + relativeY
+		y: newImageY + relativeY,
 	};
 
 	nodes.value = [...nodes.value];
 };
 
+/** При смене шага или картинки — восстановить выбранное действие из сохранённых данных шага */
 watch(
-	() => store.selectedStep.image_url,
+	() => [store.selectedStep?.id, store.selectedStep?.image_url],
 	() => {
-		clearEventNode();
-		createFullscreenNode();
-		if (store.selectedStep.action_type && eventRequiresAreaOpt(store.selectedStep.action_type) && store.selectedStep.area) {
-			createNode(
-				store.selectedStep.action_type,
-				store.selectedStep.area.width,
-				store.selectedStep.area.height,
-				store.selectedStep.area.x,
-				store.selectedStep.area.y,
-			);
+		const st = store.selectedStep;
+		if (st?.action_type) {
+			store.selectEvent(st.action_type);
+		} else {
+			store.selectEvent(null);
 		}
 	},
+	{ flush: "pre", immediate: true },
 );
 
 watch(
-	() => store.selectedEvent,
+	() => [store.selectedStep?.id, store.selectedStep?.image_url, store.selectedEvent?.id],
 	() => {
-		if (!store.selectedEvent) {
-			clearEventNode();
-			return;
-		}
-
-		if (!eventRequiresAreaOpt(store.selectedEvent)) {
-			clearEventNode();
-			return;
-		}
-
-		if (store.selectedStep.action_type && store.selectedStep.area && eventRequiresAreaOpt(store.selectedEvent)) {
-			createNode(
-				store.selectedEvent,
-				store.selectedStep.area.width,
-				store.selectedStep.area.height,
-				store.selectedStep.area.x,
-				store.selectedStep.area.y
-			);
-		} else {
-			createNode(store.selectedEvent);
-		}
-	}
+		syncFlowFromStep();
+	},
+	{ flush: "post" },
 );
 
+let flowResizeObserver = null;
+
 onMounted(() => {
-	createFullscreenNode();
-	window.addEventListener('resize', updateNodePositionOnResize);
+	void syncFlowFromStep();
+	window.addEventListener("resize", updateNodePositionOnResize);
+	nextTick(() => {
+		nextTick(() => {
+			updateNodePositionOnResize();
+			if (typeof ResizeObserver !== "undefined" && flowContainerRef.value) {
+				flowResizeObserver = new ResizeObserver(() => {
+					updateNodePositionOnResize();
+				});
+				flowResizeObserver.observe(flowContainerRef.value);
+			}
+		});
+	});
+});
+
+onUnmounted(() => {
+	window.removeEventListener("resize", updateNodePositionOnResize);
+	flowResizeObserver?.disconnect();
 });
 </script>
 
@@ -277,11 +302,21 @@ onMounted(() => {
 @import "@vue-flow/core/dist/style.css";
 @import "@vue-flow/core/dist/theme-default.css";
 .fullscreen-flow {
-	width: 100vw;
-	height: 100vh;
+	flex: 1;
+	min-height: 0;
+	width: 100%;
+	height: 100%;
 	margin: 0;
 	padding: 0;
 	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+}
+
+.fullscreen-flow .vue-flow {
+	flex: 1;
+	min-height: 0;
+	height: 100%;
 }
 
 .fullscreen-flow .vue-flow__pane {

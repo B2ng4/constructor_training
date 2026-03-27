@@ -1,6 +1,8 @@
 # repositories/levels_repository.py
 from typing import Optional
+
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from models.trainings import Levels
 from repositories.base_repository import BaseRepository
 
