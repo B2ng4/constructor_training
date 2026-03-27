@@ -1,11 +1,17 @@
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
 from pydantic import UUID4
-from sqlalchemy.orm import selectinload, joinedload
+from sqlalchemy import and_, case, delete, exists, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload, selectinload
 
-from models.trainings import Training, TypesAction, TrainingStep, TrainingPublication
-from sqlalchemy import select, delete, update, func, exists
+from models.trainings import (
+    Training,
+    TrainingPassageAttempt,
+    TrainingPublication,
+    TrainingStep,
+    TypesAction,
+)
 
 
 class TrainingRepository:
@@ -226,7 +232,7 @@ class TrainingRepository:
 
             new_step = TrainingStep(
                 step_number=step_number,
-                meta={"name": "Шаг без названия"},
+                meta={"name": f"Шаг {step_number}"},
                 training_uuid=training_uuid,
                 image_url=photo_url,
             )
@@ -294,8 +300,9 @@ class TrainingRepository:
         await self.session.flush()
         return len(steps_data)
 
-
-    async def create_or_update_publication(self, training_uuid: UUID4, access_token: str, snapshot_data: Dict) -> TrainingPublication:
+    async def create_or_update_publication(
+        self, training_uuid: UUID4, access_token: str, snapshot_data: Dict
+    ) -> TrainingPublication:
         """
         Создает новую публикацию или обновляет существующую для данного тренинга.
         При обновлении задаётся новый access_token и is_active=True (повторная публикация после снятия).
@@ -314,20 +321,22 @@ class TrainingRepository:
             publication = TrainingPublication(
                 training_uuid=training_uuid,
                 access_token=access_token,
-                data_snapshot=snapshot_data
+                data_snapshot=snapshot_data,
             )
             self.session.add(publication)
 
         await self.session.flush()
         return publication
 
-    async def get_publication_by_token(self, access_token: str) -> Optional[TrainingPublication]:
+    async def get_publication_by_token(
+        self, access_token: str
+    ) -> Optional[TrainingPublication]:
         """
         Получает публикацию по токену. Это очень быстрый запрос.
         """
         query = select(TrainingPublication).where(
             TrainingPublication.access_token == access_token,
-            TrainingPublication.is_active == True
+            TrainingPublication.is_active == True,
         )
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
@@ -339,7 +348,7 @@ class TrainingRepository:
         """
         query = select(TrainingPublication).where(
             TrainingPublication.training_uuid == training_uuid,
-            TrainingPublication.is_active == True
+            TrainingPublication.is_active == True,
         )
         result = await self.session.execute(query)
         publications = result.scalars().all()
@@ -363,3 +372,95 @@ class TrainingRepository:
             .values(views_count=TrainingPublication.views_count + 1)
         )
         await self.session.execute(stmt)
+
+    async def create_passage_attempt(
+        self, publication_id: int
+    ) -> TrainingPassageAttempt:
+        att = TrainingPassageAttempt(publication_id=publication_id)
+        self.session.add(att)
+        await self.session.flush()
+        await self.session.refresh(att)
+        return att
+
+    async def complete_passage_attempt(
+        self,
+        attempt_id: int,
+        publication_id: int,
+        is_completed: bool,
+        duration_seconds: Optional[int],
+        wrong_attempts_total: Optional[int],
+    ) -> bool:
+        stmt = (
+            update(TrainingPassageAttempt)
+            .where(
+                TrainingPassageAttempt.id == attempt_id,
+                TrainingPassageAttempt.publication_id == publication_id,
+                TrainingPassageAttempt.finished_at.is_(None),
+            )
+            .values(
+                finished_at=func.now(),
+                is_completed=is_completed,
+                duration_seconds=duration_seconds,
+                wrong_attempts_total=wrong_attempts_total,
+            )
+        )
+        res = await self.session.execute(stmt)
+        return res.rowcount > 0
+
+    async def get_passage_stats_for_training(
+        self, training_uuid: UUID4
+    ) -> Dict[str, Any]:
+        total_starts = func.count(TrainingPassageAttempt.id)
+        total_completions = func.coalesce(
+            func.sum(case((TrainingPassageAttempt.is_completed.is_(True), 1), else_=0)),
+            0,
+        )
+        avg_duration = func.avg(
+            case(
+                (
+                    and_(
+                        TrainingPassageAttempt.is_completed.is_(True),
+                        TrainingPassageAttempt.duration_seconds.isnot(None),
+                    ),
+                    TrainingPassageAttempt.duration_seconds,
+                ),
+                else_=None,
+            )
+        )
+        q = (
+            select(total_starts, total_completions, avg_duration)
+            .select_from(TrainingPassageAttempt)
+            .join(
+                TrainingPublication,
+                TrainingPublication.id == TrainingPassageAttempt.publication_id,
+            )
+            .where(TrainingPublication.training_uuid == training_uuid)
+        )
+        result = await self.session.execute(q)
+        row = result.one()
+        starts = int(row[0] or 0)
+        completions = int(row[1] or 0)
+        avg_d = row[2]
+        return {
+            "total_starts": starts,
+            "total_completions": completions,
+            "avg_duration_seconds": float(avg_d) if avg_d is not None else None,
+            "completion_rate": (completions / starts) if starts else 0.0,
+        }
+
+    async def list_passage_attempts_for_training(
+        self, training_uuid: UUID4, skip: int = 0, limit: int = 20
+    ) -> List[TrainingPassageAttempt]:
+        q = (
+            select(TrainingPassageAttempt)
+            .join(
+                TrainingPublication,
+                TrainingPublication.id == TrainingPassageAttempt.publication_id,
+            )
+            .where(TrainingPublication.training_uuid == training_uuid)
+            .order_by(TrainingPassageAttempt.started_at.desc())
+            .offset(skip)
+            .limit(limit)
+        )
+        result = await self.session.execute(q)
+        return list(result.scalars().all())

@@ -5,7 +5,7 @@
 			class="tree-item-content cursor-pointer"
 			:class="{ active: item.id === store.selectedStep?.id }"
 		>
-			<span>{{ item.meta?.name ?? "Шаг без названия" }}</span>
+			<span>{{ stepLabel(item) }}</span>
 			<q-btn
 				flat
 				dense
@@ -65,8 +65,14 @@ watchDebounced(
 	{ debounce: 500, maxWait: 1000, deep: true },
 );
 
+function stepLabel(step) {
+	const n = (step?.meta?.name ?? "").trim();
+	if (n && n !== "Шаг без названия") return n;
+	return `Шаг ${step?.step_number ?? ""}`.trim();
+}
+
 function confirmDelete(step) {
-	const stepName = step.meta?.name ?? "Шаг без названия";
+	const stepName = stepLabel(step);
 	$q.dialog({
 		title: "Удалить шаг?",
 		message: `Шаг «${stepName}» будет удалён без возможности восстановления.`,

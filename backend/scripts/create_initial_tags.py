@@ -1,7 +1,6 @@
-
 from sqlalchemy import select
-from core.database import get_async_session
 
+from core.database import get_async_session
 from models.trainings import Tags
 from repositories.tags_repository import TagsRepository
 
@@ -205,7 +204,7 @@ INITIAL_TAGS = [
     {"value": 197, "label": "macos"},
     {"value": 198, "label": "ubuntu"},
     {"value": 199, "label": "centos"},
-    {"value": 200, "label": "debian"}
+    {"value": 200, "label": "debian"},
 ]
 
 

@@ -1,7 +1,8 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field
-from typing import Optional
 import os
+from typing import Optional
+
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Configs(BaseSettings):
@@ -70,7 +71,7 @@ class Configs(BaseSettings):
 
     # ------------------- AI Video Analysis ---------------------------------
     AI_API_KEY: Optional[str] = Field(
-        default="sk-DdaC4JE-3TSuwvmZU4DNYw", env="AI_API_KEY"
+        default="sk-0PWoTdVy-7yVufovIDCEVA", env="AI_API_KEY"
     )
     AI_BASE_URL: Optional[str] = Field(
         default="https://api.vsellm.ru/v1", env="AI_BASE_URL"
@@ -79,12 +80,9 @@ class Configs(BaseSettings):
         default="qwen/qwen3-vl-30b-a3b-thinking", env="AI_MODEL"
     )
     AI_VIDEO_FPS: int = Field(default=2, env="AI_VIDEO_FPS")
-    # На сколько секунд сдвигать момент извлечения кадра относительно таймкода из LLM.
-    # По умолчанию 0.0, чтобы строго соответствовать выходу модели.
-    AI_VIDEO_FRAME_OFFSET_SEC: float = Field(
-        default=0.0, env="AI_VIDEO_FRAME_OFFSET_SEC"
-    )
 
+    # ------------------- REDIS --------------------------------------------
+    # REDIS_URL:Optional[str] = Fiels()
 
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")

@@ -1,7 +1,9 @@
 # repositories/tags_repository.py
 from typing import List, Optional
-from sqlalchemy import select, func, update, delete
+
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from models.trainings import Tags, Training, training_tags
 
 
@@ -28,7 +30,9 @@ class TagsRepository:
     async def get_by_name(self, label: str) -> Optional[Tags]:
         """Получение тега по label (имени) - регистронезависимый поиск"""
         normalized_label = label.strip()
-        query = select(Tags).where(func.lower(Tags.label) == func.lower(normalized_label))
+        query = select(Tags).where(
+            func.lower(Tags.label) == func.lower(normalized_label)
+        )
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
@@ -91,7 +95,8 @@ class TagsRepository:
         self, tag_value: int, skip: int = 0, limit: int = 100
     ) -> List[Training]:
         """Получение тренингов по тегу"""
-        from sqlalchemy.orm import selectinload, joinedload
+        from sqlalchemy.orm import joinedload, selectinload
+
         from models.trainings import TrainingStep
 
         query = (

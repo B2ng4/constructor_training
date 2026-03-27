@@ -1,55 +1,64 @@
 <template>
 	<div class="edit-page">
+		<q-btn
+			flat
+			no-caps
+			rounded
+			color="primary"
+			icon="home"
+			label="На главную"
+			class="edit-page__home-btn"
+			@click="goToTrainingList"
+		/>
+
 		<base-loader size="100px" v-model="loadingStatus" />
 
 		<template v-if="!loadingStatus">
-			<q-btn
-				flat
-				no-caps
-				rounded
-				color="primary"
-				icon="home"
-				label="На главный экран"
-				class="home-btn"
-				@click="goHome"
-			/>
-
 			<!-- Пустое состояние: нет шагов -->
 			<div v-if="!storeSteps || storeSteps.length === 0" class="empty-state">
 				<upload-photo />
 			</div>
 
-			<!-- Основной редактор -->
+			<!-- Скрин слева, панель задания справа -->
 			<template v-else>
-				<group-steps />
-				<step-title />
-				<step-hint />
-				<ai-generated-banner />
-
-				<div v-if="selectedStep?.image_url" class="edit-area">
-					<!-- Подсказка -->
-					<transition name="hint-fade">
-						<div
-							v-if="!store.selectedEvent && !hintHidden"
-							class="edit-hint"
-						>
-							<q-icon name="touch_app" size="20px" class="q-mr-sm" />
-							<span>Выберите действие в тулбаре и выделите область на скриншоте</span>
-							<q-btn
-								flat
-								dense
-								round
-								size="sm"
-								icon="close"
-								color="white"
-								class="q-ml-sm"
-								@click="hideHint"
-							/>
+				<div class="edit-split">
+					<div class="edit-split__main">
+						<div class="edit-overlays">
+							<group-steps />
+							<step-title />
 						</div>
-					</transition>
 
-					<tool-bar />
-					<vue-flow-component />
+						<div v-if="selectedStep?.image_url" class="edit-area">
+							<transition name="hint-fade">
+								<div
+									v-if="!store.selectedEvent && !hintHidden"
+									class="edit-hint"
+								>
+									<q-icon name="touch_app" size="20px" class="q-mr-sm" />
+									<span>Выберите действие в тулбаре и выделите область на скриншоте</span>
+									<q-btn
+										flat
+										dense
+										round
+										size="sm"
+										icon="close"
+										color="white"
+										class="q-ml-sm"
+										@click="hideHint"
+									/>
+								</div>
+							</transition>
+
+							<tool-bar />
+							<vue-flow-component />
+						</div>
+					</div>
+
+					<aside class="edit-split__aside">
+						<step-task-editor />
+						<step-hint />
+						<ai-generated-banner />
+					</aside>
 				</div>
 			</template>
 		</template>
@@ -66,6 +75,7 @@ import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useTrainingData } from "@store/editTraining.js";
 import StepTitle from "@components/features/edit_page/StepTitle.vue";
+import StepTaskEditor from "@components/features/edit_page/StepTaskEditor.vue";
 import StepHint from "@components/features/edit_page/StepHint.vue";
 import AIGeneratedBanner from "@components/features/edit_page/AIGeneratedBanner.vue";
 import { BaseLoader } from "@components/base_components/index.js";
@@ -87,11 +97,10 @@ function hideHint() {
 	hintHidden.value = true;
 }
 
-function goHome() {
+function goToTrainingList() {
 	router.push("/personal/training");
 }
 
-// Показать подсказку 2–4 сек, затем скрыть
 watch(
 	() => selectedStep.value?.image_url,
 	(hasImage) => {
@@ -101,7 +110,7 @@ watch(
 		}
 		if (hasImage && !store.selectedEvent) {
 			hintHidden.value = false;
-			const delay = 3000; // 3 секунды (в диапазоне 2–4 сек)
+			const delay = 3000;
 			hintAutoHideTimer = setTimeout(() => {
 				hintHidden.value = true;
 				hintAutoHideTimer = null;
@@ -144,17 +153,22 @@ onMounted(() => {
 .edit-page {
 	position: relative;
 	width: 100%;
-	height: 100%;
+	/* #app без height: 100% — задаём окно целиком, иначе холст Vue Flow с height 0 */
+	height: 100vh;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
 }
 
-.home-btn {
-	position: absolute;
-	top: 16px;
-	right: 16px;
+.edit-page__home-btn {
+	position: fixed;
+	top: 12px;
+	right: 12px;
 	left: auto;
-	z-index: 120;
-	background: rgba(255, 255, 255, 0.92);
-	border: 1px solid rgba(0, 0, 0, 0.08);
+	z-index: 200;
+	background: rgba(255, 255, 255, 0.95) !important;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
 .empty-state {
@@ -164,15 +178,63 @@ onMounted(() => {
 	min-height: 80vh;
 }
 
+.edit-split {
+	display: flex;
+	flex-direction: row-reverse;
+	flex: 1;
+	min-height: 0;
+	width: 100%;
+	align-items: stretch;
+	overflow: hidden;
+}
+
+.edit-split__main {
+	position: relative;
+	flex: 1;
+	min-width: 0;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.edit-split__aside {
+	width: min(440px, 40vw);
+	flex-shrink: 0;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	background: #fafbfc;
+	border-right: 1px solid rgba(15, 23, 42, 0.08);
+	overflow: hidden;
+}
+
+.edit-overlays {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 40;
+	pointer-events: none;
+}
+
+.edit-overlays > * {
+	pointer-events: auto;
+}
+
 .edit-area {
 	position: relative;
+	z-index: 1;
+	flex: 1;
+	min-height: 0;
 	width: 100%;
-	height: 100%;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
 }
 
 .edit-hint {
 	position: absolute;
-	top: 16px;
+	bottom: 88px;
 	left: 50%;
 	transform: translateX(-50%);
 	z-index: 100;
@@ -198,5 +260,18 @@ onMounted(() => {
 .hint-fade-leave-to {
 	opacity: 0;
 	transform: translateX(-50%) translateY(-8px);
+}
+
+@media (max-width: 900px) {
+	.edit-split {
+		flex-direction: column;
+	}
+
+	.edit-split__aside {
+		width: 100%;
+		max-height: min(45vh, 400px);
+		border-right: none;
+		border-top: 1px solid rgba(15, 23, 42, 0.08);
+	}
 }
 </style>

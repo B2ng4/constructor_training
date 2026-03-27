@@ -1,6 +1,7 @@
 # routing/base_router.py
-from typing import Generic, TypeVar, Type, List, Callable, Optional, Any
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Path, Body
+from typing import Any, Callable, Generic, List, Optional, Type, TypeVar
+
+from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query, status
 from pydantic import BaseModel
 from sqlalchemy.exc import IntegrityError
 

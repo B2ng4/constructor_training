@@ -12,6 +12,7 @@ import {
 	PassageTraining,
 	TrainingWelcomePage,
 	TrainingPlayPage,
+	CourseCreatePage,
 } from "@pages";
 
 export const routes = [
@@ -39,6 +40,10 @@ export const routes = [
 			{
 				path: '/personal/help',
 				component: HelpPage,
+			},
+			{
+				path: '/personal/courses',
+				component: CourseCreatePage,
 			},
 		]
 	},

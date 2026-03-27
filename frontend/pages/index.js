@@ -11,6 +11,7 @@ import TrainingPage from "@pages/ui/TrainingPage.vue";
 import PassageTraining from "@pages/ui/PassageTraining.vue";
 import TrainingWelcomePage from "@pages/ui/TrainingWelcomePage.vue";
 import TrainingPlayPage from "@pages/ui/TrainingPlayPage.vue";
+import CourseCreatePage from "@pages/ui/CourseCreatePage.vue";
 
 export {
 	EditPage,
@@ -26,4 +27,5 @@ export {
 	PassageTraining,
 	TrainingWelcomePage,
 	TrainingPlayPage,
+	CourseCreatePage,
 };

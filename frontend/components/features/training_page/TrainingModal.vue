@@ -170,6 +170,22 @@
 							</q-tooltip>
 						</q-icon>
 					</div>
+					<div class="row items-center q-gutter-sm q-mt-md">
+						<q-toggle
+							v-model="dataTraining.hints_enabled"
+							color="primary"
+							size="lg"
+						/>
+						<div>
+							<span class="text-body2 text-weight-medium">Включить подсказки</span>
+							<p class="text-caption text-grey-7 q-ma-none">Показывать кнопку подсказок в прохождении</p>
+						</div>
+						<q-icon name="help_outline" size="20px" color="grey-6" class="cursor-help">
+							<q-tooltip anchor="top middle" :offset="[0, 8]">
+								Если выключено, кнопка подсказок в прохождении будет скрыта
+							</q-tooltip>
+						</q-icon>
+					</div>
 				</div>
 			</q-card-section>
 
@@ -222,7 +238,8 @@ const dataTraining = ref({
 	tag_ids: [],
 	duration_minutes: null,
 	level_id: null,
-	skip_steps: false
+	skip_steps: false,
+	hints_enabled: true
 });
 
 const showModal = defineModel();
@@ -365,7 +382,8 @@ function resetForm() {
 		tag_ids: [],
 		duration_minutes: null,
 		level_id: null,
-		skip_steps: false
+		skip_steps: false,
+		hints_enabled: true
 	};
 	currentInputValue.value = "";
 }

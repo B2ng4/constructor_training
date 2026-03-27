@@ -1,11 +1,12 @@
+from typing import Optional
+
 from sqlalchemy import func
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 from models.users import User
 from schemas.users import UserRegister
 from utils.security import get_password_hash
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional
-from sqlalchemy.future import select
 
 
 class UserRepository:

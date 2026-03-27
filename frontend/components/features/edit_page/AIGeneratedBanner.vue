@@ -37,16 +37,10 @@ const { selectedStep } = storeToRefs(store);
 const showBanner = ref(true);
 const dismissedSteps = ref(new Set());
 
-// Определяем, создан ли шаг AI (по наличию annotation с вопросом "Как...")
 const isAIGenerated = computed(() => {
 	if (!selectedStep.value?.id) return false;
-	
-	// Если уже закрыли баннер для этого шага
 	if (dismissedSteps.value.has(selectedStep.value.id)) return false;
-	
-	// Проверяем, что есть annotation и начинается с "Как"
-	const annotation = selectedStep.value?.annotation;
-	return annotation && annotation.trim().startsWith("Как");
+	return selectedStep.value?.meta?.source === "video_ai";
 });
 
 // Сбрасываем показ баннера при смене шага
@@ -64,19 +58,16 @@ function dismissBanner() {
 
 <style scoped>
 .ai-banner {
-	position: absolute;
-	top: 112px;
-	left: 50%;
-	transform: translateX(-50%);
-	z-index: 1;
+	flex-shrink: 0;
+	margin: 0 12px 12px;
 	background: linear-gradient(135deg, rgba(139, 92, 246, 0.95) 0%, rgba(99, 102, 241, 0.95) 100%);
 	backdrop-filter: blur(16px);
 	-webkit-backdrop-filter: blur(16px);
 	padding: 12px 16px;
 	border-radius: 14px;
-	box-shadow: 0 4px 24px rgba(139, 92, 246, 0.4);
+	box-shadow: 0 4px 24px rgba(139, 92, 246, 0.35);
 	border: 1px solid rgba(255, 255, 255, 0.2);
-	max-width: 480px;
+	max-width: 100%;
 	display: flex;
 	align-items: flex-start;
 	gap: 12px;
@@ -137,8 +128,7 @@ function dismissBanner() {
 
 @media (max-width: 768px) {
 	.ai-banner {
-		max-width: calc(100vw - 32px);
-		top: 100px;
+		max-width: 100%;
 	}
 	
 	.ai-banner-title {

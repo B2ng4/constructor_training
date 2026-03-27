@@ -1,7 +1,7 @@
 <template>
 	<div
 		v-if="store.selectedStep"
-		class="step-hint-card absolute cursor-pointer"
+		class="step-hint-card cursor-pointer"
 	>
 		<q-tooltip anchor="bottom middle" :offset="[0, 8]">
 			{{ selectedStep?.hint ? 'Редактировать подсказку' : 'Добавить подсказку для пользователя' }}
@@ -90,19 +90,17 @@ const saveHint = async (value) => {
 
 <style scoped>
 .step-hint-card {
-	top: 64px;
-	left: 50%;
-	transform: translateX(-50%);
-	z-index: 1;
-	background: rgba(255, 255, 255, 0.85);
+	flex-shrink: 0;
+	margin: 0 12px 10px;
+	background: rgba(255, 255, 255, 0.95);
 	backdrop-filter: blur(16px);
 	-webkit-backdrop-filter: blur(16px);
-	padding: 8px 16px;
+	padding: 10px 14px;
 	border-radius: 12px;
-	box-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
-	border: 1px solid rgba(255, 255, 255, 0.6);
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+	border: 1px solid rgba(0, 0, 0, 0.06);
 	transition: all 0.2s ease;
-	max-width: 400px;
+	max-width: 100%;
 }
 
 .step-hint-card:hover {

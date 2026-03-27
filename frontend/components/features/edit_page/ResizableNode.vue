@@ -1,6 +1,10 @@
 <template>
-	<NodeResizer min-width="100" min-height="30" />
-	<NodeToolbar :is-visible="node.data.toolbarVisible">
+	<NodeResizer min-width="16" min-height="12" />
+	<NodeToolbar
+		:is-visible="node.data.toolbarVisible"
+		:position="Position.Right"
+		:offset="10"
+	>
 		<div class="node-toolbar-content">
 			<template v-if="saveMode">
 				<div
@@ -52,7 +56,7 @@
 import { Handle, Position } from '@vue-flow/core';
 import { NodeResizer } from '@vue-flow/node-resizer';
 import { NodeToolbar } from '@vue-flow/node-toolbar';
-import { computed, inject, nextTick, ref } from "vue";
+import { computed, inject, nextTick, ref, watch } from "vue";
 import { useQuasar } from "quasar";
 import { trainingStepApi } from "@api";
 import { useTrainingData } from "@store/editTraining.js";
@@ -92,12 +96,13 @@ const metaKeywords = computed({
 		}
 		store.selectedStep.area.metaKeywords = value;
 	}
-});
+})
 
 const saveMode = ref(true);
 
 const selectedMode = computed(() => props.node?.data?.type);
 const isKeyPressMode = computed(() => isKeyPressType({ type: selectedMode.value }));
+const isInputTextMode = computed(() => selectedMode.value === "inputText");
 
 const hotkeyLabel = computed(() => {
 	return metaKeywords.value?.join('+') || 'не назначен';
@@ -107,20 +112,79 @@ const openHotkeyCapture = () => {
 	isHotkeyDialogOpen.value = true;
 };
 
-function mergeStepAreaFromResponse(resp) {
-	const serverArea = resp?.data?.area;
-	if (serverArea && typeof serverArea === "object") {
-		if (!store.selectedStep.area) store.selectedStep.area = {};
-		Object.assign(store.selectedStep.area, serverArea);
+function getNodeSizePx(node) {
+	const d = node?.dimensions || {};
+	const s = node?.style || {};
+	const w = Number(d.width || parseInt(s.width, 10) || 0);
+	const h = Number(d.height || parseInt(s.height, 10) || 0);
+	return { width: w, height: h };
+}
+
+/** При вводе текста мягко расширяем область, чтобы код/строки помещались */
+function autoExpandInputArea(textValue) {
+	if (!isInputTextMode.value || !props.node) return;
+	const txt = String(textValue ?? "");
+	if (!txt) return;
+
+	const lines = txt.split("\n");
+	const lineCount = lines.length;
+	const maxLineLen = lines.reduce((m, l) => Math.max(m, l.length), 0);
+
+	const { width: curW, height: curH } = getNodeSizePx(props.node);
+	const minW = Math.max(140, curW || 0);
+	const minH = Math.max(40, curH || 0);
+
+	// Эвристика под моноширинный текст в InputText.vue
+	const wantedW = maxLineLen * 8 + 28;
+	const wantedH = lineCount * 22 + 12;
+
+	const imgW = Number(store.selectedStep?.photo_dimensions?.width || 0);
+	const imgH = Number(store.selectedStep?.photo_dimensions?.height || 0);
+	const maxW = imgW > 0 ? Math.floor(imgW * 0.9) : 900;
+	const maxH = imgH > 0 ? Math.floor(imgH * 0.9) : 700;
+
+	const newW = Math.max(minW, Math.min(maxW, wantedW));
+	const newH = Math.max(minH, Math.min(maxH, wantedH));
+
+	if (newW === curW && newH === curH) return;
+
+	props.node.dimensions = {
+		...(props.node.dimensions || {}),
+		width: newW,
+		height: newH,
+	};
+	props.node.style = {
+		...(props.node.style || {}),
+		width: `${newW}px`,
+		height: `${newH}px`,
+	};
+
+	// Поддерживаем согласованность area в сторе для сохранения.
+	if (store.selectedStep?.area) {
+		store.selectedStep.area.width = Math.max(
+			Number(store.selectedStep.area.width || 0),
+			newW
+		);
+		store.selectedStep.area.height = Math.max(
+			Number(store.selectedStep.area.height || 0),
+			newH
+		);
 	}
 }
+
+watch(
+	() => metaText.value,
+	(v) => {
+		nextTick(() => autoExpandInputArea(v));
+	}
+);
 
 const sendRequest = async () => {
 	try {
 		await nextTick();
 		const eventType = store.selectedEvent;
 		if (isKeyPressMode.value && eventType) {
-			const resp = await trainingStepApi.editStep(
+			await trainingStepApi.editStep(
 				store.trainingData.uuid,
 				store.selectedStep.id,
 				{
@@ -128,7 +192,6 @@ const sendRequest = async () => {
 					area: { metaKeywords: metaKeywords.value || [] }
 				}
 			);
-			mergeStepAreaFromResponse(resp);
 			if (!store.selectedStep.area) store.selectedStep.area = {};
 			store.selectedStep.area.metaKeywords = metaKeywords.value || [];
 			$q.notify({ color: "positive", message: "Клавиша сохранена", position: "bottom-right" });
@@ -140,7 +203,7 @@ const sendRequest = async () => {
 			return;
 		}
 
-		const resp = await trainingStepApi.editStep(
+		await trainingStepApi.editStep(
 			store.trainingData.uuid,
 			store.selectedStep.id,
 			{
@@ -157,14 +220,12 @@ const sendRequest = async () => {
 			metaText: metaText.value,
 			metaKeywords: metaKeywords.value
 		});
-		mergeStepAreaFromResponse(resp);
 		$q.notify({
 			color: "positive",
 			message: "Область сохранена",
 			position: "bottom-right",
 		});
-	} catch (err) {
-		console.error(err);
+	} catch (e) {
 		$q.notify({
 			color: "negative",
 			message: "Не удалось сохранить",

@@ -65,3 +65,10 @@ dependencies = [
     "urllib3==2.3.0",
     "uvicorn==0.34.0",
 ]
+
+[tool.black]
+line-length = 88
+
+[tool.isort]
+profile = "black"
+line_length = 88

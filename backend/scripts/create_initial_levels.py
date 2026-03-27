@@ -1,7 +1,8 @@
 from sqlalchemy import select
+
 from core.database import get_async_session
-from repositories.levels_repository import LevelsRepository
 from models.trainings import Levels
+from repositories.levels_repository import LevelsRepository
 
 INITIAL_LEVELS = [
     {"value": 1, "label": "Начальный"},

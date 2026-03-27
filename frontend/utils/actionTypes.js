@@ -56,7 +56,12 @@ export function isInputTextType(event) {
 	return event?.type === ACTION_TYPES.INPUT_TEXT;
 }
 
-/** Проверяется ли в прохождении по клику/движению мыши по области */
+/**
+ * Проверяется ли в прохождении по клику/движению мыши по области.
+ * PassageFlowComponent: leftClick — клик по координатам; rightClick — contextmenu;
+ * doubleClick — dblclick; hover — удержание курсора в области (mousemove / видимая область).
+ * inputText — поле ввода + Enter; keyPress — keydown по metaKeywords.
+ */
 export function isClickValidatedType(event) {
 	return event && TYPES_VALIDATED_BY_CLICK.includes(event.type);
 }
