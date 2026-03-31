@@ -22,6 +22,7 @@ class TrainingStepBase(BaseModel):
     meta: Optional[Dict[str, Any]] = None
     annotation: Optional[str] = None
     hint: Optional[str] = None
+    instruction_html: Optional[str] = None
     image_url: Optional[str] = None
     photo_dimensions: Optional[Dict[str, Any]] = None
 
@@ -39,6 +40,7 @@ class TrainingStepUpdate(BaseModel):
     meta: Optional[Dict[str, Any]] = None
     annotation: Optional[str] = None
     hint: Optional[str] = None
+    instruction_html: Optional[str] = None
     image_url: Optional[str] = None
     steps: Optional[List[Union["TrainingStepCreate", "TrainingStepUpdate"]]] = Field(
         default_factory=list

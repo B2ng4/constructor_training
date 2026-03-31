@@ -23,6 +23,23 @@
 					/>
 					<span class="hotkey-label">{{ hotkeyLabel }}</span>
 				</div>
+				<div
+					v-if="isInputTextMode"
+					class="text-scale-controls"
+				>
+					<span class="text-scale-label">Текст</span>
+					<q-slider
+						v-model="metaTextScalePercent"
+						:min="70"
+						:max="160"
+						:step="5"
+						dense
+						label
+						label-always
+						color="primary"
+						class="text-scale-slider"
+					/>
+				</div>
 				<q-btn
 					dense
 					no-caps
@@ -42,6 +59,7 @@
 	<template v-if="selectedMode === 'inputText'">
 		<input-text
 			v-model="metaText"
+			:scale="metaTextScale"
 		/>
 	</template>
 	<template v-if="selectedMode === 'keyPress'">
@@ -96,7 +114,31 @@ const metaKeywords = computed({
 		}
 		store.selectedStep.area.metaKeywords = value;
 	}
-})
+});
+
+const metaTextScale = computed({
+	get() {
+		const raw = Number(store.selectedStep?.area?.metaTextScale);
+		if (!Number.isFinite(raw) || raw <= 0) return 1;
+		return Math.max(0.7, Math.min(1.6, raw));
+	},
+	set(value) {
+		if (!store.selectedStep.area) {
+			store.selectedStep.area = {};
+		}
+		const normalized = Math.max(0.7, Math.min(1.6, Number(value) || 1));
+		store.selectedStep.area.metaTextScale = Number(normalized.toFixed(2));
+	},
+});
+
+const metaTextScalePercent = computed({
+	get() {
+		return Math.round(metaTextScale.value * 100);
+	},
+	set(percent) {
+		metaTextScale.value = (Number(percent) || 100) / 100;
+	},
+});
 
 const saveMode = ref(true);
 
@@ -135,8 +177,9 @@ function autoExpandInputArea(textValue) {
 	const minH = Math.max(40, curH || 0);
 
 	// Эвристика под моноширинный текст в InputText.vue
-	const wantedW = maxLineLen * 8 + 28;
-	const wantedH = lineCount * 22 + 12;
+	const scale = metaTextScale.value || 1;
+	const wantedW = maxLineLen * 8 * scale + 28;
+	const wantedH = lineCount * 22 * scale + 12;
 
 	const imgW = Number(store.selectedStep?.photo_dimensions?.width || 0);
 	const imgH = Number(store.selectedStep?.photo_dimensions?.height || 0);
@@ -148,11 +191,13 @@ function autoExpandInputArea(textValue) {
 
 	if (newW === curW && newH === curH) return;
 
+	// eslint-disable-next-line vue/no-mutating-props
 	props.node.dimensions = {
 		...(props.node.dimensions || {}),
 		width: newW,
 		height: newH,
 	};
+	// eslint-disable-next-line vue/no-mutating-props
 	props.node.style = {
 		...(props.node.style || {}),
 		width: `${newW}px`,
@@ -211,21 +256,23 @@ const sendRequest = async () => {
 				area: {
 					...area,
 					metaText: metaText.value,
-					metaKeywords: metaKeywords.value
+					metaKeywords: metaKeywords.value,
+					metaTextScale: metaTextScale.value,
 				}
 			}
 		);
 		if (!store.selectedStep.area) store.selectedStep.area = {};
 		Object.assign(store.selectedStep.area, area, {
 			metaText: metaText.value,
-			metaKeywords: metaKeywords.value
+			metaKeywords: metaKeywords.value,
+			metaTextScale: metaTextScale.value,
 		});
 		$q.notify({
 			color: "positive",
 			message: "Область сохранена",
 			position: "bottom-right",
 		});
-	} catch (e) {
+	} catch {
 		$q.notify({
 			color: "negative",
 			message: "Не удалось сохранить",
@@ -261,5 +308,23 @@ const sendRequest = async () => {
 	font-size: 12px;
 	font-weight: 500;
 	color: #6b7280;
+}
+
+.text-scale-controls {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 180px;
+}
+
+.text-scale-label {
+	font-size: 12px;
+	font-weight: 600;
+	color: #475569;
+	white-space: nowrap;
+}
+
+.text-scale-slider {
+	width: 130px;
 }
 </style>

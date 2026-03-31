@@ -72,6 +72,28 @@
 				:color="editor.isActive('taskList') ? 'primary' : 'grey-7'"
 				@click="editor.chain().focus().toggleTaskList().run()"
 			/>
+			<q-btn
+				flat
+				dense
+				round
+				size="sm"
+				icon="keyboard"
+				color="grey-7"
+				@click="openHotkeyCapture"
+			>
+				<q-tooltip>Вставить сочетание клавиш</q-tooltip>
+			</q-btn>
+			<q-btn
+				flat
+				dense
+				round
+				size="sm"
+				icon="code"
+				:color="editor.isActive('codeBlock') ? 'primary' : 'grey-7'"
+				@click="editor.chain().focus().toggleCodeBlock().run()"
+			>
+				<q-tooltip>Блок кода (язык определяется автоматически)</q-tooltip>
+			</q-btn>
 			<q-separator vertical inset class="q-mx-xs" />
 			<q-btn flat dense round size="sm" icon="palette" color="grey-7">
 				<q-menu anchor="bottom left" self="top left">
@@ -98,6 +120,10 @@
 			/>
 		</div>
 		<editor-content class="rich-task-editor__content" :editor="editor" />
+		<watch-key
+			v-model="capturedHotkey"
+			v-model:open="isHotkeyDialogOpen"
+		/>
 	</div>
 </template>
 
@@ -112,7 +138,10 @@ import { TextStyle } from "@tiptap/extension-text-style";
 import { Underline } from "@tiptap/extension-underline";
 import { StarterKit } from "@tiptap/starter-kit";
 import { EditorContent, useEditor } from "@tiptap/vue-3";
-import { computed, onBeforeUnmount, watch } from "vue";
+import { computed, onBeforeUnmount, ref, watch } from "vue";
+import { all, common, createLowlight } from "lowlight";
+import { CodeBlockLowlightWithUI } from "./CodeBlockLowlightWithUI.js";
+import WatchKey from "./WatchKey.vue";
 
 const props = defineProps({
 	modelValue: { type: String, default: "" },
@@ -120,6 +149,10 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["update:modelValue"]);
+const lowlight = createLowlight(all);
+const codeLanguageOptions = Object.keys(common).sort((a, b) => a.localeCompare(b));
+const isHotkeyDialogOpen = ref(false);
+const capturedHotkey = ref([]);
 
 const palette = [
 	"#0f172a",
@@ -143,6 +176,12 @@ const editor = useEditor({
 	extensions: [
 		StarterKit.configure({
 			heading: { levels: [2, 3] },
+			codeBlock: false,
+		}),
+		CodeBlockLowlightWithUI.configure({
+			lowlight,
+			defaultLanguage: null,
+			languageOptions: codeLanguageOptions,
 		}),
 		Underline,
 		TextStyle,
@@ -159,6 +198,7 @@ const editor = useEditor({
 		},
 	},
 	onUpdate: ({ editor: ed }) => {
+		autoDetectCurrentCodeLanguage(ed);
 		emit("update:modelValue", ed.getHTML());
 	},
 });
@@ -178,6 +218,69 @@ function setHeading(v) {
 	else chain.setParagraph().run();
 }
 
+function normalizeHotkeyKeys(keys) {
+	const aliases = {
+		control: "Ctrl",
+		ctrl: "Ctrl",
+		shift: "Shift",
+		alt: "Alt",
+		meta: "Meta",
+		cmd: "Meta",
+		command: "Meta",
+		enter: "Enter",
+		escape: "Esc",
+		esc: "Esc",
+		arrowup: "Up",
+		arrowdown: "Down",
+		arrowleft: "Left",
+		arrowright: "Right",
+		" ": "Space",
+		space: "Space",
+	};
+	return (keys || [])
+		.map((k) => String(k || "").trim())
+		.filter(Boolean)
+		.map((k) => aliases[k.toLowerCase()] ?? (k.length === 1 ? k.toUpperCase() : k))
+		.join(" + ");
+}
+
+function openHotkeyCapture() {
+	isHotkeyDialogOpen.value = true;
+}
+
+function insertCapturedHotkey(keys) {
+	if (!editor.value || !keys?.length) return;
+	const label = normalizeHotkeyKeys(keys);
+	if (!label) return;
+	editor.value
+		.chain()
+		.focus()
+		.insertContent(`<code>${label}</code>`)
+		.insertContent(" ")
+		.run();
+}
+
+let isUpdatingCodeAttrs = false;
+
+function autoDetectCurrentCodeLanguage(ed) {
+	if (isUpdatingCodeAttrs) return;
+	const { $from } = ed.state.selection;
+	const parent = $from.parent;
+	if (!parent || parent.type.name !== "codeBlock") return;
+	const currentLang = parent.attrs?.language;
+	if (currentLang) return;
+	const code = String(parent.textContent ?? "").trim();
+	if (code.length < 2) return;
+
+	const result = lowlight.highlightAuto(code);
+	const detected = result?.data?.language;
+	if (!detected) return;
+
+	isUpdatingCodeAttrs = true;
+	ed.chain().focus().updateAttributes("codeBlock", { language: detected }).run();
+	isUpdatingCodeAttrs = false;
+}
+
 watch(
 	() => props.modelValue,
 	(val) => {
@@ -186,6 +289,16 @@ watch(
 		const next = initialContent(val);
 		if (next === current || val === current) return;
 		editor.value.commands.setContent(next, false);
+	}
+);
+
+watch(
+	() => isHotkeyDialogOpen.value,
+	(isOpen, wasOpen) => {
+		if (wasOpen && !isOpen && capturedHotkey.value?.length) {
+			insertCapturedHotkey(capturedHotkey.value);
+			capturedHotkey.value = [];
+		}
 	}
 );
 
@@ -214,34 +327,38 @@ onBeforeUnmount(() => {
 
 .rich-task-editor__content {
 	max-height: min(48vh, 420px);
-	min-height: 200px;
+	min-height: 220px;
 	overflow-y: auto;
-	padding: 12px 14px;
+	padding: 16px 18px;
 }
 
 .rich-task-editor-prose {
 	outline: none;
-	min-height: 160px;
-	font-family: system-ui, -apple-system, sans-serif;
-	font-size: 14px;
-	line-height: 1.55;
+	min-height: 180px;
+	font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+	font-size: 18px;
+	line-height: 1.65;
+	font-weight: 400;
 	color: #0f172a;
+	letter-spacing: 0.01em;
 }
 
 .rich-task-editor-prose p {
-	margin: 0 0 0.65em;
+	margin: 0 0 0.7em;
 }
 
 .rich-task-editor-prose h2 {
-	font-size: 1.25em;
+	font-size: 1.35em;
 	font-weight: 700;
-	margin: 0.75em 0 0.4em;
+	margin: 0.65em 0 0.4em;
+	letter-spacing: -0.02em;
 }
 
 .rich-task-editor-prose h3 {
-	font-size: 1.1em;
+	font-size: 1.2em;
 	font-weight: 700;
-	margin: 0.65em 0 0.35em;
+	margin: 0.55em 0 0.35em;
+	letter-spacing: -0.015em;
 }
 
 .rich-task-editor-prose ul,
@@ -268,17 +385,18 @@ onBeforeUnmount(() => {
 .rich-task-editor-prose pre {
 	background: #0f172a;
 	color: #e2e8f0;
-	padding: 10px 12px;
+	padding: 12px 14px;
 	border-radius: 8px;
-	font-size: 12px;
+	font-size: 14px;
+	line-height: 1.5;
 	overflow-x: auto;
 }
 
 .rich-task-editor-prose code {
 	background: rgba(15, 23, 42, 0.06);
-	padding: 0.1em 0.35em;
+	padding: 0.12em 0.4em;
 	border-radius: 4px;
-	font-size: 0.9em;
+	font-size: 0.88em;
 }
 
 .rich-task-editor-prose .ProseMirror p.is-editor-empty:first-child::before {

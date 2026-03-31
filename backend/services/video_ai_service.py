@@ -15,13 +15,14 @@ from core.config import configs
 from core.logging_config import logger
 
 ANALYSIS_PROMPT = """
-Сделай JSON шагов из видео для интерактивного тренинга.
+Сделай JSON шагов из видео для интерактивного тренинга (скринкаст ПО).
 
 Верни только JSON:
 {
   "steps": [
     {
-      "timecode": "MM:SS",
+      "timecode_before": "MM:SS",
+      "timecode_after": "MM:SS",
       "title": "Короткое название шага",
       "instruction_md": "Короткая инструкция (1-3 предложения) без заголовков.",
       "interaction": {
@@ -35,12 +36,16 @@ ANALYSIS_PROMPT = """
 }
 
 Жесткие правила:
-- bbox нормализован: 0..1, где x1<x2 и y1<y2.
-- кадр шага = экран ДО действия.
-- для text_input обязательно expected_text (точная строка, включая пробелы/переносы).
-- для key_chord обязательно key_chord как массив, например ["ctrl","s"].
+- timecode_before: момент на шкале видео, где интерфейс ещё НЕ изменён — стабильный кадр ПЕРЕД действием пользователя.
+- timecode_after: первый момент ПОСЛЕ действия, когда новый интерфейс уже виден (после анимаций/загрузки), стабильный кадр.
+- timecode_after > timecode_before; между ними — само действие (клик, ввод, хоткей).
+- bbox только для кадра timecode_before: нормализован 0..1, x1<x2, y1<y2. Обведи МИНИМАЛЬНУЮ зону: кнопку, иконку, поле ввода, чекбокс — не весь экран и не целое окно, если достаточно элемента.
+- тип interaction строго по фактическому действию в видео (не угадывай left_click если был двойной клик).
+- для text_input обязательно expected_text (точная строка с экрана, пробелы/переносы как в поле).
+- для key_chord обязательно key_chord как массив латиницей, например ["ctrl","s"].
 - для остальных expected_text=null и key_chord=null.
-- если не уверен, шаг не добавляй.
+- таймкоды с долями секунды при необходимости (например 1:05.3).
+- если границы шага или bbox неочевидны — шаг не добавляй.
 """
 
 FALLBACK_ANALYSIS_PROMPT = """
@@ -50,12 +55,13 @@ FALLBACK_ANALYSIS_PROMPT = """
 {
   "steps": [
     {
-      "timecode": "ММ:СС",
+      "timecode_before": "ММ:СС",
+      "timecode_after": "ММ:СС",
       "title": "Короткое название",
       "instruction_md": "Короткая инструкция на русском",
       "interaction": {
         "type": "left_click|right_click|double_click|hover|text_input|key_chord",
-        "bbox": [x1, y1, x2, y2],   // все значения 0..1
+        "bbox": [x1, y1, x2, y2],
         "expected_text": null,
         "key_chord": null
       }
@@ -64,10 +70,10 @@ FALLBACK_ANALYSIS_PROMPT = """
 }
 
 Правила:
-- steps должен быть непустым.
-- У каждого шага обязателен bbox.
+- steps непустой; у каждого шага bbox 0..1 на кадре ДО действия (timecode_before).
+- timecode_before — стабильный кадр до действия; timecode_after — стабильный кадр после изменения UI.
 - Для text_input expected_text обязателен и не пустой.
-- Без markdown-блоков, без комментариев, только JSON.
+- Без markdown-блоков и комментариев, только JSON.
 """
 
 
@@ -85,6 +91,9 @@ class VideoStepData:
     action_type_key: str
     expected_text: Optional[str] = None
     key_chord: Optional[List[str]] = None
+    timecode_before: Optional[str] = None
+    timecode_after: Optional[str] = None
+    after_frame_bytes: Optional[bytes] = None
 
 
 def _normalize_interaction_type(raw: str) -> str:
@@ -153,6 +162,10 @@ class VideoAIService:
         )
         self.model = configs.AI_MODEL
         self.fps = configs.AI_VIDEO_FPS
+        self.fps_max = max(1, int(configs.AI_VIDEO_FPS_MAX or 12))
+
+    def _effective_api_fps(self) -> int:
+        return max(1, min(int(round(float(self.fps or 1))), self.fps_max))
 
     async def analyze_video(self, video_file: UploadFile) -> List[VideoStepData]:
         """
@@ -168,8 +181,8 @@ class VideoAIService:
             video_path = tmp.name
 
         try:
-            fast_fps = max(1, int(round(min(float(self.fps or 1), 2.0))))
-            ai_response = self._call_ai_model(video_path, fps=fast_fps, max_tokens=3600)
+            api_fps = self._effective_api_fps()
+            ai_response = self._call_ai_model(video_path, fps=api_fps, max_tokens=4800)
             steps_payload = self._parse_ai_response(ai_response)
 
             if not steps_payload:
@@ -179,8 +192,8 @@ class VideoAIService:
                 ai_response = self._call_ai_model(
                     video_path,
                     prompt=FALLBACK_ANALYSIS_PROMPT,
-                    fps=max(1, int(round(float(self.fps or 1)))),
-                    max_tokens=5200,
+                    fps=api_fps,
+                    max_tokens=6400,
                 )
                 steps_payload = self._parse_ai_response(ai_response)
                 if not steps_payload:
@@ -355,8 +368,12 @@ class VideoAIService:
         for item in steps:
             if not isinstance(item, dict):
                 continue
-            timecode = str(item.get("timecode", "")).strip()
-            title = str(item.get("title", "")).strip()
+            tb = str(item.get("timecode_before", "")).strip()
+            ta = str(item.get("timecode_after", "")).strip()
+            legacy_tc = str(item.get("timecode", "")).strip()
+            timecode_before = tb or legacy_tc
+            timecode_after = ta
+            timecode = timecode_before
             instruction_md = self._normalize_instruction_md(
                 item.get("instruction_md", "")
             )
@@ -373,12 +390,14 @@ class VideoAIService:
             expected_text = inter.get("expected_text")
             key_chord = _normalize_key_chord(inter.get("key_chord"))
 
-            if not timecode or not isinstance(bbox, list) or len(bbox) != 4:
-                logger.warning(f"Пропущен шаг: некорректный timecode или bbox")
+            if not timecode_before or not isinstance(bbox, list) or len(bbox) != 4:
+                logger.warning("Пропущен шаг: некорректный timecode_before/timecode или bbox")
                 continue
 
             if not instruction_md and not title:
-                logger.warning(f"Пропущен шаг {timecode}: нет текста задания")
+                logger.warning(
+                    f"Пропущен шаг {timecode_before}: нет текста задания"
+                )
                 continue
 
             try:
@@ -396,10 +415,14 @@ class VideoAIService:
             if width <= 0 or height <= 0:
                 continue
             if width < 0.005 or height < 0.005:
-                logger.warning(f"Шаг {timecode}: bbox очень маленький, пропуск")
+                logger.warning(
+                    f"Шаг {timecode_before}: bbox очень маленький, пропуск"
+                )
                 continue
             if width > 0.95 or height > 0.95:
-                logger.warning(f"Шаг {timecode}: bbox слишком большой, пропуск")
+                logger.warning(
+                    f"Шаг {timecode_before}: bbox слишком большой, пропуск"
+                )
                 continue
 
             if itype == "text_input":
@@ -414,7 +437,7 @@ class VideoAIService:
                     )
                 if not expected_text:
                     logger.warning(
-                        f"Пропущен шаг {timecode}: text_input без expected_text"
+                        f"Пропущен шаг {timecode_before}: text_input без expected_text"
                     )
                     continue
             else:
@@ -429,6 +452,8 @@ class VideoAIService:
             validated.append(
                 {
                     "timecode": timecode,
+                    "timecode_before": timecode_before,
+                    "timecode_after": timecode_after or None,
                     "title": title or f"Шаг {len(validated) + 1}",
                     "instruction_md": instruction_md
                     or title
@@ -466,9 +491,12 @@ class VideoAIService:
             if width > 0.9 or height > 0.9:
                 continue
             q = str(question).strip()
+            tc = str(timecode).strip()
             validated.append(
                 {
-                    "timecode": str(timecode).strip(),
+                    "timecode": tc,
+                    "timecode_before": tc,
+                    "timecode_after": None,
                     "title": q[:120] if q else "Шаг",
                     "instruction_md": q,
                     "interaction_type": "left_click",
@@ -491,11 +519,40 @@ class VideoAIService:
         except ValueError:
             return 0
 
+    def _frame_to_png_bytes(self, frame: Any) -> Optional[bytes]:
+        ok, buf = cv2.imencode(".png", frame)
+        return buf.tobytes() if ok else None
+
+    def _read_frame_at_seconds(
+        self,
+        cap: cv2.VideoCapture,
+        target_seconds: float,
+        fps: float,
+        total_frames: int,
+        duration: float,
+    ) -> Any:
+        """Возвращает BGR-кадр или None."""
+        ts = max(0.0, float(target_seconds))
+        if duration and ts > duration:
+            ts = max(0.0, duration - 0.05)
+
+        frame_number = int(round(ts * fps))
+        if total_frames > 0:
+            frame_number = max(0, min(frame_number, total_frames - 1))
+        cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
+        ret, frame = cap.read()
+
+        if not ret or frame is None:
+            cap.set(cv2.CAP_PROP_POS_MSEC, ts * 1000.0)
+            ret, frame = cap.read()
+        return frame if ret and frame is not None else None
+
     def _extract_frames_at_timecodes(
         self, video_path: str, steps_payload: List[Dict[str, Any]]
     ) -> List[VideoStepData]:
-        """Извлекает кадры из видео по шагам (состояние до действия)."""
-        FRAME_OFFSET_SEC = 0.10
+        """Извлекает кадры «до» и опционально «после» по шагам."""
+        frame_lead_sec = max(0.0, float(configs.AI_VIDEO_FRAME_OFFSET_SEC))
+        after_lag_sec = max(0.0, float(configs.AI_VIDEO_AFTER_FRAME_LAG_SEC))
 
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
@@ -511,36 +568,52 @@ class VideoAIService:
         results: List[VideoStepData] = []
 
         sorted_steps = sorted(
-            steps_payload, key=lambda s: self._timecode_to_seconds(s["timecode"])
+            steps_payload,
+            key=lambda s: self._timecode_to_seconds(s["timecode"]),
         )
 
         for step in sorted_steps:
             timecode = step["timecode"]
+            tc_before = step.get("timecode_before") or timecode
+            tc_after = step.get("timecode_after")
             bbox = step["bbox"]
-            action_seconds = self._timecode_to_seconds(timecode)
 
-            target_seconds = max(0, action_seconds - FRAME_OFFSET_SEC)
+            before_seconds = self._timecode_to_seconds(tc_before)
+            target_before = max(0.0, before_seconds - frame_lead_sec)
 
-            if duration and target_seconds > duration:
-                target_seconds = max(0, duration - 0.5)
-
-            target_ms = target_seconds * 1000.0
-            cap.set(cv2.CAP_PROP_POS_MSEC, target_ms)
-            ret, frame = cap.read()
-
-            if not ret or frame is None:
-                frame_number = int(target_seconds * fps)
-                frame_number = max(0, min(frame_number, total_frames - 1))
-                cap.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
-                ret, frame = cap.read()
-                if not ret or frame is None:
-                    logger.warning(f"Не удалось извлечь кадр для таймкода {timecode}")
-                    continue
+            frame = self._read_frame_at_seconds(
+                cap, target_before, fps, total_frames, duration
+            )
+            if frame is None:
+                logger.warning(
+                    f"Не удалось извлечь кадр «до» для таймкода {tc_before}"
+                )
+                continue
 
             height, width = frame.shape[:2]
-            ok, buf = cv2.imencode(".png", frame)
-            if not ok:
+            png_before = self._frame_to_png_bytes(frame)
+            if not png_before:
                 continue
+
+            after_bytes: Optional[bytes] = None
+            if tc_after:
+                after_seconds = self._timecode_to_seconds(tc_after) + after_lag_sec
+                if after_seconds <= before_seconds:
+                    after_seconds = before_seconds + 0.15
+                if duration and after_seconds > duration - 0.04:
+                    after_seconds = max(target_before, duration - 0.04)
+                frame_after = self._read_frame_at_seconds(
+                    cap, after_seconds, fps, total_frames, duration
+                )
+                if frame_after is not None:
+                    after_png = self._frame_to_png_bytes(frame_after)
+                    if after_png and after_png != png_before:
+                        after_bytes = after_png
+                    elif after_png == png_before:
+                        logger.warning(
+                            f"Кадры до/после совпали для шага {tc_before}, "
+                            "timecode_after уточните в видео"
+                        )
 
             results.append(
                 VideoStepData(
@@ -548,12 +621,15 @@ class VideoAIService:
                     instruction_md=step["instruction_md"],
                     step_title=step["title"],
                     bbox=bbox,
-                    frame_bytes=buf.tobytes(),
+                    frame_bytes=png_before,
                     frame_width=width,
                     frame_height=height,
                     action_type_key=step["interaction_type"],
                     expected_text=step.get("expected_text"),
                     key_chord=step.get("key_chord"),
+                    timecode_before=tc_before,
+                    timecode_after=tc_after,
+                    after_frame_bytes=after_bytes,
                 )
             )
 

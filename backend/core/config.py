@@ -71,7 +71,7 @@ class Configs(BaseSettings):
 
     # ------------------- AI Video Analysis ---------------------------------
     AI_API_KEY: Optional[str] = Field(
-        default="sk-0PWoTdVy-7yVufovIDCEVA", env="AI_API_KEY"
+        default="sk-pLUS5g_b85ENrNiwQnG0Pw", env="AI_API_KEY"
     )
     AI_BASE_URL: Optional[str] = Field(
         default="https://api.vsellm.ru/v1", env="AI_BASE_URL"
@@ -79,10 +79,17 @@ class Configs(BaseSettings):
     AI_MODEL: Optional[str] = Field(
         default="qwen/qwen3-vl-30b-a3b-thinking", env="AI_MODEL"
     )
-    AI_VIDEO_FPS: int = Field(default=2, env="AI_VIDEO_FPS")
+    AI_VIDEO_FPS: int = Field(default=4, env="AI_VIDEO_FPS")
 
-    # ------------------- REDIS --------------------------------------------
-    # REDIS_URL:Optional[str] = Fiels()
+    AI_VIDEO_FPS_MAX: int = Field(default=12, env="AI_VIDEO_FPS_MAX")
+
+    AI_VIDEO_FRAME_OFFSET_SEC: float = Field(
+        default=0.10, env="AI_VIDEO_FRAME_OFFSET_SEC"
+    )
+    # Сдвиг вперёд при извлечении кадра «после» (анимации/переходы UI успели завершиться).
+    AI_VIDEO_AFTER_FRAME_LAG_SEC: float = Field(
+        default=0.12, env="AI_VIDEO_AFTER_FRAME_LAG_SEC"
+    )
 
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env")

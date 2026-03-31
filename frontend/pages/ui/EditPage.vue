@@ -56,8 +56,7 @@
 
 					<aside class="edit-split__aside">
 						<step-task-editor />
-						<step-hint />
-						<ai-generated-banner />
+						<AIGeneratedBanner />
 					</aside>
 				</div>
 			</template>
@@ -76,7 +75,6 @@ import { storeToRefs } from "pinia";
 import { useTrainingData } from "@store/editTraining.js";
 import StepTitle from "@components/features/edit_page/StepTitle.vue";
 import StepTaskEditor from "@components/features/edit_page/StepTaskEditor.vue";
-import StepHint from "@components/features/edit_page/StepHint.vue";
 import AIGeneratedBanner from "@components/features/edit_page/AIGeneratedBanner.vue";
 import { BaseLoader } from "@components/base_components/index.js";
 import ToolBar from "@components/features/edit_page/tool_bar/ui/ToolBar.vue";

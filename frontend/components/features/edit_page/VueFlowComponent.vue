@@ -1,5 +1,18 @@
 <template>
 	<div ref="flowContainerRef" class="fullscreen-flow">
+		<div v-if="showViewportHint" class="viewport-hint" role="note" @click.stop>
+			<q-icon name="open_with" size="18px" />
+			<span>Масштаб: колесо мыши. Перемещение: зажмите среднюю кнопку.</span>
+			<q-btn
+				flat
+				dense
+				round
+				size="sm"
+				icon="close"
+				color="white"
+				@click="dismissViewportHint"
+			/>
+		</div>
 		<VueFlow v-model="nodes" :default-viewport="{ zoom: 0.7 }" :node-types="nodeTypes" @node-drag-stop="onNodeDragStop">
 			<template #node-screenshot>
 				<ScreenshotNode />
@@ -24,6 +37,7 @@ const nodes = ref([]);
 const flowContainerRef = ref(null);
 const nodeTypes = { screenshot: ScreenshotNode };
 const DEFAULT_ZOOM = 0.7;
+const showViewportHint = ref(true);
 
 const eventRequiresAreaOpt = (event) => eventRequiresArea(event);
 
@@ -252,10 +266,19 @@ const updateNodePositionOnResize = () => {
 	nodes.value = [...nodes.value];
 };
 
+function dismissViewportHint() {
+	showViewportHint.value = false;
+}
+
+function markViewportHintSeen() {
+	if (showViewportHint.value) showViewportHint.value = false;
+}
+
 /** При смене шага или картинки — восстановить выбранное действие из сохранённых данных шага */
 watch(
 	() => [store.selectedStep?.id, store.selectedStep?.image_url],
 	() => {
+		showViewportHint.value = true;
 		const st = store.selectedStep;
 		if (st?.action_type) {
 			store.selectEvent(st.action_type);
@@ -278,6 +301,8 @@ let flowResizeObserver = null;
 
 onMounted(() => {
 	void syncFlowFromStep();
+	flowContainerRef.value?.addEventListener("wheel", markViewportHintSeen, { passive: true });
+	flowContainerRef.value?.addEventListener("mousedown", markViewportHintSeen, { passive: true });
 	window.addEventListener("resize", updateNodePositionOnResize);
 	nextTick(() => {
 		nextTick(() => {
@@ -293,6 +318,8 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+	flowContainerRef.value?.removeEventListener("wheel", markViewportHintSeen);
+	flowContainerRef.value?.removeEventListener("mousedown", markViewportHintSeen);
 	window.removeEventListener("resize", updateNodePositionOnResize);
 	flowResizeObserver?.disconnect();
 });
@@ -311,6 +338,27 @@ onUnmounted(() => {
 	overflow: hidden;
 	display: flex;
 	flex-direction: column;
+	position: relative;
+}
+
+.viewport-hint {
+	position: absolute;
+	top: 10px;
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 50;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	max-width: min(94%, 760px);
+	padding: 8px 10px;
+	background: rgba(15, 23, 42, 0.82);
+	backdrop-filter: blur(8px);
+	border: 1px solid rgba(148, 163, 184, 0.28);
+	border-radius: 10px;
+	color: #e2e8f0;
+	font-size: 12px;
+	line-height: 1.35;
 }
 
 .fullscreen-flow .vue-flow {

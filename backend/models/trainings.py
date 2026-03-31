@@ -157,6 +157,11 @@ class TrainingStep(Base):
     meta: Mapped[Optional[Dict]] = mapped_column(JSONB)
     annotation: Mapped[Optional[str]] = mapped_column(sa.Text)
     hint: Mapped[Optional[str]] = mapped_column(sa.Text)
+    instruction_html: Mapped[Optional[str]] = mapped_column(
+        sa.Text,
+        nullable=True,
+        comment="Задание для ученика (безопасный HTML)",
+    )
     image_url: Mapped[Optional[str]] = mapped_column(sa.Text)
     photo_dimensions: Mapped[Optional[Dict]] = mapped_column(JSONB)
     training: Mapped["Training"] = relationship(

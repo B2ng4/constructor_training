@@ -32,6 +32,9 @@
 import { ref, computed, onMounted, onUnmounted, nextTick } from "vue";
 
 const model = defineModel({ type: String, default: () => "" });
+const props = defineProps({
+	scale: { type: Number, default: 1 },
+});
 
 const rootRef = ref(null);
 const inputRef = ref(null);
@@ -40,7 +43,7 @@ const focused = ref(false);
 const fontSizePx = ref(14);
 
 const fontStyle = computed(() => ({
-	fontSize: `${fontSizePx.value}px`,
+	fontSize: `${Math.round(fontSizePx.value * (Number(props.scale) || 1))}px`,
 	lineHeight: 1.2,
 }));
 

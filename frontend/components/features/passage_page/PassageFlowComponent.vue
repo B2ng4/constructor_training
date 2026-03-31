@@ -20,6 +20,24 @@
 				@mousemove="onWrapMouseMove"
 			>
 				<div
+					v-if="showViewportHint"
+					class="viewport-hint"
+					role="note"
+					@click.stop
+				>
+					<q-icon name="open_with" size="18px" />
+					<span>Масштаб: колесо мыши. Перемещение: зажмите среднюю кнопку (или ЛКМ при зуме).</span>
+					<q-btn
+						flat
+						dense
+						round
+						size="sm"
+						icon="close"
+						color="white"
+						@click="dismissViewportHint"
+					/>
+				</div>
+				<div
 					ref="screenshotAspectRef"
 					class="screenshot-aspect"
 					:style="screenshotAspectStyle"
@@ -31,9 +49,10 @@
 					>
 						<img
 							ref="imgRef"
-							:src="selectedStep.image_url"
+							:src="displayScreenshotUrl"
 							alt=""
 							class="screenshot-img"
+							:class="{ 'screenshot-img--outcome': !!forcedAfterUrl }"
 							draggable="false"
 							@load="updateImageContentLayout"
 						/>
@@ -61,20 +80,16 @@
 						<div
 							v-if="isInputText && isPassageMode"
 							class="overlay-input-wrap"
-							:class="{
-								'overlay-input-wrap--focus-ring': inputFocused,
-								'overlay-input-wrap--hint-typing': isHintTyping,
-							}"
 							@click.stop
 						>
 							<div class="overlay-input-stack">
 								<div
-									v-if="isHintTyping"
-									class="overlay-text-mirror overlay-text-mirror--hint-type"
+									class="overlay-text-mirror"
+									:class="{ 'overlay-text-mirror--hint-type': isHintTyping }"
 									:style="overlayInputStyle"
 									aria-hidden="true"
 								>
-									{{ inputValue }}<span
+									{{ overlayDisplayValue }}<span
 										v-if="isHintTyping"
 										class="overlay-typewriter-caret"
 									/>
@@ -82,7 +97,8 @@
 								<textarea
 									ref="overlayInputRef"
 									v-model="inputValue"
-									:class="['overlay-input', { 'overlay-input--hint-typing': isHintTyping }]"
+									class="overlay-input overlay-input--ghost-text"
+									:class="{ 'overlay-input--hint-typing': isHintTyping }"
 									:style="overlayInputStyle"
 									wrap="off"
 									autocomplete="off"
@@ -93,7 +109,6 @@
 									@scroll="onOverlayScroll"
 									@paste="onOverlayPaste"
 									@keydown="onOverlayKeydown"
-									@focus="inputFocused = true"
 									@blur="onOverlayBlur"
 								/>
 							</div>
@@ -143,6 +158,31 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from "vue";
+
+const OUTCOME_FRAME_HOLD_MS = 620;
+
+function delay(ms) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function preloadImage(src) {
+	if (!src) return Promise.resolve();
+	return new Promise((resolve) => {
+		const im = new Image();
+		im.onload = () => resolve();
+		im.onerror = () => resolve();
+		im.src = src;
+	});
+}
+
+function stepAfterImageUrl(step) {
+	const m = step?.meta;
+	if (m && typeof m === "object" && typeof m.image_url_after === "string") {
+		const u = m.image_url_after.trim();
+		return u || "";
+	}
+	return "";
+}
 import {
 	eventRequiresArea,
 	isKeyPressType,
@@ -167,13 +207,21 @@ const imgRef = ref(null);
 const inputRef = ref(null);
 const overlayInputRef = ref(null);
 const inputValue = ref("");
-const inputFocused = ref(false);
+const hintMaskValue = ref("");
 /** Идёт анимация печати подсказки */
 const isHintTyping = ref(false);
 let hintTypewriterTimer = null;
 /** Чтобы @input не отменял печать подсказки при программной подстановке */
 let inputFromTypewriter = false;
 const hoverTimer = ref(null);
+const showViewportHint = ref(true);
+/** После верного действия: кадр «после» из AI до перехода на следующий шаг */
+const forcedAfterUrl = ref(null);
+const outcomeBusy = ref(false);
+
+const displayScreenshotUrl = computed(
+	() => forcedAfterUrl.value || props.selectedStep?.image_url || ""
+);
 
 /** Зум и пан как в редакторе (VueFlow) */
 const zoom = ref(1);
@@ -201,6 +249,10 @@ const area = computed(() => props.selectedStep?.area);
 const actionType = computed(() => props.selectedStep?.action_type);
 
 const isPassageMode = computed(() => props.mode === "passage");
+
+const passageInteractionLocked = computed(
+	() => isPassageMode.value && !!forcedAfterUrl.value
+);
 
 /** В прохождении область видна только при подсказке (кроме невидимого поля ввода) */
 const showAreaVisible = computed(() => {
@@ -235,7 +287,7 @@ const showAreaOnImage = computed(() => {
 
 /** Можно ли проверять клик по области (режим прохождения, есть область и тип клика/правый/двойной/hover) */
 const canClickToValidate = computed(() => {
-	if (!isPassageMode.value) return false;
+	if (!isPassageMode.value || passageInteractionLocked.value) return false;
 	const at = actionType.value;
 	const a = area.value;
 	if (!at || !isClickValidatedType(at)) return false;
@@ -322,6 +374,7 @@ const screenshotAspectStyle = computed(() => {
 });
 
 function onWheel(e) {
+	if (showViewportHint.value) showViewportHint.value = false;
 	stopAutoZoomAnimation();
 	const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
 	const next = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, zoom.value + delta));
@@ -342,6 +395,7 @@ function onWheel(e) {
 }
 
 function onWrapMouseDown(e) {
+	if (showViewportHint.value) showViewportHint.value = false;
 	stopAutoZoomAnimation();
 	// Средняя кнопка мыши — пан в любой момент (как в редакторе)
 	if (e.button === 1) {
@@ -360,6 +414,10 @@ function onWrapMouseDown(e) {
 	isPanning.value = true;
 	panStart.value = { x: e.clientX, y: e.clientY };
 	panStartOffset.value = { ...pan.value };
+}
+
+function dismissViewportHint() {
+	showViewportHint.value = false;
 }
 
 function onDocumentMouseMove(e) {
@@ -385,6 +443,13 @@ const hotkeyLabel = computed(() => {
 	return kw.join(" + ");
 });
 
+/** Для визуализации в оверлее: сначала ввод пользователя, иначе маска подсказки */
+const overlayDisplayValue = computed(() => {
+	const userText = String(inputValue.value ?? "");
+	if (userText.length > 0) return userText;
+	return String(hintMaskValue.value ?? "");
+});
+
 /** Размер шрифта в поле поверх скрина — от высоты области в логических пикселях */
 const overlayInputStyle = computed(() => {
 	const a = area.value;
@@ -394,7 +459,8 @@ const overlayInputStyle = computed(() => {
 		return { fontSize: "14px", lineHeight: 1.25 };
 	}
 	const lh = Number(a.height) || 24;
-	const fs = Math.round(Math.max(11, Math.min(26, lh * 0.38)));
+	const scale = Math.max(0.7, Math.min(1.6, Number(a.metaTextScale) || 1));
+	const fs = Math.round(Math.max(11, Math.min(38, lh * 0.38 * scale)));
 	return {
 		fontSize: `${fs}px`,
 		lineHeight: 1.2,
@@ -527,7 +593,28 @@ function isPointInArea(px, py) {
 	return px >= ax && px <= ax + aw && py >= ay && py <= ay + ah;
 }
 
+async function emitActionComplete() {
+	if (outcomeBusy.value) return;
+	outcomeBusy.value = true;
+	try {
+		const afterUrl = stepAfterImageUrl(props.selectedStep);
+		if (!isPassageMode.value || !afterUrl) {
+			emit("action-complete");
+			return;
+		}
+		await preloadImage(afterUrl);
+		forcedAfterUrl.value = afterUrl;
+		await nextTick();
+		updateImageContentLayout();
+		await delay(OUTCOME_FRAME_HOLD_MS);
+		emit("action-complete");
+	} finally {
+		outcomeBusy.value = false;
+	}
+}
+
 function onWrapClick(e) {
+	if (passageInteractionLocked.value) return;
 	if (didPanThisGesture.value) {
 		didPanThisGesture.value = false;
 		return;
@@ -540,13 +627,14 @@ function onWrapClick(e) {
 	if (!coords) return;
 	if (isPointInArea(coords.x, coords.y)) {
 		e.preventDefault();
-		emit("action-complete");
+		void emitActionComplete();
 	} else {
 		emit("action-wrong");
 	}
 }
 
 function onWrapContextMenu(e) {
+	if (passageInteractionLocked.value) return;
 	if (didPanThisGesture.value) {
 		didPanThisGesture.value = false;
 		return;
@@ -557,13 +645,14 @@ function onWrapContextMenu(e) {
 	if (!coords) return;
 	if (isPointInArea(coords.x, coords.y)) {
 		e.preventDefault();
-		emit("action-complete");
+		void emitActionComplete();
 	} else {
 		emit("action-wrong");
 	}
 }
 
 function onWrapDblClick(e) {
+	if (passageInteractionLocked.value) return;
 	if (didPanThisGesture.value) {
 		didPanThisGesture.value = false;
 		return;
@@ -574,7 +663,7 @@ function onWrapDblClick(e) {
 	if (!coords) return;
 	if (isPointInArea(coords.x, coords.y)) {
 		e.preventDefault();
-		emit("action-complete");
+		void emitActionComplete();
 	} else {
 		emit("action-wrong");
 	}
@@ -582,6 +671,7 @@ function onWrapDblClick(e) {
 
 /** Hover при прохождении: когда область не показана, проверяем по координатам на mousemove */
 function onWrapMouseMove(e) {
+	if (passageInteractionLocked.value) return;
 	if (!isPassageMode.value || actionType.value?.type !== "hover" || showAreaVisible.value) return;
 	if (!canClickToValidate.value || !area.value) return;
 	const coords = getClickInImageCoords(e);
@@ -589,7 +679,7 @@ function onWrapMouseMove(e) {
 		if (!hoverTimer.value) {
 			hoverTimer.value = setTimeout(() => {
 				hoverTimer.value = null;
-				emit("action-complete");
+				void emitActionComplete();
 			}, 800);
 		}
 	} else {
@@ -614,31 +704,35 @@ function onWrapMouseLeave() {
 }
 
 function onAreaClick(e) {
+	if (passageInteractionLocked.value) return;
 	if (actionType.value?.type === "leftClick") {
 		e.preventDefault();
-		emit("action-complete");
+		void emitActionComplete();
 	}
 }
 
 function onAreaDblClick(e) {
+	if (passageInteractionLocked.value) return;
 	if (actionType.value?.type === "doubleClick") {
 		e.preventDefault();
-		emit("action-complete");
+		void emitActionComplete();
 	}
 }
 
 function onAreaContextMenu(e) {
+	if (passageInteractionLocked.value) return;
 	if (actionType.value?.type === "rightClick") {
 		e.preventDefault();
-		emit("action-complete");
+		void emitActionComplete();
 	}
 }
 
 function onAreaMouseEnter() {
+	if (passageInteractionLocked.value) return;
 	if (actionType.value?.type !== "hover") return;
 	hoverTimer.value = setTimeout(() => {
 		hoverTimer.value = null;
-		emit("action-complete");
+		void emitActionComplete();
 	}, 800);
 }
 
@@ -666,13 +760,14 @@ function normalizeTextForValidation(raw) {
 }
 
 function tryCompleteInputIfMatch() {
+	if (passageInteractionLocked.value) return;
 	if (!isInputTextType(actionType.value)) return;
 	const expected = normalizeTextForValidation(area.value?.metaText);
 	if (!expected) return;
 	const actual = normalizeTextForValidation(inputValue.value);
 	if (actual === expected) {
 		inputValue.value = "";
-		emit("action-complete");
+		void emitActionComplete();
 	}
 }
 
@@ -684,40 +779,42 @@ function cancelHintTypewriter() {
 	isHintTyping.value = false;
 }
 
-/** Подсказка: «печатающийся» текст, затем засчёт шага */
+function clearHintOverlay() {
+	cancelHintTypewriter();
+	hintMaskValue.value = "";
+}
+
+/** Подсказка: «печатающийся» неактивный текст, без автозачёта шага */
 function runHintTypewriter(full) {
 	cancelHintTypewriter();
 	const text = String(full ?? "");
 	if (!text.length) {
-		nextTick(() => tryCompleteInputIfMatch());
+		hintMaskValue.value = "";
 		return;
 	}
 	isHintTyping.value = true;
 	let i = 0;
-	function setInputProgrammatic(v) {
+	function setMaskProgrammatic(v) {
 		inputFromTypewriter = true;
-		inputValue.value = v;
+		hintMaskValue.value = v;
 		setTimeout(() => {
 			inputFromTypewriter = false;
 		}, 0);
 	}
-	setInputProgrammatic("");
+	// При показе подсказки очищаем ошибочный ввод, чтобы пользователь набирал заново.
+	inputValue.value = "";
+	setMaskProgrammatic("");
 	const tick = () => {
 		if (i >= text.length) {
 			hintTypewriterTimer = null;
 			isHintTyping.value = false;
-			inputFromTypewriter = true;
-			inputValue.value = text;
-			setTimeout(() => {
-				inputFromTypewriter = false;
-				nextTick(() => {
-					overlayInputRef.value?.focus?.();
-					tryCompleteInputIfMatch();
-				});
-			}, 0);
+			hintMaskValue.value = text;
+			nextTick(() => {
+				overlayInputRef.value?.focus?.();
+			});
 			return;
 		}
-		setInputProgrammatic(text.slice(0, i + 1));
+		setMaskProgrammatic(text.slice(0, i + 1));
 		i += 1;
 		const delay = 26 + Math.round(Math.random() * 38);
 		hintTypewriterTimer = setTimeout(tick, delay);
@@ -725,24 +822,26 @@ function runHintTypewriter(full) {
 	hintTypewriterTimer = setTimeout(tick, 140);
 }
 
-function onOverlayKeydown(e) {
+function onOverlayKeydown() {
 	if (!isInputTextType(actionType.value)) return;
 	if (!inputFromTypewriter && (hintTypewriterTimer != null || isHintTyping.value)) {
-		cancelHintTypewriter();
+		clearHintOverlay();
 	}
 }
 
 function onOverlayInput() {
 	if (!inputFromTypewriter && (hintTypewriterTimer != null || isHintTyping.value)) {
-		cancelHintTypewriter();
+		clearHintOverlay();
 	}
+	if (hintMaskValue.value) hintMaskValue.value = "";
 	tryCompleteInputIfMatch();
 }
 
 function onOverlayPaste() {
 	if (hintTypewriterTimer != null || isHintTyping.value) {
-		cancelHintTypewriter();
+		clearHintOverlay();
 	}
+	if (hintMaskValue.value) hintMaskValue.value = "";
 }
 
 function onOverlayScroll(e) {
@@ -754,7 +853,6 @@ function onOverlayScroll(e) {
 }
 
 function onOverlayBlur(e) {
-	inputFocused.value = false;
 	const el = e?.target ?? overlayInputRef.value;
 	if (!el) return;
 	el.scrollLeft = 0;
@@ -762,24 +860,71 @@ function onOverlayBlur(e) {
 }
 
 function checkInputText() {
+	if (passageInteractionLocked.value) return;
 	const expected = normalizeTextForValidation(area.value?.metaText);
 	const actual = normalizeTextForValidation(inputValue.value);
 	if (actual === expected) {
 		inputValue.value = "";
-		emit("action-complete");
+		void emitActionComplete();
 	} else {
 		emit("action-wrong");
 	}
 }
 
-const KEY_ALIASES = { control: "ctrl", " ": "space" };
+const KEY_ALIASES = {
+	control: "ctrl",
+	ctrlleft: "ctrl",
+	ctrlright: "ctrl",
+	shiftleft: "shift",
+	shiftright: "shift",
+	altleft: "alt",
+	altright: "alt",
+	altgraph: "alt",
+	metaleft: "meta",
+	metaright: "meta",
+	" ": "space",
+	escape: "esc",
+	arrowup: "up",
+	arrowdown: "down",
+	arrowleft: "left",
+	arrowright: "right",
+};
 
 function normalizeKey(k) {
 	const s = String(k).toLowerCase();
 	return KEY_ALIASES[s] ?? s;
 }
 
+function buildPressedKeysFromEvent(e) {
+	const parts = [];
+	if (e.ctrlKey) parts.push("ctrl");
+	if (e.altKey) parts.push("alt");
+	if (e.shiftKey) parts.push("shift");
+	if (e.metaKey) parts.push("meta");
+
+	let main = normalizeKey(e.key ?? "");
+	const code = String(e.code ?? "").toLowerCase();
+
+	// Для функциональных клавиш и части спецклавиш code стабильнее, чем key.
+	if (/^f\d{1,2}$/.test(code)) main = code;
+	if (code.startsWith("digit") && code.length > 5) main = code.slice(5);
+	if (code.startsWith("key") && code.length === 4) main = code.slice(3).toLowerCase();
+	if (code === "space") main = "space";
+
+	const isModifierOnly = ["ctrl", "alt", "shift", "meta"].includes(main);
+	if (main && !isModifierOnly) parts.push(main);
+	return Array.from(new Set(parts.map(normalizeKey)));
+}
+
+function sameKeyCombo(a, b) {
+	const aa = Array.from(new Set((a || []).map(normalizeKey))).sort();
+	const bb = Array.from(new Set((b || []).map(normalizeKey))).sort();
+	if (aa.length !== bb.length) return false;
+	return aa.every((v, i) => v === bb[i]);
+}
+
 function onKeyDown(e) {
+	if (passageInteractionLocked.value) return;
 	if (!isKeyPress.value) return;
 	const kw = area.value?.metaKeywords || [];
 	if (!kw.length) return;
@@ -787,36 +932,27 @@ function onKeyDown(e) {
 	const tag = e.target?.tagName?.toUpperCase();
 	if (tag === "INPUT" || tag === "TEXTAREA") return;
 
-	const key = e.key ?? "";
-	const ctrl = e.ctrlKey;
-	const alt = e.altKey;
-	const shift = e.shiftKey;
-	const meta = e.metaKey;
+	const pressed = buildPressedKeysFromEvent(e);
+	const expected = kw.map(normalizeKey);
 
-	const parts = [];
-	if (ctrl) parts.push("ctrl");
-	if (alt) parts.push("alt");
-	if (shift) parts.push("shift");
-	if (meta) parts.push("meta");
-	parts.push(normalizeKey(key));
-
-	const pressed = parts.filter(Boolean).map(normalizeKey).join(" + ");
-	const expected = kw.map(normalizeKey).join(" + ");
-
-	if (pressed === expected) {
+	if (sameKeyCombo(pressed, expected)) {
 		e.preventDefault();
-		emit("action-complete");
+		void emitActionComplete();
 	}
 }
 
 watch(
 	() => props.selectedStep?.id,
 	() => {
+		forcedAfterUrl.value = null;
+		outcomeBusy.value = false;
 		cancelHintTypewriter();
 		inputValue.value = "";
+		hintMaskValue.value = "";
 		zoom.value = 1;
 		pan.value = { x: 0, y: 0 };
 		imageContentFracs.value = null;
+		showViewportHint.value = true;
 		nextTick(() => {
 			updateImageContentLayout();
 			if (isInputTextType(actionType.value)) {
@@ -848,6 +984,7 @@ watch(
 		if (!isPassageMode.value || !isInputTextType(actionType.value)) return;
 		if (!hint) {
 			cancelHintTypewriter();
+			hintMaskValue.value = "";
 			return;
 		}
 		if (area.value?.metaText != null) {
@@ -923,6 +1060,26 @@ onUnmounted(() => {
 	justify-content: center;
 }
 
+.viewport-hint {
+	position: absolute;
+	top: 10px;
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 20;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	max-width: min(94%, 760px);
+	padding: 8px 10px;
+	background: rgba(15, 23, 42, 0.82);
+	backdrop-filter: blur(8px);
+	border: 1px solid rgba(148, 163, 184, 0.28);
+	border-radius: 10px;
+	color: #e2e8f0;
+	font-size: 12px;
+	line-height: 1.35;
+}
+
 .screenshot-aspect {
 	position: relative;
 	width: 100%;
@@ -963,6 +1120,11 @@ onUnmounted(() => {
 	object-position: center;
 	pointer-events: none;
 	user-select: none;
+	transition: opacity 0.35s ease;
+}
+
+.screenshot-img--outcome {
+	opacity: 0.97;
 }
 
 .action-area {
@@ -1036,33 +1198,8 @@ onUnmounted(() => {
 	display: flex;
 	align-items: stretch;
 	justify-content: stretch;
-	padding: 2px 4px;
+	padding: 0 2px;
 	box-sizing: border-box;
-}
-
-.overlay-input-wrap::before {
-	content: "";
-	position: absolute;
-	inset: 0;
-	border-radius: 4px;
-	background: rgba(0, 0, 0, 0.38);
-	pointer-events: none;
-	z-index: 0;
-	transition: background 0.2s ease, box-shadow 0.2s ease;
-}
-
-.overlay-input-wrap--focus-ring::before {
-	background: rgba(0, 0, 0, 0.48);
-	box-shadow:
-		inset 0 0 0 1px rgba(255, 255, 255, 0.22),
-		0 0 0 2px rgba(97, 240, 255, 0.45);
-}
-
-.overlay-input-wrap--hint-typing::before {
-	background: rgba(15, 23, 42, 0.55);
-	box-shadow:
-		inset 0 0 0 1px rgba(251, 191, 36, 0.55),
-		0 0 12px rgba(251, 191, 36, 0.25);
 }
 
 .overlay-input-stack {
@@ -1138,27 +1275,27 @@ onUnmounted(() => {
 	border: none;
 	border-radius: 0;
 	background: transparent !important;
-	color: #f8fafc;
-	-webkit-text-fill-color: currentColor;
 	outline: none;
 	padding: 0 2px;
 	box-sizing: border-box;
 	font-family: inherit;
 	font-weight: inherit;
 	letter-spacing: inherit;
-	caret-color: #61f0ff;
-	text-shadow:
-		0 0 1px rgba(0, 0, 0, 1),
-		0 0 4px rgba(0, 0, 0, 0.95),
-		0 1px 2px rgba(0, 0, 0, 1),
-		0 0 14px rgba(0, 0, 0, 0.85);
 	box-shadow: none;
 	resize: none;
 	overflow: auto;
 	white-space: pre;
 }
 
-.overlay-input::selection {
+/* Текст рисуется в .overlay-text-mirror; здесь только нативный курсор */
+.overlay-input--ghost-text {
+	color: transparent !important;
+	-webkit-text-fill-color: transparent !important;
+	text-shadow: none !important;
+	caret-color: #61f0ff;
+}
+
+.overlay-input--ghost-text::selection {
 	background: rgba(97, 240, 255, 0.35);
 }
 
@@ -1167,11 +1304,9 @@ onUnmounted(() => {
 	box-shadow: none;
 }
 
+/* Печать подсказки: курсор скрыт, мигающий маркер в зеркале */
 .overlay-input--hint-typing {
-	color: transparent !important;
-	-webkit-text-fill-color: transparent !important;
 	caret-color: transparent !important;
-	text-shadow: none !important;
 }
 
 .input-text-panel {

@@ -8,7 +8,8 @@
 			v-if="htmlContent"
 			class="passage-task-panel__body task-html-body"
 			v-html="htmlContent"
-		/>
+			@click="onTaskBodyClick"
+		></div>
 		<div v-else class="passage-task-panel__empty text-grey-6">
 			Текст задания не заполнен. Отредактируйте шаг в конструкторе.
 		</div>
@@ -17,11 +18,13 @@
 
 <script setup>
 import { computed } from "vue";
+import { useQuasar } from "quasar";
 import { renderAnnotationToSafeHtml } from "@utils/renderAnnotationHtml.js";
 
 const props = defineProps({
 	selectedStep: { type: Object, default: null },
 });
+const $q = useQuasar();
 
 const shortTitle = computed(() => {
 	const s = props.selectedStep;
@@ -35,6 +38,37 @@ const htmlContent = computed(() => {
 	const raw = props.selectedStep?.annotation;
 	return renderAnnotationToSafeHtml(raw);
 });
+
+async function copyCodeFromEvent(e) {
+	const btn = e?.target?.closest?.(".task-code-copy-btn");
+	if (!btn) return false;
+	const wrap = btn.closest(".task-code-wrap");
+	const codeEl = wrap?.querySelector?.("pre code");
+	const text = codeEl?.textContent ?? "";
+	if (!text.trim()) return true;
+	try {
+		if (navigator?.clipboard?.writeText) {
+			await navigator.clipboard.writeText(text);
+		} else {
+			const ta = document.createElement("textarea");
+			ta.value = text;
+			ta.style.position = "fixed";
+			ta.style.left = "-9999px";
+			document.body.appendChild(ta);
+			ta.select();
+			document.execCommand("copy");
+			ta.remove();
+		}
+		$q.notify({ color: "positive", message: "Код скопирован", position: "top", timeout: 900 });
+	} catch {
+		$q.notify({ color: "negative", message: "Не удалось скопировать код", position: "top" });
+	}
+	return true;
+}
+
+function onTaskBodyClick(e) {
+	void copyCodeFromEvent(e);
+}
 </script>
 
 <style scoped>
@@ -65,26 +99,28 @@ const htmlContent = computed(() => {
 }
 
 .passage-task-panel__short {
-	font-size: 17px;
-	font-weight: 700;
+	font-size: 20px;
+	font-weight: 800;
 	color: #0f172a;
-	line-height: 1.4;
+	line-height: 1.35;
+	letter-spacing: -0.02em;
 }
 
 .passage-task-panel__body {
-	padding: 20px 22px 28px;
+	padding: 22px 24px 32px;
 	overflow-y: auto;
 	flex: 1;
 	min-height: 0;
-	font-size: 18px;
-	line-height: 1.72;
-	color: #1e293b;
-	letter-spacing: 0.005em;
+	font-size: 20px;
+	line-height: 1.75;
+	color: #0f172a;
+	font-weight: 400;
+	letter-spacing: 0.012em;
 }
 
 .passage-task-panel__empty {
-	padding: 20px 22px;
-	font-size: 15px;
+	padding: 22px 24px;
+	font-size: 16px;
 	line-height: 1.55;
 }
 
@@ -107,17 +143,19 @@ const htmlContent = computed(() => {
 }
 
 .task-html-body :deep(h2) {
-	font-size: 1.35em;
-	font-weight: 700;
-	margin: 0.75em 0 0.4em;
-	color: #0f172a;
+	font-size: 1.4em;
+	font-weight: 800;
+	margin: 0.7em 0 0.4em;
+	color: #020617;
+	letter-spacing: -0.02em;
 }
 
 .task-html-body :deep(h3) {
-	font-size: 1.2em;
+	font-size: 1.25em;
 	font-weight: 700;
-	margin: 0.65em 0 0.35em;
+	margin: 0.6em 0 0.35em;
 	color: #0f172a;
+	letter-spacing: -0.015em;
 }
 
 .task-html-body :deep(strong) {
@@ -145,7 +183,11 @@ const htmlContent = computed(() => {
 
 @media (max-width: 1200px) {
 	.passage-task-panel__body {
-		font-size: 17px;
+		font-size: 18px;
+	}
+
+	.passage-task-panel__short {
+		font-size: 18px;
 	}
 }
 
@@ -176,5 +218,47 @@ const htmlContent = computed(() => {
 	display: flex;
 	align-items: flex-start;
 	gap: 8px;
+}
+
+.task-html-body :deep(.task-code-wrap) {
+	margin: 0.6em 0 0.9em;
+	border: 1px solid rgba(15, 23, 42, 0.15);
+	border-radius: 10px;
+	overflow: hidden;
+	background: #0f172a;
+}
+
+.task-html-body :deep(.task-code-head) {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 6px 10px;
+	background: rgba(2, 6, 23, 0.9);
+	border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.task-html-body :deep(.task-code-lang) {
+	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	font-size: 12px;
+	line-height: 1.2;
+	color: #cbd5e1;
+	text-transform: lowercase;
+	letter-spacing: 0.03em;
+}
+
+.task-html-body :deep(.task-code-copy-btn) {
+	border: 0;
+	background: transparent;
+	color: #e2e8f0;
+	cursor: pointer;
+	font-family: "Material Symbols Outlined", "Material Icons", sans-serif;
+	font-size: 18px;
+	line-height: 1;
+	padding: 2px 4px;
+	border-radius: 4px;
+}
+
+.task-html-body :deep(.task-code-copy-btn:hover) {
+	background: rgba(148, 163, 184, 0.25);
 }
 </style>

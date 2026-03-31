@@ -664,6 +664,15 @@ class TrainingsService:
                     step_data.frame_bytes, object_name, training_uuid
                 )
 
+                image_url_after: Optional[str] = None
+                if step_data.after_frame_bytes:
+                    after_name = s3_service.generate_unique_filename(
+                        f"video_ai_step_{i + 1:03d}_after.png"
+                    )
+                    image_url_after = await s3_service.upload_file(
+                        step_data.after_frame_bytes, after_name, training_uuid
+                    )
+
                 bbox = step_data.bbox
                 # Нормализованные (0..1) и пиксельные bbox (legacy/шум модели).
                 # Если значения > 1 — трактуем как абсолютные пиксели кадра.
@@ -708,7 +717,11 @@ class TrainingsService:
                     "name": step_data.step_title,
                     "source": "video_ai",
                     "ai_timecode": step_data.timecode,
+                    "ai_timecode_before": step_data.timecode_before or step_data.timecode,
+                    "ai_timecode_after": step_data.timecode_after,
                 }
+                if image_url_after:
+                    step_meta["image_url_after"] = image_url_after
 
                 new_step = TrainingStep(
                     step_number=next_step_number + i,
@@ -729,8 +742,11 @@ class TrainingsService:
                     {
                         "step_number": next_step_number + i,
                         "image_url": image_url,
+                        "image_url_after": image_url_after,
                         "name": step_data.step_title,
                         "timecode": step_data.timecode,
+                        "timecode_before": step_data.timecode_before,
+                        "timecode_after": step_data.timecode_after,
                         "area": area,
                         "action_type_id": action_type_id,
                         "action_type_key": action_key,

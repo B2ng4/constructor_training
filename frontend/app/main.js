@@ -4,6 +4,7 @@ import router from "./router/index.js";
 import { Quasar, Notify, Dialog } from "quasar";
 import quasarLang from "quasar/lang/ru";
 import "@assets/styles/index.css";
+import "highlight.js/styles/github-dark.css";
 import { createPinia } from "pinia";
 import VueDndKitPlugin from "@vue-dnd-kit/core";
 import { colorSchema } from "./config/colorSchema.js";

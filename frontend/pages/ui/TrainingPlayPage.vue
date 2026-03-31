@@ -45,27 +45,72 @@
 
 		<!-- Прохождение -->
 		<template v-else>
-			<!-- Таймер -->
-			<div v-if="durationMinutes > 0" class="timer-clock">
-				<div class="timer-clock__face" :class="{ 'timer-clock__face--over': timer.timeRemaining.value <= 0 }">
-					<q-icon name="schedule" size="22px" class="timer-clock__icon" />
-					<div class="timer-clock__time">
-						{{ timer.formatTime(timer.timeRemaining.value > 0 ? timer.timeRemaining.value : timer.totalSecondsSpent.value) }}
-					</div>
-					<div class="timer-clock__label">{{ timer.timeRemaining.value > 0 ? "осталось" : "время" }}</div>
-					<svg class="timer-clock__ring" viewBox="0 0 36 36">
-						<path
-							class="timer-clock__ring-bg"
-							d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-						/>
-						<path
-							class="timer-clock__ring-fill"
-							:stroke-dasharray="`${(1 - timer.timerProgress.value) * 100}, 100`"
-							d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-						/>
-					</svg>
+			<header
+				class="play-top-bar"
+				:class="{ 'play-top-bar--viewport-only': hasSideTaskPanel }"
+			>
+				<div class="play-top-bar__left">
+					<q-btn
+						flat
+						no-caps
+						rounded
+						color="grey-8"
+						icon="home"
+						class="play-top-bar__home"
+						@click="confirmExitToHome"
+					>
+						<span class="play-top-bar__home-label gt-xs">На главную</span>
+						<q-tooltip>На главный экран</q-tooltip>
+					</q-btn>
+					<PassageStepList
+						:steps="steps"
+						:current-index="currentIndex"
+						@select-step="passage.selectStep"
+					/>
 				</div>
-			</div>
+				<div class="play-top-bar__spacer" aria-hidden="true" />
+				<div
+					v-if="durationMinutes > 0"
+					class="timer-panel"
+					:class="timerPanelClass"
+				>
+					<div class="timer-panel__row">
+						<div class="timer-panel__icon-wrap">
+							<q-icon
+								:name="timer.timeRemaining.value > 0 ? 'schedule' : 'timer_off'"
+								size="22px"
+								class="timer-panel__icon"
+							/>
+						</div>
+						<div class="timer-panel__main">
+							<div class="timer-panel__caption">
+								{{ timer.timeRemaining.value > 0 ? "Осталось времени" : "Лимит времени" }}
+							</div>
+							<div class="timer-panel__digits">
+								{{ timerDisplayValue }}
+							</div>
+						</div>
+					</div>
+					<q-linear-progress
+						v-if="timer.timeRemaining.value > 0"
+						:value="timer.timerProgress.value"
+						:color="timer.timeRemaining.value <= 60 ? 'warning' : 'primary'"
+						rounded
+						size="6px"
+						class="timer-panel__bar"
+						track-color="rgba(15, 23, 42, 0.08)"
+					/>
+					<q-linear-progress
+						v-else
+						:value="1"
+						rounded
+						size="6px"
+						color="negative"
+						class="timer-panel__bar timer-panel__bar--over"
+						track-color="rgba(239, 68, 68, 0.15)"
+					/>
+				</div>
+			</header>
 
 			<!-- Шаг без скриншота -->
 			<div
@@ -89,12 +134,6 @@
 			<template v-else>
 				<div class="play-layout">
 					<div class="play-layout__viewport">
-						<PassageStepList
-							:steps="steps"
-							:current-index="currentIndex"
-							class="step-list-absolute"
-							@select-step="passage.selectStep"
-						/>
 						<div class="flow-area">
 							<PassageFlowComponent
 								mode="passage"
@@ -113,7 +152,7 @@
 							:hints-available="hintsAvailable"
 							@prev="passage.prevStep"
 							@next="goNext"
-							@toggle-hints="hintsEnabled = hintsAvailable ? !hintsEnabled : false"
+							@toggle-hints="toggleHintsForCurrentStep"
 						/>
 					</div>
 					<aside class="play-layout__task">
@@ -161,12 +200,32 @@ const showCompletionModal = ref(false);
 const wrongAttempts = ref(0);
 const totalWrongSession = ref(0);
 const playStartedAtMs = ref(0);
-/** Подсказки (подсветка области / автозаполнение текста) после ошибки, если включено */
-const hintsEnabled = ref(false);
+/** Подсказки по шагам: включение хранится отдельно для каждого шага */
+const hintsEnabledByStep = ref({});
 const hintsAvailable = computed(() => props.trainingData?.hints_enabled !== false);
-const hintVisible = computed(
-	() => hintsAvailable.value && hintsEnabled.value && wrongAttempts.value > 0
-);
+const hintsEnabled = computed({
+	get: () => {
+		const id = selectedStep.value?.id;
+		if (!id) return false;
+		return !!hintsEnabledByStep.value[id];
+	},
+	set: (val) => {
+		const id = selectedStep.value?.id;
+		if (!id) return;
+		hintsEnabledByStep.value = {
+			...hintsEnabledByStep.value,
+			[id]: !!val,
+		};
+	},
+});
+const hintVisible = computed(() => {
+	if (!hintsAvailable.value || !hintsEnabled.value) return false;
+	if (isInputTextType(selectedStep.value?.action_type)) return true;
+	return wrongAttempts.value > 0;
+});
+
+/** Колонка с заданием слева от скрина — верхнюю панель только над скрином */
+const hasSideTaskPanel = computed(() => !!selectedStep.value?.image_url);
 
 onMounted(() => {
 	playStartedAtMs.value = Date.now();
@@ -182,12 +241,13 @@ watch(
 watch(
 	() => hintsAvailable.value,
 	(v) => {
-		if (!v) hintsEnabled.value = false;
+		if (!v) hintsEnabledByStep.value = {};
 	},
 	{ immediate: true }
 );
 
 const durationMinutes = computed(() => props.trainingData?.duration_minutes ?? 0);
+
 const timer = usePassageTimer(durationMinutes, () => {
 	$q.notify({
 		color: "warning",
@@ -196,6 +256,22 @@ const timer = usePassageTimer(durationMinutes, () => {
 		icon: "schedule",
 	});
 });
+
+const timerDisplayValue = computed(() =>
+	timer.formatTime(
+		timer.timeRemaining.value > 0
+			? timer.timeRemaining.value
+			: timer.totalSecondsSpent.value
+	)
+);
+
+const timerPanelClass = computed(() => ({
+	"timer-panel--over": durationMinutes.value > 0 && timer.timeRemaining.value <= 0,
+	"timer-panel--urgent":
+		durationMinutes.value > 0 &&
+		timer.timeRemaining.value > 0 &&
+		timer.timeRemaining.value <= 60,
+}));
 
 function onActionComplete() {
 	if (isInputTextType(selectedStep.value?.action_type)) {
@@ -271,6 +347,31 @@ function goToWelcome() {
 		params: { accessToken: route.params.accessToken },
 	});
 }
+
+function confirmExitToHome() {
+	$q.dialog({
+		title: "Выйти из тренинга?",
+		message: "Текущий прогресс не будет сохранён.",
+		cancel: true,
+		persistent: true,
+		ok: {
+			label: "На главную",
+			color: "primary",
+			flat: true,
+		},
+	}).onOk(() => {
+		timer.stop();
+		router.push("/");
+	});
+}
+
+function toggleHintsForCurrentStep() {
+	if (!hintsAvailable.value) {
+		hintsEnabled.value = false;
+		return;
+	}
+	hintsEnabled.value = !hintsEnabled.value;
+}
 </script>
 
 <style scoped>
@@ -323,101 +424,208 @@ function goToWelcome() {
 		border-right: none;
 		border-top: 1px solid rgba(15, 23, 42, 0.08);
 	}
+
+	.play-top-bar--viewport-only {
+		left: 0;
+		right: 0;
+	}
 }
 
-/* ——— Часы (таймер) ——— */
-.timer-clock {
+/* ——— Верхняя панель: домой + таймер ——— */
+.play-top-bar {
 	position: absolute;
-	top: 12px;
-	right: 12px;
-	z-index: 15;
-}
-
-.timer-clock__face {
-	position: relative;
-	width: 72px;
-	height: 72px;
-	border-radius: 50%;
-	background: #fff;
-	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-	border: 1px solid rgba(0, 0, 0, 0.06);
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 20;
 	display: flex;
-	flex-direction: column;
 	align-items: center;
-	justify-content: center;
+	gap: 10px;
+	padding: 10px 14px;
+	min-height: 56px;
+	pointer-events: none;
+	box-sizing: border-box;
 }
 
-.timer-clock__face--over {
-	background: rgba(239, 68, 68, 0.08);
-	border-color: rgba(239, 68, 68, 0.2);
+.play-top-bar__left {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	flex-shrink: 1;
+	min-width: 0;
+	pointer-events: auto;
 }
 
-.timer-clock__icon {
-	color: var(--q-primary);
-	opacity: 0.9;
-	margin-bottom: 2px;
-}
-
-.timer-clock__face--over .timer-clock__icon {
-	color: #ef4444;
-}
-
-.timer-clock__time {
-	font-size: 13px;
-	font-weight: 700;
-	color: #1a1a2e;
-	line-height: 1.2;
-}
-
-.timer-clock__face--over .timer-clock__time {
-	color: #b91c1c;
-}
-
-.timer-clock__label {
-	font-size: 9px;
-	font-weight: 600;
-	text-transform: uppercase;
-	letter-spacing: 0.02em;
-	color: #64748b;
-}
-
-.timer-clock__face--over .timer-clock__label {
-	color: #dc2626;
-}
-
-.timer-clock__ring {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	width: 100%;
-	height: 100%;
-	transform: translate(-50%, -50%) rotate(-90deg);
+.play-top-bar__spacer {
+	flex: 1;
+	min-width: 8px;
 	pointer-events: none;
 }
 
-.timer-clock__ring-bg {
-	fill: none;
-	stroke: rgba(0, 0, 0, 0.06);
-	stroke-width: 2;
+.play-top-bar > .timer-panel {
+	pointer-events: auto;
+	flex-shrink: 0;
 }
 
-.timer-clock__ring-fill {
-	fill: none;
-	stroke: var(--q-primary);
-	stroke-width: 2;
-	stroke-linecap: round;
-	transition: stroke-dasharray 0.3s ease;
+/*
+ * Десктоп: задание слева (row-reverse), панель не заходит на лист задания.
+ * Совпадает с шириной .play-layout__task: min(420px, 38vw).
+ */
+.play-top-bar--viewport-only {
+	left: min(420px, 38vw);
+	right: 0;
 }
 
-.timer-clock__face--over .timer-clock__ring-fill {
-	stroke: #ef4444;
+.play-top-bar__home {
+	background: rgba(255, 255, 255, 0.92) !important;
+	backdrop-filter: blur(10px);
+	box-shadow: 0 2px 14px rgba(15, 23, 42, 0.08);
+	border: 1px solid rgba(15, 23, 42, 0.06);
 }
 
-.step-list-absolute {
-	position: absolute;
-	top: 16px;
-	left: 16px;
-	z-index: 10;
+.play-top-bar__home-label {
+	margin-left: 4px;
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.timer-panel {
+	min-width: 0;
+	max-width: min(280px, 52vw);
+	padding: 10px 14px 12px;
+	border-radius: 14px;
+	background: rgba(255, 255, 255, 0.95);
+	backdrop-filter: blur(12px);
+	border: 1px solid rgba(15, 23, 42, 0.07);
+	box-shadow:
+		0 4px 24px rgba(15, 23, 42, 0.1),
+		0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+	transition:
+		border-color 0.25s ease,
+		box-shadow 0.25s ease;
+}
+
+.timer-panel--urgent {
+	border-color: rgba(245, 158, 11, 0.45);
+	box-shadow:
+		0 4px 20px rgba(245, 158, 11, 0.18),
+		0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+	animation: timer-urgent-pulse 2s ease-in-out infinite;
+}
+
+.timer-panel--over {
+	border-color: rgba(239, 68, 68, 0.35);
+	background: rgba(254, 242, 242, 0.96);
+	box-shadow:
+		0 4px 22px rgba(239, 68, 68, 0.12),
+		0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+}
+
+@keyframes timer-urgent-pulse {
+	0%,
+	100% {
+		box-shadow:
+			0 4px 20px rgba(245, 158, 11, 0.18),
+			0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+	}
+	50% {
+		box-shadow:
+			0 6px 28px rgba(245, 158, 11, 0.28),
+			0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+	}
+}
+
+.timer-panel__row {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 8px;
+}
+
+.timer-panel__icon-wrap {
+	flex-shrink: 0;
+	width: 40px;
+	height: 40px;
+	border-radius: 12px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: linear-gradient(
+		145deg,
+		color-mix(in srgb, var(--q-primary) 22%, white),
+		color-mix(in srgb, var(--q-primary) 10%, white)
+	);
+}
+
+.timer-panel--urgent .timer-panel__icon-wrap {
+	background: linear-gradient(
+		145deg,
+		rgba(245, 158, 11, 0.22),
+		rgba(245, 158, 11, 0.08)
+	);
+}
+
+.timer-panel--over .timer-panel__icon-wrap {
+	background: linear-gradient(
+		145deg,
+		rgba(239, 68, 68, 0.2),
+		rgba(239, 68, 68, 0.08)
+	);
+}
+
+.timer-panel__icon {
+	color: var(--q-primary);
+}
+
+.timer-panel--urgent .timer-panel__icon {
+	color: #d97706;
+}
+
+.timer-panel--over .timer-panel__icon {
+	color: #dc2626;
+}
+
+.timer-panel__main {
+	min-width: 0;
+	flex: 1;
+}
+
+.timer-panel__caption {
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: #64748b;
+	margin-bottom: 2px;
+}
+
+.timer-panel--over .timer-panel__caption {
+	color: #b91c1c;
+}
+
+.timer-panel__digits {
+	font-size: 26px;
+	font-weight: 800;
+	font-variant-numeric: tabular-nums;
+	letter-spacing: 0.04em;
+	line-height: 1.1;
+	color: #0f172a;
+}
+
+.timer-panel--urgent .timer-panel__digits {
+	color: #b45309;
+}
+
+.timer-panel--over .timer-panel__digits {
+	color: #991b1b;
+}
+
+.timer-panel__bar {
+	margin-top: 2px;
+}
+
+.timer-panel__bar--over {
+	opacity: 0.85;
 }
 
 .flow-area {
@@ -428,6 +636,7 @@ function goToWelcome() {
 }
 
 .play-layout__viewport .flow-area {
+	top: 56px;
 	bottom: 72px;
 }
 
@@ -453,6 +662,8 @@ function goToWelcome() {
 	justify-content: center;
 	gap: 20px;
 	min-height: 60vh;
+	padding-top: 64px;
+	box-sizing: border-box;
 	color: #64748b;
 }
 

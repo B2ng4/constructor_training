@@ -27,12 +27,13 @@
 			v-show="tab === 'preview'"
 			class="step-task-editor__pane step-task-editor__preview task-html-body"
 			v-html="previewHtml"
-		/>
+			@click="onPreviewClick"
+		></div>
 	</div>
 </template>
 
 <script setup>
-import { computed, ref, watch } from "vue";
+import { computed, onBeforeUnmount, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useTrainingData } from "@store/editTraining.js";
 import { TrainingStepApi } from "@api";
@@ -42,7 +43,7 @@ import RichTaskEditor from "./RichTaskEditor.vue";
 
 const api = new TrainingStepApi();
 const store = useTrainingData();
-const { selectedStep, trainingData } = storeToRefs(store);
+const { selectedStep, trainingData, steps } = storeToRefs(store);
 const $q = useQuasar();
 
 const tab = ref("edit");
@@ -58,13 +59,47 @@ function onAnnotationInput(v) {
 	scheduleSave();
 }
 
+async function copyCodeFromEvent(e) {
+	const btn = e?.target?.closest?.(".task-code-copy-btn");
+	if (!btn) return false;
+	const wrap = btn.closest(".task-code-wrap");
+	const codeEl = wrap?.querySelector?.("pre code");
+	const text = codeEl?.textContent ?? "";
+	if (!text.trim()) return true;
+	try {
+		if (navigator?.clipboard?.writeText) {
+			await navigator.clipboard.writeText(text);
+		} else {
+			const ta = document.createElement("textarea");
+			ta.value = text;
+			ta.style.position = "fixed";
+			ta.style.left = "-9999px";
+			document.body.appendChild(ta);
+			ta.select();
+			document.execCommand("copy");
+			ta.remove();
+		}
+		$q.notify({ color: "positive", message: "Код скопирован", position: "top", timeout: 900 });
+	} catch {
+		$q.notify({ color: "negative", message: "Не удалось скопировать код", position: "top" });
+	}
+	return true;
+}
+
+function onPreviewClick(e) {
+	void copyCodeFromEvent(e);
+}
+
 watch(
 	() => selectedStep.value?.id,
-	() => {
+	async (newId, oldId) => {
 		tab.value = "edit";
 		if (saveTimer.value) {
 			clearTimeout(saveTimer.value);
 			saveTimer.value = null;
+		}
+		if (oldId != null && newId !== oldId) {
+			await persistAnnotationForStepId(oldId);
 		}
 	}
 );
@@ -79,15 +114,20 @@ function scheduleSave() {
 
 async function persistAnnotation() {
 	if (!trainingData.value?.uuid || !selectedStep.value?.id) return;
-	const stepId = selectedStep.value.id;
-	const text = (selectedStep.value.annotation ?? "").trim();
+	await persistAnnotationForStepId(selectedStep.value.id);
+}
+
+/** Сохранить текст задания для шага по id (объект шага в массиве store, не только selected) */
+async function persistAnnotationForStepId(stepId) {
+	if (!trainingData.value?.uuid || !stepId) return;
+	const step = steps.value?.find((s) => s.id === stepId);
+	if (!step) return;
+	const text = (step.annotation ?? "").trim();
 	try {
 		await api.editStep(trainingData.value.uuid, stepId, {
 			annotation: text || null,
 		});
-		if (selectedStep.value?.id === stepId) {
-			selectedStep.value.annotation = text || null;
-		}
+		step.annotation = text || null;
 	} catch {
 		$q.notify({
 			color: "negative",
@@ -96,6 +136,16 @@ async function persistAnnotation() {
 		});
 	}
 }
+
+onBeforeUnmount(() => {
+	if (saveTimer.value) {
+		clearTimeout(saveTimer.value);
+		saveTimer.value = null;
+	}
+	if (selectedStep.value?.id) {
+		void persistAnnotationForStepId(selectedStep.value.id);
+	}
+});
 </script>
 
 <style scoped>
@@ -125,9 +175,10 @@ async function persistAnnotation() {
 }
 
 .step-task-editor__label {
-	font-size: 13px;
-	font-weight: 600;
+	font-size: 15px;
+	font-weight: 700;
 	color: #0f172a;
+	letter-spacing: -0.01em;
 }
 
 .step-task-editor__pane {
@@ -155,30 +206,75 @@ async function persistAnnotation() {
 }
 
 .step-task-editor__preview {
-	font-size: 14px;
-	line-height: 1.55;
-	color: #334155;
+	font-size: 18px;
+	line-height: 1.65;
+	color: #0f172a;
+	letter-spacing: 0.01em;
 }
 
 .task-html-body :deep(p) {
-	margin: 0 0 0.65em;
+	margin: 0 0 0.7em;
 }
 
 .task-html-body :deep(ul),
 .task-html-body :deep(ol) {
-	margin: 0.4em 0 0.65em;
-	padding-left: 1.35em;
+	margin: 0.45em 0 0.7em;
+	padding-left: 1.4em;
 }
 
 .task-html-body :deep(h2) {
-	font-size: 1.2em;
+	font-size: 1.35em;
 	font-weight: 700;
-	margin: 0.6em 0 0.35em;
+	margin: 0.55em 0 0.35em;
+	color: #0f172a;
 }
 
 .task-html-body :deep(h3) {
-	font-size: 1.05em;
+	font-size: 1.2em;
 	font-weight: 700;
-	margin: 0.5em 0 0.3em;
+	margin: 0.45em 0 0.3em;
+	color: #0f172a;
+}
+
+.task-html-body :deep(.task-code-wrap) {
+	margin: 0.6em 0 0.9em;
+	border: 1px solid rgba(15, 23, 42, 0.15);
+	border-radius: 10px;
+	overflow: hidden;
+	background: #0f172a;
+}
+
+.task-html-body :deep(.task-code-head) {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 6px 10px;
+	background: rgba(2, 6, 23, 0.9);
+	border-bottom: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.task-html-body :deep(.task-code-lang) {
+	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+	font-size: 12px;
+	line-height: 1.2;
+	color: #cbd5e1;
+	text-transform: lowercase;
+	letter-spacing: 0.03em;
+}
+
+.task-html-body :deep(.task-code-copy-btn) {
+	border: 0;
+	background: transparent;
+	color: #e2e8f0;
+	cursor: pointer;
+	font-family: "Material Symbols Outlined", "Material Icons", sans-serif;
+	font-size: 18px;
+	line-height: 1;
+	padding: 2px 4px;
+	border-radius: 4px;
+}
+
+.task-html-body :deep(.task-code-copy-btn:hover) {
+	background: rgba(148, 163, 184, 0.25);
 }
 </style>

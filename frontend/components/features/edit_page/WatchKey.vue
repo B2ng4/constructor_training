@@ -35,39 +35,92 @@
 </template>
 
 <script setup>
-import { useMagicKeys } from "@vueuse/core";
-import { computed, watch } from "vue";
+import { computed, onBeforeUnmount, watch } from "vue";
 
-const { current } = useMagicKeys();
 const isListening = defineModel('open', { default: false });
 const pressedKeys = defineModel({ default: () => [] });
 
 const displayKeys = computed(() => pressedKeys.value?.join(' + ') || '');
 
-/** Debounce закрытия, чтобы chord из нескольких keydown не обрывался */
+const MODIFIER_KEYS = new Set(["ctrl", "control", "shift", "alt", "meta"]);
 let finalizeTimer = null;
+
+function normalizeKeyName(raw) {
+	const s = String(raw ?? "").trim().toLowerCase();
+	const aliases = {
+		control: "ctrl",
+		" ": "space",
+		arrowup: "up",
+		arrowdown: "down",
+		arrowleft: "left",
+		arrowright: "right",
+		escape: "esc",
+	};
+	return aliases[s] ?? s;
+}
+
+function buildComboFromEvent(e) {
+	const parts = [];
+	if (e.ctrlKey) parts.push("ctrl");
+	if (e.altKey) parts.push("alt");
+	if (e.shiftKey) parts.push("shift");
+	if (e.metaKey) parts.push("meta");
+
+	const main = normalizeKeyName(e.key);
+	if (main && !MODIFIER_KEYS.has(main)) {
+		parts.push(main);
+	}
+	return parts;
+}
+
+function onKeyDown(e) {
+	if (!isListening.value) return;
+	e.preventDefault();
+	e.stopPropagation();
+
+	const combo = buildComboFromEvent(e);
+	if (!combo.length) return;
+	pressedKeys.value = combo;
+
+	const hasMainKey = combo.some((k) => !MODIFIER_KEYS.has(k));
+	if (!hasMainKey) return;
+
+	if (finalizeTimer) clearTimeout(finalizeTimer);
+	finalizeTimer = setTimeout(() => {
+		finalizeTimer = null;
+		isListening.value = false;
+	}, 220);
+}
+
+function onKeyUp(e) {
+	if (!isListening.value) return;
+	e.preventDefault();
+	e.stopPropagation();
+}
 
 watch(isListening, (value) => {
 	if (value) {
 		pressedKeys.value = [];
+		window.addEventListener("keydown", onKeyDown, true);
+		window.addEventListener("keyup", onKeyUp, true);
 		return;
 	}
+	window.removeEventListener("keydown", onKeyDown, true);
+	window.removeEventListener("keyup", onKeyUp, true);
 	if (finalizeTimer) {
 		clearTimeout(finalizeTimer);
 		finalizeTimer = null;
 	}
 });
 
-// Даём время добрать комбинацию (модификаторы + основная клавиша)
-watch(current, (keys) => {
-	if (!isListening.value || keys.size === 0) return;
-	pressedKeys.value = Array.from(keys);
-	if (finalizeTimer) clearTimeout(finalizeTimer);
-	finalizeTimer = setTimeout(() => {
+onBeforeUnmount(() => {
+	window.removeEventListener("keydown", onKeyDown, true);
+	window.removeEventListener("keyup", onKeyUp, true);
+	if (finalizeTimer) {
+		clearTimeout(finalizeTimer);
 		finalizeTimer = null;
-		isListening.value = false;
-	}, 450);
-}, { deep: true });
+	}
+});
 </script>
 
 <style scoped>
