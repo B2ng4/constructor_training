@@ -13,6 +13,39 @@ from schemas.tags import TagResponse
 # === Модели для TrainingStep ===
 
 
+class ScenarioTransitionBase(BaseModel):
+    source_step_id: int
+    target_step_id: Optional[int] = None
+    trigger_type: str = Field(default="success", pattern="^(success|error|attempts_exceeded|choice|condition|default)$")
+    label: Optional[str] = Field(default=None, max_length=120)
+    condition: Optional[Dict[str, Any]] = None
+    priority: int = 0
+    is_default: bool = False
+
+
+class ScenarioTransitionCreate(ScenarioTransitionBase):
+    pass
+
+
+class ScenarioTransitionResponse(ScenarioTransitionBase):
+    id: int
+    training_uuid: UUID4
+
+    class Config:
+        from_attributes = True
+
+
+class ScenarioGraphUpdate(BaseModel):
+    start_step_id: Optional[int] = None
+    transitions: List[ScenarioTransitionCreate] = Field(default_factory=list)
+
+
+class ScenarioGraphResponse(BaseModel):
+    start_step_id: Optional[int] = None
+    transitions: List[ScenarioTransitionResponse] = Field(default_factory=list)
+    validation: Dict[str, Any] = Field(default_factory=dict)
+
+
 class TrainingStepBase(BaseModel):
     step_number: int
     action_type_id: Optional[int] = None
@@ -150,9 +183,11 @@ class TrainingResponse(BaseModel):
     skip_steps: Optional[bool] = None
     hints_enabled: Optional[bool] = None
     icon: Optional[str] = None
+    scenario_start_step_id: Optional[int] = None
     level: Optional[LevelResponse] = None
     tags: List[TagResponse] = Field(default_factory=list)
     steps: List[TrainingStepResponse] = Field(default_factory=list)
+    transitions: List[ScenarioTransitionResponse] = Field(default_factory=list)
 
     class Config:
         from_attributes = True

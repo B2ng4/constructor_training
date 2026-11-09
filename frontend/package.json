@@ -10,6 +10,7 @@
     "prettier": "prettier --write"
   },
   "dependencies": {
+    "@fontsource-variable/inter": "^5.2.8",
     "@quasar/extras": "^1.16.17",
     "@tiptap/extension-code-block-lowlight": "^3.20.5",
     "@tiptap/extension-color": "^3.20.5",

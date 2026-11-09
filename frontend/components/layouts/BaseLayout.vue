@@ -143,23 +143,25 @@ export default {
  */
 .base-layout {
 	background-color: #eef2f6;
-	background-image: 
-		radial-gradient(circle at 15% 50%, rgba(80, 100, 247, 0.12) 0, transparent 50%), 
-		radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.08) 0, transparent 50%), 
+	background-image:
+		radial-gradient(circle at 15% 50%, rgba(80, 100, 247, 0.12) 0, transparent 50%),
+		radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.08) 0, transparent 50%),
 		radial-gradient(circle at 50% 100%, rgba(80, 100, 247, 0.1) 0, transparent 50%);
+	background-attachment: fixed;
+	height: 100vh;
 	min-height: 100vh;
+	overflow: hidden;
 	position: relative;
 }
 
 .base-layout::before {
 	content: "";
 	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
+	inset: -5vh -5vw;
 	background-image: radial-gradient(rgba(15, 23, 42, 0.05) 1px, transparent 1px);
 	background-size: 24px 24px;
+	transform: translate3d(0, 0, 0) scale(1.05);
+	will-change: transform;
 	pointer-events: none;
 	z-index: 0;
 }
@@ -291,6 +293,8 @@ export default {
 	backdrop-filter: blur(24px);
 	-webkit-backdrop-filter: blur(24px);
 	border-right: 1px solid rgba(0, 0, 0, 0.06) !important;
+	position: fixed;
+	will-change: transform;
 }
 
 :deep(.q-drawer) {
@@ -356,8 +360,15 @@ export default {
 
 .page-container {
 	background: transparent;
+	background-attachment: fixed;
 	position: relative;
 	z-index: 1;
+	height: 100vh;
+	overflow-x: hidden;
+	overflow-y: auto;
+	overscroll-behavior-y: contain;
+	scroll-behavior: smooth;
+	scrollbar-gutter: stable;
 }
 
 .page-content-slot {
@@ -368,6 +379,28 @@ export default {
 
 .page-content-view {
 	width: 100%;
+	min-height: calc(100vh - 60px);
+}
+
+.page-container::-webkit-scrollbar {
+	width: 10px;
+}
+
+.page-container::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.page-container::-webkit-scrollbar-thumb {
+	background: rgba(100, 116, 139, 0.24);
+	border: 3px solid transparent;
+	border-radius: 999px;
+	background-clip: padding-box;
+}
+
+.page-container::-webkit-scrollbar-thumb:hover {
+	background: rgba(80, 100, 247, 0.42);
+	border: 3px solid transparent;
+	background-clip: padding-box;
 }
 
 /* Плавное появление контента при смене раздела */
@@ -402,6 +435,72 @@ export default {
 .page-container :deep(.animate-stagger-children > *) {
 	animation: none;
 	opacity: 1;
+}
+
+:global(body.body--dark) .base-layout {
+	background-color: #080d18;
+	background-image:
+		radial-gradient(circle at 15% 45%, rgba(80, 100, 247, 0.16) 0, transparent 48%),
+		radial-gradient(circle at 85% 25%, rgba(168, 85, 247, 0.10) 0, transparent 45%),
+		radial-gradient(circle at 50% 100%, rgba(37, 99, 235, 0.10) 0, transparent 48%);
+}
+
+:global(body.body--dark) .base-layout::before {
+	background-image: radial-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+}
+
+:global(body.body--dark) .base-layout::after {
+	background: linear-gradient(180deg, rgba(8, 13, 24, 0.96) 0%, rgba(8, 13, 24, 0) 100%);
+}
+
+:global(body.body--dark) .header,
+:global(body.body--dark) .drawer,
+:global(body.body--dark) :deep(.q-drawer) {
+	background: rgba(10, 16, 29, 0.88) !important;
+	border-color: rgba(148, 163, 184, 0.13) !important;
+	box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+}
+
+:global(body.body--dark) .header-menu-btn,
+:global(body.body--dark) .drawer-nav-header,
+:global(body.body--dark) .drawer-nav-item {
+	color: #94a3b8;
+}
+
+:global(body.body--dark) .brand-title,
+:global(body.body--dark) .drawer-nav-item:hover {
+	color: #f1f5f9;
+}
+
+:global(body.body--dark) .layout-brand:hover,
+:global(body.body--dark) .header-menu-btn:hover,
+:global(body.body--dark) .drawer-nav-item:hover {
+	background: rgba(148, 163, 184, 0.08);
+}
+
+:global(body.body--dark) .header-divider {
+	background: rgba(148, 163, 184, 0.16);
+}
+
+:global(body.body--dark) .drawer-nav-item--active {
+	background: rgba(80, 100, 247, 0.14) !important;
+	border-color: rgba(99, 102, 241, 0.2);
+	box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.05);
+}
+
+@media (max-width: 767px) {
+	.base-layout {
+		height: auto;
+		min-height: 100vh;
+		overflow: visible;
+	}
+
+	.page-container {
+		height: auto;
+		min-height: 100vh;
+		overflow: visible;
+		scrollbar-gutter: auto;
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {

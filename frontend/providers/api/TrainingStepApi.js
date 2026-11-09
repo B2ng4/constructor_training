@@ -27,6 +27,20 @@ export class TrainingStepApi extends BaseApi {
 		return super.createRequest();
 	}
 
+	getScenarioGraph(trainingUuid) {
+		super.httpMethod = "get";
+		super.sourceUrl = `/training/${trainingUuid}/scenario`;
+		super.params = {};
+		return super.createRequest();
+	}
+
+	saveScenarioGraph(trainingUuid, data) {
+		super.httpMethod = "put";
+		super.sourceUrl = `/training/${trainingUuid}/scenario`;
+		super.data = data;
+		return super.createRequest();
+	}
+
 	deleteStep(trainingUuid, stepId) {
 		super.httpMethod = "delete";
 		super.sourceUrl = `/training/${trainingUuid}/steps/${stepId}`;
@@ -40,6 +54,12 @@ export class TrainingStepApi extends BaseApi {
 		super.sourceUrl = `/training/${trainingUuid}/steps/${stepId}/screenshot`;
 		super.data = fd;
 		super.headers = {};
+		return super.createRequest();
+	}
+
+	detectStepElements(trainingUuid, stepId) {
+		super.httpMethod = "post";
+		super.sourceUrl = `/training/${trainingUuid}/steps/${stepId}/detect-elements`;
 		return super.createRequest();
 	}
 

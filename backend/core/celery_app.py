@@ -36,3 +36,8 @@ celery_app.conf.update(
 )
 if _IS_WINDOWS:
     celery_app.conf.update(worker_pool="solo")
+
+# Workaround для бага Celery 5.5.x: геттер `_backend` читает `self._local.app`,
+# а сеттер пишет в `self._local.backend` — `app.backend` возвращает None для
+# не-thread-safe бэкендов (Redis). Прогреваем кэш напрямую.
+celery_app._backend_cache = celery_app._get_backend()

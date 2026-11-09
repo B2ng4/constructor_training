@@ -4,8 +4,10 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_BASE_URL: /api
+        VITE_API_BASE_URL: http://localhost:8001
     container_name: frontend
+    ports:
+      - "80:80"
     networks:
       - app-network
     restart: unless-stopped
@@ -18,6 +20,8 @@ services:
       context: ./backend
       dockerfile: dockerfile
     container_name: backend
+    ports:
+      - "8001:8001"
     env_file:
       - ./backend/.env
     environment:
@@ -118,36 +122,6 @@ services:
       - app-network
     restart: unless-stopped
 
-  nginx:
-    image: nginx:stable-alpine
-    container_name: nginx-proxy
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./certbot/www:/var/www/certbot:ro
-      - ./certbot/conf:/etc/letsencrypt:ro
-    depends_on:
-      backend:
-        condition: service_healthy
-      frontend:
-        condition: service_started
-    networks:
-      - app-network
-    restart: unless-stopped
-
-  certbot:
-    image: certbot/certbot:latest
-    container_name: certbot
-    volumes:
-      - ./certbot/www:/var/www/certbot
-      - ./certbot/conf:/etc/letsencrypt
-    depends_on:
-      - nginx
-    networks:
-      - app-network
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
 volumes:
   postgres_data:

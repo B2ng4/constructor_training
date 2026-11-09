@@ -92,6 +92,11 @@ class Training(Base):
         nullable=True,
         comment="URL иконки тренинга",
     )
+    scenario_start_step_id: Mapped[Optional[int]] = mapped_column(
+        sa.Integer,
+        nullable=True,
+        comment="ID стартового шага сценарного графа",
+    )
 
     created_at: Mapped[Optional[datetime]] = mapped_column(
         sa.DateTime, server_default=text("NOW()")
@@ -129,6 +134,13 @@ class Training(Base):
         back_populates="training",
         lazy="selectin",
         cascade="all, delete-orphan",
+    )
+    transitions: Mapped[List["TrainingTransition"]] = relationship(
+        "models.trainings.TrainingTransition",
+        back_populates="training",
+        lazy="selectin",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
 
 
@@ -193,6 +205,53 @@ class TrainingStep(Base):
         remote_side=[id],
         foreign_keys=[parent_step_id],
         lazy="selectin",
+    )
+
+
+class TrainingTransition(Base):
+    __tablename__ = "training_transitions"
+    __table_args__ = (
+        sa.UniqueConstraint(
+            "source_step_id",
+            "target_step_id",
+            "trigger_type",
+            name="uq_training_transition_route",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    training_uuid: Mapped[UUID4] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("trainings.uuid", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    source_step_id: Mapped[int] = mapped_column(
+        ForeignKey("training_steps.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    target_step_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("training_steps.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    trigger_type: Mapped[str] = mapped_column(
+        sa.String(32), nullable=False, default="success", server_default="success"
+    )
+    label: Mapped[Optional[str]] = mapped_column(sa.String(120), nullable=True)
+    condition: Mapped[Optional[Dict]] = mapped_column(JSONB, nullable=True)
+    priority: Mapped[int] = mapped_column(
+        sa.Integer, nullable=False, default=0, server_default="0"
+    )
+    is_default: Mapped[bool] = mapped_column(
+        sa.Boolean, nullable=False, default=False, server_default=sa.false()
+    )
+
+    training: Mapped["Training"] = relationship(
+        "models.trainings.Training", back_populates="transitions"
+    )
+    source_step: Mapped["TrainingStep"] = relationship(
+        "models.trainings.TrainingStep", foreign_keys=[source_step_id]
+    )
+    target_step: Mapped[Optional["TrainingStep"]] = relationship(
+        "models.trainings.TrainingStep", foreign_keys=[target_step_id]
     )
 
 

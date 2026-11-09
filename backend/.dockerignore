@@ -10,6 +10,5 @@ venv
 .env.*
 !.env.example
 *.md
-scripts/manual_study_journal.pdf
 .git
 .gitignore

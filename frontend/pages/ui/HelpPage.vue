@@ -1,30 +1,32 @@
 <template>
-	<div class="help-page">
-		<div class="page-header animate-fade-in-up">
-			<h1 class="page-title">Помощь</h1>
-			<p class="page-subtitle">
-				Как пользоваться платформой «Конструктор тренингов»
-			</p>
-		</div>
+	<page-shell title="Помощь" subtitle="Как пользоваться платформой «Конструктор тренингов»">
+		<div class="help-layout">
+			<section class="page-panel help-faq">
+				<div class="page-panel__head">
+					<h2 class="page-panel__title">
+						<q-icon name="question_answer" size="20px" class="page-panel__title-icon" />
+						Частые вопросы
+					</h2>
+				</div>
 
-		<div class="help-content">
-			<div class="faq-section animate-stagger-children">
-				<q-expansion-item
-					v-for="(item, i) in faq"
-					:key="i"
-					:label="item.question"
-					header-class="faq-header"
-					class="faq-item"
-				>
-					<q-card flat class="faq-answer">
-						<q-card-section>
-							{{ item.answer }}
-						</q-card-section>
-					</q-card>
-				</q-expansion-item>
-			</div>
+				<div class="faq-list">
+					<q-expansion-item
+						v-for="(item, i) in faq"
+						:key="i"
+						:label="item.question"
+						header-class="faq-header"
+						class="faq-item"
+					>
+						<q-card flat class="faq-answer">
+							<q-card-section>
+								{{ item.answer }}
+							</q-card-section>
+						</q-card>
+					</q-expansion-item>
+				</div>
+			</section>
 
-			<div class="quick-tips animate-fade-in-up animate-stagger-5">
+			<section class="page-panel help-tips">
 				<div class="tips-icon">
 					<q-icon name="lightbulb" size="24px" />
 				</div>
@@ -36,13 +38,14 @@
 					<li>Выделите область на скриншоте и сохраните</li>
 					<li>Опубликуйте тренинг и поделитесь ссылкой</li>
 				</ol>
-			</div>
+			</section>
 		</div>
-	</div>
+	</page-shell>
 </template>
 
 <script setup>
 import { ref } from "vue";
+import PageShell from "@components/common/PageShell.vue";
 
 const faq = ref([
 	{
@@ -69,81 +72,35 @@ const faq = ref([
 </script>
 
 <style scoped>
-.help-page {
-	padding: 32px 40px 24px;
-	height: calc(100vh - 56px);
-	overflow-y: auto;
-	display: flex;
-	flex-direction: column;
+.help-layout {
+	display: grid;
+	grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.7fr);
+	gap: 24px;
+	align-items: start;
 }
 
-/* ——— Header ——— */
-.page-header {
-	margin-bottom: 32px;
-	flex-shrink: 0;
-	position: relative;
-	z-index: 2;
-}
-
-.page-title {
-	font-size: 32px;
-	font-weight: 800;
-	color: #0f172a;
-	margin: 0 0 8px 0;
-	letter-spacing: -0.02em;
-	line-height: 1.2;
-}
-
-.page-subtitle {
-	font-size: 16px;
-	color: #64748b;
-	margin: 0;
-	font-weight: 500;
-	line-height: 1.5;
-}
-
-/* ——— Help Content ——— */
-.help-content {
-	max-width: 800px;
-	flex: 1;
-	min-height: 0;
-	position: relative;
-	z-index: 2;
-}
-
-/* ——— FAQ Section ——— */
-.faq-section {
+.faq-list {
 	display: flex;
 	flex-direction: column;
 	gap: 12px;
-	margin-bottom: 32px;
 }
 
 .faq-item {
-	background: rgba(255, 255, 255, 0.85);
-	backdrop-filter: blur(12px);
-	-webkit-backdrop-filter: blur(12px);
-	border: 1px solid rgba(0, 0, 0, 0.06);
-	border-radius: 14px;
+	background: rgba(255, 255, 255, 0.55);
+	border: 1px solid rgba(0, 0, 0, 0.04);
+	border-radius: 16px;
 	overflow: hidden;
-	box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
-	transition: border-color 0.25s ease, box-shadow 0.25s var(--anim-ease-out), background 0.25s ease;
+	transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
+
 .faq-item:hover {
-	background: rgba(255, 255, 255, 0.9);
-	border-color: rgba(255, 255, 255, 1);
-	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+	background: rgba(255, 255, 255, 0.75);
 }
-.faq-item :deep(.q-expansion-item__container) {
-	transition: background 0.2s ease;
-}
-.faq-item :deep(.q-item__label) {
-	transition: color 0.2s ease;
-}
+
 .faq-item[aria-expanded="true"] {
-	background: rgba(255, 255, 255, 0.95);
-	border-color: rgba(80, 100, 247, 0.3);
-	box-shadow: 0 2px 12px rgba(80, 100, 247, 0.06);
+	background: rgba(255, 255, 255, 0.9);
+	border-color: rgba(80, 100, 247, 0.15);
+	box-shadow: 0 4px 16px rgba(80, 100, 247, 0.05);
 }
 
 .faq-item :deep(.faq-header) {
@@ -157,6 +114,7 @@ const faq = ref([
 	color: rgba(80, 100, 247, 0.7);
 	transition: transform 0.3s var(--anim-ease-spring);
 }
+
 .faq-item[aria-expanded="true"] :deep(.q-expansion-item__toggle-icon) {
 	transform: rotate(180deg);
 }
@@ -167,63 +125,47 @@ const faq = ref([
 }
 
 .faq-answer :deep(.q-card__section) {
-	padding: 18px 20px;
-	font-size: 14px;
+	padding: 16px 20px 20px;
+	font-size: 15px;
 	color: #475569;
 	line-height: 1.6;
 }
 
-/* ——— Quick Tips ——— */
-.quick-tips {
-	background: rgba(255, 255, 255, 0.85);
-	backdrop-filter: blur(12px);
-	-webkit-backdrop-filter: blur(12px);
-	border: 1px solid rgba(0, 0, 0, 0.06);
-	border-radius: 16px;
-	padding: 28px 32px;
-	position: relative;
-	box-shadow: 0 4px 16px rgba(15, 23, 42, 0.03);
-	transition: border-color 0.25s ease, box-shadow 0.25s var(--anim-ease-out), background 0.25s ease;
-}
-.quick-tips:hover {
-	background: rgba(255, 255, 255, 0.9);
-	border-color: rgba(245, 158, 11, 0.3);
-	box-shadow: 0 4px 20px rgba(245, 158, 11, 0.08);
+.help-tips {
+	position: sticky;
+	top: 24px;
 }
 
 .tips-icon {
-	width: 48px;
-	height: 48px;
-	border-radius: 12px;
-	background: rgba(245, 158, 11, 0.12);
+	width: 52px;
+	height: 52px;
+	border-radius: 14px;
+	background: rgba(245, 158, 11, 0.10);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	color: rgba(245, 158, 11, 0.95);
 	margin-bottom: 16px;
-	transition: transform 0.35s var(--anim-ease-spring);
-}
-.quick-tips:hover .tips-icon {
-	transform: scale(1.08);
 }
 
 .tips-title {
 	font-size: 18px;
-	font-weight: 600;
+	font-weight: 750;
 	color: #0f172a;
-	margin: 0 0 16px 0;
+	margin: 0 0 16px;
+	letter-spacing: -0.01em;
 }
 
 .tips-list {
 	list-style-position: outside;
-	padding-left: 24px;
+	padding-left: 22px;
 	margin: 0;
 }
 
 .tips-list li {
 	font-size: 14px;
 	color: #475569;
-	line-height: 1.6;
+	line-height: 1.55;
 	margin-bottom: 10px;
 }
 
@@ -231,58 +173,13 @@ const faq = ref([
 	margin-bottom: 0;
 }
 
-/* ——— Responsive ——— */
-@media (max-width: 768px) {
-	.help-page {
-		padding: 24px 16px 20px;
+@media (max-width: 900px) {
+	.help-layout {
+		grid-template-columns: 1fr;
 	}
-	
-	.page-header {
-		margin-bottom: 24px;
-	}
-	
-	.page-title {
-		font-size: 24px;
-	}
-	
-	.page-subtitle {
-		font-size: 14px;
-	}
-	
-	.faq-section {
-		gap: 10px;
-		margin-bottom: 24px;
-	}
-	
-	.faq-item :deep(.faq-header) {
-		font-size: 14px;
-		padding: 16px;
-	}
-	
-	.faq-answer :deep(.q-card__section) {
-		padding: 16px;
-		font-size: 13px;
-	}
-	
-	.quick-tips {
-		padding: 24px;
-	}
-	
-	.tips-icon {
-		width: 44px;
-		height: 44px;
-	}
-	
-	.tips-title {
-		font-size: 16px;
-	}
-	
-	.tips-list {
-		padding-left: 20px;
-	}
-	
-	.tips-list li {
-		font-size: 13px;
+
+	.help-tips {
+		position: static;
 	}
 }
 </style>

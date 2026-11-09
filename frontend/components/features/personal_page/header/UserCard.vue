@@ -50,6 +50,21 @@
 					</q-item-section>
 					<q-item-section>Профиль</q-item-section>
 				</q-item>
+				<q-item clickable v-ripple @click="toggleDarkMode">
+					<q-item-section avatar>
+						<q-icon :name="settings.darkMode ? 'light_mode' : 'dark_mode'" size="sm" color="grey-7" />
+					</q-item-section>
+					<q-item-section>{{ settings.darkMode ? "Светлая тема" : "Тёмная тема" }}</q-item-section>
+					<q-item-section side>
+						<q-toggle
+							:model-value="settings.darkMode"
+							color="primary"
+							size="sm"
+							@click.stop
+							@update:model-value="setDarkMode"
+						/>
+					</q-item-section>
+				</q-item>
 				<q-separator />
 				<q-item clickable v-ripple v-close-popup @click="logout">
 					<q-item-section avatar>
@@ -61,177 +76,95 @@
 		</q-menu>
 	</q-btn>
 
-	<q-dialog v-model="profileDialog" persistent transition-show="scale" transition-hide="scale">
-		<q-card class="profile-card">
-			<!-- Banner & Avatar -->
-			<div class="profile-banner relative-position" style="height: 140px">
-				<div class="absolute-bottom bg-transparent profile-avatar-container">
-					<q-avatar size="84px" class="profile-avatar shadow-4">
-						<img v-if="userStore.photo" :src="userStore.photo" />
-						<YandexMark v-else-if="userStore.isYandexUser" :size="84" class="bg-white q-pa-xs" />
-						<span v-else class="bg-primary text-white">{{ userInitials }}</span>
-					</q-avatar>
-					<q-btn round dense color="primary" icon="edit" class="profile-avatar-edit" size="sm" />
+	<q-dialog v-model="profileDialog" persistent>
+		<q-card class="profile-modal" flat bordered>
+			<div class="profile-modal__header">
+				<div class="profile-modal__avatar">
+					<img v-if="userStore.photo" :src="userStore.photo" alt="" />
+					<YandexMark v-else-if="userStore.isYandexUser" :size="72" class="profile-modal__avatar-yandex" />
+					<span v-else>{{ userInitials }}</span>
 				</div>
+				<div class="profile-modal__identity">
+					<div class="profile-modal__name">{{ userStore.fullName }}</div>
+					<div class="profile-modal__email">{{ userStore.email }}</div>
+					<div class="profile-modal__role">{{ roleLabel }}</div>
+				</div>
+				<q-btn flat round dense icon="close" v-close-popup />
 			</div>
 
-			<q-card-section class="q-pt-xl q-pb-sm">
-				<div class="row justify-between items-start">
-					<div>
-						<div class="text-h5 text-weight-bold text-blue-grey-9">{{ userStore.fullName }}</div>
-						<div class="text-blue-grey-5">{{ userStore.email }}</div>
+			<q-card-section class="profile-modal__body">
+				<div class="profile-section">
+					<div class="profile-section__title">Аккаунт</div>
+					<div class="profile-row">
+						<div class="profile-row__label">Тип входа</div>
+						<div class="profile-row__value">
+							<q-chip
+								v-if="userStore.isYandexUser"
+								dense
+								class="profile-chip profile-chip--yandex"
+							>
+								<template #avatar>
+									<YandexMark :size="16" />
+								</template>
+								Yandex ID
+							</q-chip>
+							<span v-else class="profile-chip profile-chip--basic">Базовый аккаунт</span>
+						</div>
 					</div>
-					<q-chip v-if="userStore.isYandexUser" color="red-1" text-color="red-7" class="text-weight-medium">
-						<template #avatar>
-							<YandexMark :size="20" />
-						</template>
-						Yandex ID
-					</q-chip>
-					<q-chip v-else color="blue-1" text-color="blue-7" icon="verified_user" class="text-weight-medium">
-						Базовый аккаунт
-					</q-chip>
+					<div class="profile-row">
+						<div class="profile-row__label">Email</div>
+						<div class="profile-row__value">{{ userStore.email || "—" }}</div>
+					</div>
+					<div v-if="userStore.phone_number" class="profile-row">
+						<div class="profile-row__label">Телефон</div>
+						<div class="profile-row__value">{{ userStore.phone_number }}</div>
+					</div>
+					<div class="profile-row">
+						<div class="profile-row__label">Роль</div>
+						<div class="profile-row__value">{{ roleLabel }}</div>
+					</div>
+				</div>
+
+				<div class="profile-section">
+					<div class="profile-section__title">Настройки</div>
+					<div class="profile-toggle">
+						<div class="profile-toggle__text">
+							<div class="profile-toggle__title">Уведомления по email</div>
+							<div class="profile-toggle__desc">Новости, обновления и отчёты</div>
+						</div>
+						<q-toggle v-model="settings.emailNotif" color="primary" />
+					</div>
+					<div class="profile-toggle">
+						<div class="profile-toggle__text">
+							<div class="profile-toggle__title">Тёмная тема</div>
+							<div class="profile-toggle__desc">Интерфейс в тёмном режиме</div>
+						</div>
+						<q-toggle
+							:model-value="settings.darkMode"
+							color="primary"
+							@update:model-value="setDarkMode"
+						/>
+					</div>
 				</div>
 			</q-card-section>
 
-			<q-tabs 
-				v-model="profileTab" 
-				dense 
-				class="text-grey-7" 
-				active-color="primary" 
-				indicator-color="primary" 
-				align="justify" 
-				narrow-indicator
-			>
-				<q-tab name="overview" icon="person" label="Обзор" />
-				<q-tab name="settings" icon="settings" label="Настройки" />
-				<q-tab name="security" icon="security" label="Безопасность" />
-			</q-tabs>
-
-			<q-separator />
-
-			<q-tab-panels v-model="profileTab" animated class="profile-panels">
-				<!-- Вкладка: Обзор -->
-				<q-tab-panel name="overview">
-					<div class="text-subtitle2 text-blue-grey-8 q-mb-md text-weight-bold">Ваша статистика</div>
-					<div class="row q-col-gutter-md q-mb-lg">
-						<div class="col-4">
-							<div class="stat-box bg-blue-50 text-blue-9">
-								<q-icon name="school" size="28px" class="q-mb-sm opacity-80" />
-								<div class="stat-value">12</div>
-								<div class="stat-label">Пройдено</div>
-							</div>
-						</div>
-						<div class="col-4">
-							<div class="stat-box bg-emerald-50 text-emerald-9">
-								<q-icon name="edit_note" size="28px" class="q-mb-sm opacity-80" />
-								<div class="stat-value">4</div>
-								<div class="stat-label">Создано</div>
-							</div>
-						</div>
-						<div class="col-4">
-							<div class="stat-box bg-orange-50 text-orange-9">
-								<q-icon name="local_fire_department" size="28px" class="q-mb-sm opacity-80" />
-								<div class="stat-value">3</div>
-								<div class="stat-label">Дня подряд</div>
-							</div>
-						</div>
-					</div>
-					
-					<div class="text-subtitle2 text-blue-grey-8 q-mb-sm text-weight-bold">Достижения</div>
-					<div class="row gap-2 q-mb-md">
-						<q-chip color="amber-1" text-color="amber-9" icon="emoji_events">Первый тренинг</q-chip>
-						<q-chip color="purple-1" text-color="purple-9" icon="psychology">Знаток</q-chip>
-						<q-chip outline color="grey-5" icon="lock">Скрыто</q-chip>
-					</div>
-
-					<div class="text-subtitle2 text-blue-grey-8 q-mb-sm text-weight-bold">О себе</div>
-					<div class="bio-box">
-						Увлеченный создатель обучающих материалов. Стремлюсь сделать процесс обучения интерактивным и увлекательным. 🚀
-					</div>
-				</q-tab-panel>
-
-				<!-- Вкладка: Настройки -->
-				<q-tab-panel name="settings">
-					<q-list padding class="settings-list">
-						<q-item tag="label" v-ripple class="q-mb-sm rounded-borders bg-grey-1">
-							<q-item-section>
-								<q-item-label class="text-weight-medium">Уведомления на email</q-item-label>
-								<q-item-label caption>Получать новости, обновления и отчеты</q-item-label>
-							</q-item-section>
-							<q-item-section side>
-								<q-toggle v-model="settings.emailNotif" color="primary" />
-							</q-item-section>
-						</q-item>
-						
-						<q-item tag="label" v-ripple class="q-mb-sm rounded-borders bg-grey-1">
-							<q-item-section>
-								<q-item-label class="text-weight-medium">Публичный профиль</q-item-label>
-								<q-item-label caption>Другие пользователи могут видеть вашу статистику и достижения</q-item-label>
-							</q-item-section>
-							<q-item-section side>
-								<q-toggle v-model="settings.publicProfile" color="primary" />
-							</q-item-section>
-						</q-item>
-
-						<q-item tag="label" v-ripple class="rounded-borders bg-grey-1">
-							<q-item-section>
-								<q-item-label class="text-weight-medium">Темная тема</q-item-label>
-								<q-item-label caption>Включить ночной режим интерфейса</q-item-label>
-							</q-item-section>
-							<q-item-section side>
-								<q-toggle v-model="settings.darkMode" color="primary" @update:model-value="$q.dark.set" />
-							</q-item-section>
-						</q-item>
-					</q-list>
-				</q-tab-panel>
-
-				<!-- Вкладка: Безопасность -->
-				<q-tab-panel name="security">
-					<q-list bordered separator class="rounded-borders">
-						<q-item class="q-py-md">
-							<q-item-section avatar>
-								<q-avatar color="blue-50" text-color="blue-7" icon="mail" />
-							</q-item-section>
-							<q-item-section>
-								<q-item-label caption>Основной Email</q-item-label>
-								<q-item-label class="text-weight-medium">{{ userStore.email }}</q-item-label>
-							</q-item-section>
-							<q-item-section side>
-								<q-icon name="verified" color="positive" size="24px">
-									<q-tooltip>Подтвержден</q-tooltip>
-								</q-icon>
-							</q-item-section>
-						</q-item>
-						
-						<q-item class="q-py-md">
-							<q-item-section avatar>
-								<q-avatar color="grey-2" text-color="grey-7" icon="phone" />
-							</q-item-section>
-							<q-item-section>
-								<q-item-label caption>Телефон</q-item-label>
-								<q-item-label class="text-weight-medium">{{ userStore.phone_number || "Не указан" }}</q-item-label>
-							</q-item-section>
-							<q-item-section side>
-								<q-btn flat round dense icon="edit" color="grey-6" />
-							</q-item-section>
-						</q-item>
-
-						<q-item clickable v-ripple class="q-py-md text-primary">
-							<q-item-section avatar>
-								<q-avatar color="blue-50" text-color="primary" icon="lock_reset" />
-							</q-item-section>
-							<q-item-section class="text-weight-medium">Изменить пароль</q-item-section>
-							<q-item-section side>
-								<q-icon name="chevron_right" color="primary" />
-							</q-item-section>
-						</q-item>
-					</q-list>
-				</q-tab-panel>
-			</q-tab-panels>
-
-			<q-card-actions align="right" class="bg-grey-1 q-pa-md">
-				<q-btn flat label="Отмена" color="grey-7" v-close-popup class="text-weight-medium" />
-				<q-btn unelevated label="Сохранить изменения" color="primary" v-close-popup class="text-weight-medium q-px-md" />
+			<q-card-actions class="profile-modal__footer">
+				<q-btn
+					flat
+					no-caps
+					color="negative"
+					label="Выйти"
+					class="profile-modal__logout"
+					@click="logout"
+				/>
+				<q-btn
+					unelevated
+					no-caps
+					color="primary"
+					label="Готово"
+					class="profile-modal__done"
+					v-close-popup
+				/>
 			</q-card-actions>
 		</q-card>
 	</q-dialog>
@@ -250,11 +183,9 @@ const userStore = useUserStore();
 const loading = ref(false);
 const profileDialog = ref(false);
 
-const profileTab = ref('overview');
 const settings = ref({
 	emailNotif: true,
-	publicProfile: false,
-	darkMode: $q.dark.isActive
+	darkMode: $q.dark.isActive,
 });
 
 const userInitials = computed(() => {
@@ -280,6 +211,13 @@ const avatarIsImage = computed(
 	() => !!(userStore.photo || userStore.isYandexUser)
 );
 
+const roleLabel = computed(() => {
+	if (userStore.isEmployee) return "Сотрудник";
+	if (userStore.role === "creator") return "Создатель тренингов";
+	if (userStore.role === "admin") return "Администратор";
+	return userStore.role || "Пользователь";
+});
+
 async function loadUser() {
 	loading.value = true;
 	try {
@@ -293,7 +231,19 @@ function openProfile() {
 	profileDialog.value = true;
 }
 
+function setDarkMode(enabled) {
+	settings.value.darkMode = enabled;
+	$q.dark.set(enabled);
+	localStorage.setItem("skillsnap-theme", enabled ? "dark" : "light");
+	document.documentElement.style.colorScheme = enabled ? "dark" : "light";
+}
+
+function toggleDarkMode() {
+	setDarkMode(!settings.value.darkMode);
+}
+
 function logout() {
+	profileDialog.value = false;
 	localStorage.removeItem("tokenAuth");
 	userStore.clearUser();
 	router.push("/login");
@@ -377,79 +327,214 @@ onMounted(() => {
 	transition: background 0.2s ease;
 }
 
-.profile-card {
-	width: 100%;
-	max-width: 540px;
+/* Profile modal */
+.profile-modal {
+	width: 480px;
+	max-width: 95vw;
+	border-radius: 24px;
 	overflow: hidden;
+	background: #fff;
+	box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
 }
 
-.profile-banner {
-	background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-}
-
-.profile-avatar-container {
-	padding: 0 24px;
-	transform: translateY(30%);
+.profile-modal__header {
 	display: flex;
-	align-items: flex-end;
+	align-items: flex-start;
+	gap: 18px;
+	padding: 28px 24px 24px;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-.profile-avatar {
-	border: 4px solid #ffffff;
-	background: #ffffff;
-}
-
-.profile-avatar-edit {
-	margin-left: -20px;
-	margin-bottom: 4px;
-	border: 2px solid #ffffff;
-	box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.profile-panels {
-	min-height: 320px;
-}
-
-.stat-box {
-	border-radius: 12px;
-	padding: 16px;
-	text-align: center;
+.profile-modal__avatar {
+	width: 80px;
+	height: 80px;
+	border-radius: 22px;
+	overflow: hidden;
+	flex-shrink: 0;
+	background: linear-gradient(135deg, rgba(80, 100, 247, 0.10) 0%, rgba(168, 85, 247, 0.08) 100%);
 	display: flex;
-	flex-direction: column;
 	align-items: center;
-	transition: transform 0.2s ease;
+	justify-content: center;
+	font-size: 26px;
+	font-weight: 750;
+	color: #0f172a;
+	border: 2px solid rgba(0, 0, 0, 0.04);
 }
 
-.stat-box:hover {
-	transform: translateY(-2px);
+.profile-modal__avatar img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
 }
 
-.stat-value {
-	font-size: 24px;
-	font-weight: 800;
-	line-height: 1.2;
+.profile-modal__avatar-yandex {
+	background: #fff;
+	padding: 10px;
+}
+
+.profile-modal__identity {
+	flex: 1;
+	min-width: 0;
+	padding-top: 4px;
+}
+
+.profile-modal__name {
+	font-size: 20px;
+	font-weight: 750;
+	color: #0f172a;
+	letter-spacing: -0.02em;
+	line-height: 1.25;
 	margin-bottom: 4px;
 }
 
-.stat-label {
+.profile-modal__email {
+	font-size: 14px;
+	color: #64748b;
+	margin-bottom: 8px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.profile-modal__role {
+	display: inline-flex;
+	font-size: 12px;
+	font-weight: 650;
+	color: #5064f7;
+	background: rgba(80, 100, 247, 0.08);
+	padding: 4px 10px;
+	border-radius: 20px;
+}
+
+.profile-modal__body {
+	padding: 24px;
+}
+
+.profile-section {
+	margin-bottom: 28px;
+}
+
+.profile-section:last-child {
+	margin-bottom: 0;
+}
+
+.profile-section__title {
+	font-size: 13px;
+	font-weight: 650;
+	color: #94a3b8;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+	margin-bottom: 14px;
+}
+
+.profile-row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 12px;
+	padding: 12px 0;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.profile-row:last-child {
+	border-bottom: none;
+}
+
+.profile-row__label {
+	font-size: 14px;
+	color: #64748b;
+}
+
+.profile-row__value {
+	font-size: 14px;
+	font-weight: 600;
+	color: #0f172a;
+	text-align: right;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.profile-chip {
 	font-size: 12px;
 	font-weight: 600;
-	text-transform: uppercase;
-	letter-spacing: 0.05em;
-	opacity: 0.9;
+	border-radius: 8px;
+	padding: 3px 10px;
 }
 
-.bio-box {
-	background: #f8fafc;
-	border-radius: 12px;
-	padding: 16px;
+.profile-chip--yandex {
+	background: rgba(239, 68, 68, 0.08);
+	color: #dc2626;
+}
+
+.profile-chip--basic {
+	background: rgba(80, 100, 247, 0.08);
+	color: #5064f7;
+}
+
+.profile-toggle {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	padding: 14px 0;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.profile-toggle:last-child {
+	border-bottom: none;
+}
+
+.profile-toggle__title {
 	font-size: 14px;
-	color: #475569;
-	line-height: 1.5;
-	border: 1px solid #e2e8f0;
+	font-weight: 650;
+	color: #0f172a;
+	margin-bottom: 2px;
 }
 
-.opacity-80 {
-	opacity: 0.8;
+.profile-toggle__desc {
+	font-size: 13px;
+	color: #64748b;
+}
+
+.profile-modal__footer {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 16px 24px;
+	border-top: 1px solid rgba(0, 0, 0, 0.05);
+	background: #fafbfc;
+}
+
+.profile-modal__logout {
+	font-weight: 600;
+	border-radius: 10px;
+}
+
+.profile-modal__done {
+	border-radius: 12px;
+	padding: 8px 24px;
+	font-weight: 600;
+	box-shadow: 0 4px 12px rgba(80, 100, 247, 0.25);
+}
+
+@media (max-width: 560px) {
+	.profile-modal {
+		width: 100%;
+		max-width: 100%;
+		border-radius: 0;
+	}
+
+	.profile-modal__header {
+		padding: 20px 16px;
+	}
+
+	.profile-modal__body {
+		padding: 20px 16px;
+	}
+
+	.profile-modal__footer {
+		padding: 16px;
+	}
 }
 </style>

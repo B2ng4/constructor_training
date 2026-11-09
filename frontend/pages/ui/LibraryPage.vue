@@ -1,291 +1,156 @@
 <template>
-	<div class="library-page">
-		<div class="page-header animate-fade-in-up">
-			<h1 class="page-title">Библиотека тренингов</h1>
-			<p class="page-subtitle">
-				Каталог готовых тренингов и материалов для обучения
-			</p>
-		</div>
-
-		<div class="coming-soon-container">
-			<div class="coming-soon-card animate-scale-in">
-				<div class="icon-wrapper">
-					<q-icon name="library_books" size="56px" />
+	<page-shell title="Библиотека" subtitle="Каталог готовых тренингов и шаблонов для быстрого старта">
+		<div class="page-panel library-card">
+			<div class="library-hero">
+				<div class="library-hero__icon">
+					<q-icon name="auto_stories" size="40px" />
 				</div>
-				
-				<h2 class="coming-soon-title">Скоро здесь</h2>
-				
-				<p class="coming-soon-description">
-					В библиотеке появятся готовые тренинги, шаблоны и материалы для быстрого старта. Вы сможете просматривать каталог, копировать тренинги и делиться ими с коллегами.
+				<h2 class="library-hero__title">Скоро здесь</h2>
+				<p class="library-hero__desc">
+					В библиотеке появятся готовые тренинги, шаблоны и материалы для быстрого старта.
+					Вы сможете просматривать каталог, копировать тренинги и делиться ими с коллегами.
 				</p>
+			</div>
 
-				<div class="features-list animate-stagger-children">
-					<div class="feature-item relative-position" v-ripple>
-						<q-icon name="content_copy" size="18px" />
-						<span>Копирование тренингов</span>
-					</div>
-					<div class="feature-item relative-position" v-ripple>
-						<q-icon name="filter_list" size="18px" />
-						<span>Фильтры и поиск</span>
-					</div>
-					<div class="feature-item relative-position" v-ripple>
-						<q-icon name="share" size="18px" />
-						<span>Совместная работа</span>
-					</div>
+			<div class="library-features">
+				<div class="library-feature" v-ripple>
+					<q-icon name="content_copy" size="20px" class="library-feature__icon" />
+					<span class="library-feature__text">Копирование тренингов</span>
 				</div>
-
-				<div class="actions">
-					<q-btn
-						unelevated
-						no-caps
-						rounded
-						color="primary"
-						label="Мои тренинги"
-						icon="list_alt"
-						to="/personal/training"
-						class="action-btn action-btn--primary"
-					/>
-					<q-btn
-						outline
-						no-caps
-						rounded
-						color="primary"
-						label="Создать тренинг"
-						icon="add"
-						to="/personal/training"
-						class="action-btn"
-					/>
+				<div class="library-feature" v-ripple>
+					<q-icon name="filter_list" size="20px" class="library-feature__icon" />
+					<span class="library-feature__text">Фильтры и поиск</span>
+				</div>
+				<div class="library-feature" v-ripple>
+					<q-icon name="share" size="20px" class="library-feature__icon" />
+					<span class="library-feature__text">Совместная работа</span>
 				</div>
 			</div>
+
+			<div class="library-actions">
+				<q-btn
+					unelevated
+					no-caps
+					color="primary"
+					icon="list_alt"
+					label="Мои тренинги"
+					to="/personal/training"
+					class="page-cta"
+				/>
+				<q-btn
+					outline
+					no-caps
+					color="primary"
+					icon="add"
+					label="Создать тренинг"
+					to="/personal/training"
+					class="page-cta page-cta--outline"
+				/>
+			</div>
 		</div>
-	</div>
+	</page-shell>
 </template>
 
 <script setup>
+import PageShell from "@components/common/PageShell.vue";
 </script>
 
 <style scoped>
-.library-page {
-	padding: 32px 40px 24px;
-	height: calc(100vh - 56px);
-	overflow: hidden;
-	display: flex;
-	flex-direction: column;
-}
-
-/* ——— Header ——— */
-.page-header {
-	margin-bottom: 32px;
-	flex-shrink: 0;
-	position: relative;
-	z-index: 2;
-}
-
-.page-title {
-	font-size: 32px;
-	font-weight: 800;
-	color: #0f172a;
-	margin: 0 0 8px 0;
-	letter-spacing: -0.02em;
-	line-height: 1.2;
-}
-
-.page-subtitle {
-	font-size: 16px;
-	color: #64748b;
-	margin: 0;
-	font-weight: 500;
-	line-height: 1.5;
-}
-
-/* ——— Coming Soon Container ——— */
-.coming-soon-container {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	flex: 1;
-	min-height: 0;
-}
-
-.coming-soon-card {
-	background: rgba(255, 255, 255, 0.85);
-	backdrop-filter: blur(20px);
-	-webkit-backdrop-filter: blur(20px);
-	border: 1px solid rgba(0, 0, 0, 0.06);
-	border-radius: 20px;
-	padding: 48px 40px;
+.library-card {
 	text-align: center;
-	max-width: 560px;
-	width: 100%;
-	box-shadow: 0 8px 32px rgba(15, 23, 42, 0.04);
-	transition: box-shadow 0.3s ease, transform 0.3s var(--anim-ease-spring), background 0.3s ease;
-	position: relative;
-	z-index: 2;
-}
-.coming-soon-card:hover {
-	background: rgba(255, 255, 255, 0.9);
-	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
-	transform: translateY(-2px);
+	max-width: 640px;
+	margin: 0 auto;
+	padding: 52px 40px;
 }
 
-.icon-wrapper {
-	width: 96px;
-	height: 96px;
+.library-hero__icon {
+	width: 88px;
+	height: 88px;
 	border-radius: 24px;
-	background: rgba(80, 100, 247, 0.08);
+	background: rgba(80, 100, 247, 0.10);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: rgba(80, 100, 247, 0.7);
-	margin: 0 auto 28px;
-	transition: transform 0.35s var(--anim-ease-spring), background 0.3s ease;
-}
-.coming-soon-card:hover .icon-wrapper {
-	transform: scale(1.05);
-	background: rgba(80, 100, 247, 0.12);
+	color: #5064f7;
+	margin: 0 auto 24px;
+	box-shadow: 0 8px 24px rgba(80, 100, 247, 0.12);
 }
 
-.icon-wrapper .q-icon {
-	font-size: 48px;
-}
-
-.coming-soon-title {
+.library-hero__title {
 	font-size: 24px;
-	font-weight: 600;
+	font-weight: 750;
 	color: #0f172a;
-	margin: 0 0 12px 0;
-	letter-spacing: -0.01em;
+	margin: 0 0 10px;
+	letter-spacing: -0.02em;
 }
 
-.coming-soon-description {
+.library-hero__desc {
 	font-size: 15px;
 	color: #64748b;
 	line-height: 1.6;
-	margin: 0 0 32px 0;
-	max-width: 440px;
-	margin-left: auto;
-	margin-right: auto;
+	max-width: 480px;
+	margin: 0 auto 32px;
 }
 
-/* ——— Features List ——— */
-.features-list {
+.library-features {
 	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+	grid-template-columns: repeat(3, 1fr);
 	gap: 12px;
-	margin-bottom: 32px;
-	padding: 0 10px;
+	margin-bottom: 36px;
 }
 
-.feature-item {
+.library-feature {
 	display: flex;
 	align-items: center;
+	justify-content: center;
 	gap: 8px;
-	padding: 10px 14px;
-	background: rgba(255, 255, 255, 0.6);
+	padding: 12px 16px;
+	background: rgba(255, 255, 255, 0.65);
 	border: 1px solid rgba(0, 0, 0, 0.05);
-	border-radius: 12px;
-	font-size: 13px;
+	border-radius: 14px;
+	font-size: 14px;
+	font-weight: 600;
 	color: #475569;
-	font-weight: 500;
-	transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s var(--anim-ease-spring);
+	transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
-.feature-item:hover {
+
+.library-feature:hover {
 	background: rgba(80, 100, 247, 0.06);
-	border-color: rgba(80, 100, 247, 0.25);
+	border-color: rgba(80, 100, 247, 0.2);
 	transform: translateY(-1px);
 }
 
-.feature-item .q-icon {
-	color: rgba(80, 100, 247, 0.7);
+.library-feature__icon {
+	color: #5064f7;
 	flex-shrink: 0;
-	font-size: 16px;
 }
 
-/* ——— Actions ——— */
-.actions {
+.library-actions {
 	display: flex;
 	justify-content: center;
 	gap: 12px;
 	flex-wrap: wrap;
 }
 
-.action-btn {
-	padding: 10px 24px;
-	font-size: 14px;
-	font-weight: 500;
-	border-radius: 12px;
-	transition: box-shadow 0.25s ease, transform 0.25s var(--anim-ease-spring), background 0.2s ease;
-}
-.action-btn--primary {
-	box-shadow: 0 2px 8px rgba(80, 100, 247, 0.25);
-}
-.action-btn--primary:hover {
-	box-shadow: 0 4px 20px rgba(80, 100, 247, 0.35);
-	transform: translateY(-2px);
-}
-.action-btn--primary:active {
-	transform: translateY(0);
-}
-.action-btn:not(.action-btn--primary):hover {
-	background: rgba(80, 100, 247, 0.06);
-	transform: translateY(-1px);
+.page-cta--outline {
+	box-shadow: none !important;
 }
 
-/* ——— Responsive ——— */
-@media (max-width: 768px) {
-	.library-page {
-		padding: 24px 16px 20px;
+@media (max-width: 640px) {
+	.library-card {
+		padding: 36px 24px;
 	}
-	
-	.page-header {
-		margin-bottom: 24px;
-	}
-	
-	.page-title {
-		font-size: 24px;
-	}
-	
-	.page-subtitle {
-		font-size: 14px;
-	}
-	
-	.coming-soon-card {
-		padding: 40px 24px;
-	}
-	
-	.icon-wrapper {
-		width: 80px;
-		height: 80px;
-		border-radius: 20px;
-		margin-bottom: 20px;
-	}
-	
-	.icon-wrapper .q-icon {
-		font-size: 40px;
-	}
-	
-	.coming-soon-title {
-		font-size: 20px;
-	}
-	
-	.coming-soon-description {
-		font-size: 14px;
-	}
-	
-	.features-list {
+
+	.library-features {
 		grid-template-columns: 1fr;
-		padding: 0;
-		gap: 10px;
-		margin-bottom: 24px;
 	}
-	
-	.actions {
+
+	.library-actions {
 		flex-direction: column;
 		width: 100%;
-		gap: 10px;
 	}
-	
-	.action-btn {
+
+	.page-cta {
 		width: 100%;
 	}
 }

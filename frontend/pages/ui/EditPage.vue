@@ -13,9 +13,14 @@
 				<upload-photo />
 			</div>
 
-			<!-- Скрин слева, панель задания справа -->
+			<!-- Панель задания слева, скрин справа -->
 			<template v-else>
 				<div class="edit-split premium-bg-container">
+					<aside class="edit-split__aside glass-panel">
+						<step-task-editor />
+						<AIGeneratedBanner />
+					</aside>
+
 					<div class="edit-split__main">
 						<edit-editor-header
 							:show-crop="cropButtonVisible"
@@ -24,6 +29,7 @@
 							@crop="cropDialogOpen = true"
 							@home="goToTrainingList"
 							@duplicate="trainingEvents.duplicateStep.trigger()"
+							@detect="detectStepElements"
 						/>
 
 						<transition name="step-fade" mode="out-in">
@@ -55,11 +61,6 @@
 							</div>
 						</transition>
 					</div>
-
-					<aside class="edit-split__aside glass-panel">
-						<step-task-editor />
-						<AIGeneratedBanner />
-					</aside>
 				</div>
 			</template>
 		</template>
@@ -76,7 +77,7 @@
 <script setup>
 import VueFlowComponent from "@components/features/edit_page/VueFlowComponent.vue";
 import { UploadPhoto } from "@components/features/edit_page/uploader_photo";
-import { TrainingApi } from "@api";
+import { TrainingApi, TrainingStepApi } from "@api";
 import { useRoute, useRouter } from "vue-router";
 import { nextTick, onMounted, onUnmounted, ref, watch, computed } from "vue";
 import { storeToRefs } from "pinia";
@@ -97,6 +98,7 @@ import { trainingEvents } from "@utils/eventBus.js";
 import { onBeforeRouteLeave } from "vue-router";
 
 const trainingApi = new TrainingApi();
+const trainingStepApi = new TrainingStepApi();
 const route = useRoute();
 const router = useRouter();
 const store = useTrainingData();
@@ -136,6 +138,40 @@ function hideHint() {
 
 function goToTrainingList() {
 	router.push("/personal/training");
+}
+
+const detecting = ref(false);
+
+async function detectStepElements() {
+	const step = selectedStep.value;
+	if (detecting.value || !step?.id || !trainingUuidParam.value) return;
+	detecting.value = true;
+	try {
+		const { data } = await trainingStepApi.detectStepElements(
+			trainingUuidParam.value,
+			step.id
+		);
+		const detections = data?.meta?.ui_detections;
+		if (Array.isArray(detections)) {
+			step.meta = { ...(step.meta || {}), ui_detections: detections };
+			const inList = store.steps?.find((s) => s.id === step.id);
+			if (inList) inList.meta = JSON.parse(JSON.stringify(step.meta));
+		}
+		$q.notify({
+			color: "positive",
+			message: `Найдено элементов: ${detections?.length ?? 0}`,
+			position: "bottom-right",
+			timeout: 1800,
+		});
+	} catch {
+		$q.notify({
+			color: "negative",
+			message: "Не удалось определить элементы",
+			position: "top",
+		});
+	} finally {
+		detecting.value = false;
+	}
 }
 
 watch(
@@ -315,7 +351,9 @@ useEditorKeyboard({
 	z-index: 100;
 	padding: 12px;
 	gap: 12px;
-	border-left: 1px solid rgba(15, 23, 42, 0.08);
+	margin: 10px 0 10px 12px;
+	border-radius: 16px;
+	overflow: hidden;
 }
 
 .empty-state {
@@ -369,11 +407,14 @@ useEditorKeyboard({
 		flex-direction: column;
 	}
 
+	.edit-split__main {
+		order: -1;
+	}
+
 	.edit-split__aside {
-		width: 100%;
+		width: auto;
 		max-height: min(45vh, 400px);
-		border-right: none;
-		border-top: 1px solid rgba(15, 23, 42, 0.08);
+		margin: 0 12px 12px;
 	}
 }
 </style>

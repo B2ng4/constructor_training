@@ -217,7 +217,7 @@ function onTaskBodyClick(e) {
 	overflow-y: auto;
 	flex: 1;
 	min-height: 0;
-	font-family: "Inter", system-ui, sans-serif;
+	font-family: var(--font-sans);
 	font-size: 19px;
 	line-height: 1.7;
 	color: #1e293b;

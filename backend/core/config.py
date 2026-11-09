@@ -1,5 +1,6 @@
 import os
 from typing import Optional
+from urllib.parse import quote_plus
 
 from pydantic import AliasChoices, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -110,6 +111,20 @@ class Configs(BaseSettings):
     CLIENT_ID_SALUTESPEECH: str = Field(default="", env="CLIENT_ID_SALUTESPEECH")
     SALUT_SPEECH_AUTORIZATION: str = Field(default="", env="SALUT_SPEECH_AUTORIZATION")
 
+    # ------------------- YOLO UI-детекция -----------------------------------
+    # Авторазметка кликабельных элементов на загружаемых скриншотах.
+    YOLO_UI_DETECTION_ENABLED: bool = Field(
+        default=True, env="YOLO_UI_DETECTION_ENABLED"
+    )
+    YOLO_UI_CONF: float = Field(default=0.25, env="YOLO_UI_CONF")
+    YOLO_MODEL_REPO: str = Field(
+        default="macpaw-research/yolov11l-ui-elements-detection",
+        env="YOLO_MODEL_REPO",
+    )
+    YOLO_MODEL_FILE: str = Field(
+        default="ui-elements-detection.pt", env="YOLO_MODEL_FILE"
+    )
+
     # ------------------- Фоновые задачи (Celery + Redis) -------------------
     REDIS_URL: str = Field(default="redis://localhost:6379/0", env="REDIS_URL")
     CELERY_BROKER_URL: str = Field(
@@ -150,10 +165,12 @@ configs = Configs()
 
 
 def get_db_url():
-    return (
-        f"postgresql+asyncpg://{configs.DB_USER}:{configs.DB_PASS}@"
-        f"{configs.DB_HOST}:{configs.DB_PORT}/{configs.DB_NAME}"
-    )
+    user = quote_plus(str(configs.DB_USER or "postgres"))
+    password = quote_plus(str(configs.DB_PASS or ""))
+    host = configs.DB_HOST or "localhost"
+    port = configs.DB_PORT or 5432
+    name = configs.DB_NAME or "postgres"
+    return f"postgresql+asyncpg://{user}:{password}@{host}:{port}/{name}"
 
 
 def get_auth_data():

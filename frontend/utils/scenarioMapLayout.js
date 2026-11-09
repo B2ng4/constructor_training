@@ -1,126 +1,138 @@
 import { MarkerType } from "@vue-flow/core";
 
-export const SCENARIO_NODE_WIDTH = 200;
-export const SCENARIO_NODE_HEIGHT = 168;
-export const SCENARIO_NODE_GAP = 72;
-export const SCENARIO_ROW_Y = 40;
+export const SCENARIO_NODE_WIDTH = 224;
+export const SCENARIO_NODE_HEIGHT = 198;
+export const SCENARIO_NODE_GAP_X = 150;
+export const SCENARIO_NODE_GAP_Y = 86;
 
-/**
- * Сортирует шаги по step_number.
- */
+export const TRIGGER_META = {
+	success: { label: "Успешное действие", color: "#22c55e" },
+	error: { label: "Ошибка", color: "#ef4444" },
+	attempts_exceeded: { label: "Превышены попытки", color: "#f59e0b" },
+	choice: { label: "Выбор пользователя", color: "#3b82f6" },
+	condition: { label: "Условие", color: "#a855f7" },
+	default: { label: "По умолчанию", color: "#64748b" },
+};
+
 export function sortStepsByNumber(steps) {
 	return [...(steps || [])].sort(
 		(a, b) => (a.step_number ?? 0) - (b.step_number ?? 0),
 	);
 }
 
-/**
- * Строит nodes/edges для линейной карты сценария.
- */
-export function buildScenarioGraph(steps, callbacks = {}) {
+export function createLinearTransitions(steps) {
 	const sorted = sortStepsByNumber(steps);
-	const { onDelete, onSelect, selectedStepId } = callbacks;
-
-	const nodes = sorted.map((step, index) => ({
-		id: `step-${step.id}`,
-		type: "step",
-		position: {
-			x: index * (SCENARIO_NODE_WIDTH + SCENARIO_NODE_GAP),
-			y: SCENARIO_ROW_Y,
-		},
-		draggable: true,
-		selectable: true,
-		data: {
-			step,
-			selected: step.id === selectedStepId,
-			onDelete,
-			onSelect,
-		},
+	return sorted.map((step, index) => ({
+		id: `draft-${step.id}`,
+		source_step_id: step.id,
+		target_step_id: sorted[index + 1]?.id ?? null,
+		trigger_type: "success",
+		label: null,
+		condition: null,
+		priority: 0,
+		is_default: false,
 	}));
-
-	const edges = sorted.slice(0, -1).map((step, index) => {
-		const next = sorted[index + 1];
-		return {
-			id: `edge-${step.id}-${next.id}`,
-			source: `step-${step.id}`,
-			target: `step-${next.id}`,
-			type: "add",
-			animated: true,
-			markerEnd: MarkerType.ArrowClosed,
-			data: {
-				afterStepId: step.id,
-				onAdd: callbacks.onAdd,
-			},
-		};
-	});
-
-	return { nodes, edges };
 }
 
-/**
- * Вычисляет новый порядок шагов по горизонтальной позиции узлов.
- */
-export function computeOrderFromNodes(nodes) {
-	return nodes
-		.filter((n) => n.type === "step")
-		.sort((a, b) => a.position.x - b.position.x)
-		.map((n, index) => ({
-			id: Number(String(n.id).replace(/^step-/, "")),
-			step_number: index + 1,
-		}));
-}
-
-/**
- * Раскладывает узлы по сетке после изменения порядка.
- */
-export function layoutNodesInOrder(nodes) {
-	const stepNodes = nodes
-		.filter((n) => n.type === "step")
-		.sort((a, b) => a.position.x - b.position.x);
-
-	return nodes.map((node) => {
-		if (node.type !== "step") return node;
-		const orderIndex = stepNodes.findIndex((n) => n.id === node.id);
-		return {
-			...node,
-			position: {
-				x: orderIndex * (SCENARIO_NODE_WIDTH + SCENARIO_NODE_GAP),
-				y: SCENARIO_ROW_Y,
-			},
-		};
-	});
-}
-
-/**
- * Вставляет новые шаги после указанного id и возвращает payload для reorder API.
- */
-export function buildOrderWithInsert(currentSteps, newSteps, afterStepId) {
-	const sorted = sortStepsByNumber(currentSteps);
-	const result = [];
-
-	for (const step of sorted) {
-		result.push(step);
-		if (step.id === afterStepId) {
-			for (const added of newSteps) result.push(added);
+function graphPositions(steps, transitions, startStepId) {
+	const ids = new Set(steps.map((step) => step.id));
+	const outgoing = new Map(steps.map((step) => [step.id, []]));
+	for (const edge of transitions) {
+		if (edge.target_step_id != null && ids.has(edge.target_step_id)) {
+			outgoing.get(edge.source_step_id)?.push(edge.target_step_id);
 		}
 	}
-
-	return result.map((step, index) => ({
-		id: step.id,
-		step_number: index + 1,
-	}));
+	const levels = new Map();
+	const queue = startStepId != null ? [[startStepId, 0]] : [];
+	while (queue.length) {
+		const [id, level] = queue.shift();
+		if (!ids.has(id) || (levels.has(id) && levels.get(id) <= level)) continue;
+		levels.set(id, level);
+		for (const target of outgoing.get(id) || []) queue.push([target, level + 1]);
+	}
+	let fallbackLevel = Math.max(0, ...levels.values()) + 1;
+	for (const step of sortStepsByNumber(steps)) {
+		if (!levels.has(step.id)) levels.set(step.id, fallbackLevel++);
+	}
+	const rows = new Map();
+	const positions = new Map();
+	for (const step of steps) {
+		const level = levels.get(step.id) ?? 0;
+		const row = rows.get(level) || 0;
+		rows.set(level, row + 1);
+		positions.set(step.id, {
+			x: 110 + level * (SCENARIO_NODE_WIDTH + SCENARIO_NODE_GAP_X),
+			y: 80 + row * (SCENARIO_NODE_HEIGHT + SCENARIO_NODE_GAP_Y),
+		});
+	}
+	return positions;
 }
 
-/**
- * Вставляет новые шаги в начало сценария.
- */
-export function buildOrderWithInsertAtStart(currentSteps, newSteps) {
-	const sorted = sortStepsByNumber(currentSteps);
-	const result = [...newSteps, ...sorted];
-	return result.map((step, index) => ({
-		id: step.id,
-		step_number: index + 1,
-	}));
+export function buildScenarioGraph(steps, scenario = {}, callbacks = {}) {
+	const sorted = sortStepsByNumber(steps);
+	const transitions = scenario.transitions?.length
+		? scenario.transitions
+		: createLinearTransitions(sorted);
+	const startStepId = scenario.start_step_id ?? sorted[0]?.id ?? null;
+	const positions = graphPositions(sorted, transitions, startStepId);
+	const nodes = [
+		{
+			id: "scenario-start",
+			type: "terminal",
+			position: { x: -190, y: 100 },
+			draggable: false,
+			data: { kind: "start", label: "Старт" },
+		},
+		...sorted.map((step) => ({
+			id: `step-${step.id}`,
+			type: "step",
+			position: positions.get(step.id),
+			draggable: true,
+			selectable: true,
+			data: {
+				step,
+				selected: step.id === callbacks.selectedStepId,
+				onDelete: callbacks.onDelete,
+				onSelect: callbacks.onSelect,
+			},
+		})),
+		{
+			id: "scenario-finish",
+			type: "terminal",
+			position: {
+				x: 250 + (Math.max(0, ...[...positions.values()].map((p) => p.x)) || 0),
+				y: 100,
+			},
+			draggable: true,
+			data: { kind: "finish", label: "Завершение" },
+		},
+	];
+	const edges = transitions.map((transition, index) => {
+		const meta = TRIGGER_META[transition.trigger_type] || TRIGGER_META.default;
+		return {
+			id: `transition-${transition.id ?? `${transition.source_step_id}-${transition.target_step_id}-${transition.trigger_type}-${index}`}`,
+			source: `step-${transition.source_step_id}`,
+			target: transition.target_step_id == null ? "scenario-finish" : `step-${transition.target_step_id}`,
+			type: "scenario",
+			animated: transition.trigger_type === "success",
+			markerEnd: { type: MarkerType.ArrowClosed, color: meta.color },
+			style: { stroke: meta.color, strokeWidth: 2.4 },
+			data: { transition, meta, onEdit: callbacks.onEditTransition },
+		};
+	});
+	if (startStepId != null) {
+		edges.unshift({
+			id: "scenario-start-edge",
+			source: "scenario-start",
+			target: `step-${startStepId}`,
+			type: "scenario",
+			animated: true,
+			markerEnd: { type: MarkerType.ArrowClosed, color: "#5064f7" },
+			style: { stroke: "#5064f7", strokeWidth: 2.6 },
+			data: { startEdge: true, meta: { label: "Начало", color: "#5064f7" } },
+		});
+	}
+	return { nodes, edges, transitions, startStepId };
 }
 
 export function stepLabel(step) {
@@ -138,5 +150,5 @@ export function stepActionLabel(step) {
 		if (id === 6) return "Нажатие клавиши";
 		if (id === 1) return "Левый клик";
 	}
-	return "Не задано";
+	return "Действие не задано";
 }

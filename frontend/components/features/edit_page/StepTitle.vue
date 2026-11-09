@@ -1,7 +1,7 @@
 <template>
 	<div
 		v-if="store.selectedStep"
-		class="step-title-card absolute cursor-pointer"
+		class="step-title-card cursor-pointer"
 	>
 		<q-tooltip anchor="top middle" :offset="[0, 8]">
 			Краткое имя для списка шагов (не полное задание)

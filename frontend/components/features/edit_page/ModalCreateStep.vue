@@ -30,12 +30,24 @@
 						<span>Видео</span>
 					</div>
 				</div>
-				<p class="modal-hint text-caption text-grey-6 q-mt-none q-mb-md">
-					{{ uploadMode === 'video'
-						? 'AI создаст шаги с описаниями и определит области действий автоматически'
-						: 'Загрузите изображения интерфейса для создания шагов'
-					}}
-				</p>
+				<div class="row items-center justify-between q-mb-md">
+					<p class="modal-hint text-caption text-grey-6 q-mt-none q-mb-none">
+						{{ uploadMode === 'video'
+							? 'AI создаст шаги с описаниями и определит области действий автоматически'
+							: 'Загрузите изображения интерфейса для создания шагов'
+						}}
+					</p>
+					<q-toggle
+						v-if="uploadMode === 'photos'"
+						v-model="autoDetect"
+						color="primary"
+						icon="auto_awesome"
+						label="Автоопределение элементов"
+						left-label
+					>
+						<q-tooltip>Запускать YOLO-разметку элементов после загрузки скриншотов</q-tooltip>
+					</q-toggle>
+				</div>
 				
 				<!-- Требования к видео -->
 				<div v-if="uploadMode === 'video'" class="video-requirements-compact q-mb-md">
@@ -155,6 +167,7 @@ const trainingApi = new TrainingApi();
 const images = ref([]);
 const loading = ref(false);
 const uploadMode = ref("photos");
+const autoDetect = ref(true);
 const videoFile = ref(null);
 const videoInputRef = ref(null);
 
@@ -166,6 +179,7 @@ watch(uploadMode, () => {
 watch(value, (open) => {
 	if (!open) {
 		uploadMode.value = "photos";
+		autoDetect.value = true;
 		videoFile.value = null;
 		images.value = [];
 	}
@@ -254,7 +268,7 @@ const addSteps = async () => {
 			images.value.forEach((el) => {
 				formData.append("files", el.originalFile);
 			});
-			await metaApi.uploadImages(route.params.uuid, formData);
+			await metaApi.uploadImages(route.params.uuid, formData, autoDetect.value);
 
 			const { data } = await trainingApi.getTrainingByUuid(route.params.uuid);
 			store.setTrainingData(data);
@@ -325,6 +339,15 @@ const addSteps = async () => {
 .modal-hint {
 	min-height: 1.4em;
 	line-height: 1.4;
+	flex: 1;
+	margin-right: 8px;
+}
+
+@media (max-width: 560px) {
+	.modal-hint {
+		margin-right: 0;
+		margin-bottom: 8px;
+	}
 }
 
 .modal-content-slot {

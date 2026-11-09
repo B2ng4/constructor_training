@@ -1,27 +1,29 @@
 <template>
 	<div v-if="store.selectedStep" class="step-task-editor glass-panel">
 		<header class="step-task-editor__bar">
-			<div class="step-task-editor__title">
-				<q-icon
-					name="auto_awesome"
-					size="20px"
-					class="step-task-editor__icon magic-stream-text"
-					v-if="isImproving || isGeneratingTTS"
-				/>
-				<q-icon name="assignment" size="18px" class="step-task-editor__icon" v-else />
-				<span class="step-task-editor__label">Задание</span>
-			</div>
-			
-			<div class="step-task-editor__actions">
-				<q-btn
-					flat
-					round
-					dense
-					color="primary"
-					icon="auto_awesome"
-					class="q-ml-sm"
-					:loading="isImproving || isGeneratingTTS"
-				>
+			<div class="step-task-editor__bar-row">
+				<div class="step-task-editor__title">
+					<q-icon
+						name="auto_awesome"
+						size="20px"
+						class="step-task-editor__icon magic-stream-text"
+						v-if="isImproving || isGeneratingTTS"
+					/>
+					<q-icon name="assignment" size="18px" class="step-task-editor__icon" v-else />
+					<span class="step-task-editor__label">Задание</span>
+				</div>
+
+				<q-space />
+
+				<div class="step-task-editor__actions">
+					<q-btn
+						flat
+						round
+						dense
+						color="primary"
+						icon="auto_awesome"
+						:loading="isImproving || isGeneratingTTS"
+					>
 					<q-tooltip>AI Лаборатория</q-tooltip>
 					<q-menu transition-show="jump-down" transition-hide="jump-up" class="glass-panel overflow-hidden" style="border-radius: 12px">
 						<q-list style="min-width: 220px" class="q-py-sm">
@@ -44,19 +46,19 @@
 							</q-item>
 						</q-list>
 					</q-menu>
-				</q-btn>
+					</q-btn>
+				</div>
 			</div>
-
-			<q-space />
 
 			<q-tabs
 				v-model="tab"
 				dense
-				class="text-grey-7"
+				class="step-task-editor__tabs text-grey-7"
 				active-color="primary"
 				indicator-color="primary"
 				narrow-indicator
 				no-caps
+				stretch
 			>
 				<q-tab name="edit" label="Редактор" />
 				<q-tab name="preview" label="Превью" />
@@ -229,7 +231,7 @@ const improveWithAI = async (variant = "general") => {
 			position: "bottom-right",
 			icon: "auto_awesome"
 		});
-	} catch (error) {
+	} catch {
 		$q.notify({ color: "negative", message: "Ошибка AI", position: "top" });
 		selectedStep.value.annotation = originalText;
 	} finally {
@@ -258,7 +260,7 @@ const generateTTS = async () => {
 			position: "bottom-right",
 			icon: "headphones"
 		});
-	} catch (error) {
+	} catch {
 		$q.notify({
 			color: "negative",
 			message: "Ошибка при генерации озвучки",
@@ -438,13 +440,29 @@ trainingEvents.generateTTS.on(() => {
 
 .step-task-editor__bar {
 	display: flex;
-	align-items: center;
-	gap: 12px;
-	padding: 12px 16px;
+	flex-direction: column;
+	padding: 12px 16px 0;
 	background: rgba(255, 255, 255, 0.4);
 	backdrop-filter: blur(10px);
 	border-bottom: 1px solid rgba(15, 23, 42, 0.06);
 	flex-shrink: 0;
+}
+
+.step-task-editor__bar-row {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	width: 100%;
+}
+
+.step-task-editor__tabs {
+	width: 100%;
+	margin-top: 4px;
+}
+
+.step-task-editor__tabs :deep(.q-tab) {
+	flex: 1;
+	min-width: 0;
 }
 
 .step-task-editor__title {

@@ -1,6 +1,26 @@
 <template>
 	<header class="edit-editor-header glass-panel">
 		<div class="edit-editor-header__left">
+			<q-btn flat round dense color="grey-8" icon="apps" class="edit-editor-header__nav-btn">
+				<q-tooltip>Разделы</q-tooltip>
+				<q-menu anchor="bottom left" self="top left">
+					<q-list dense style="min-width: 220px">
+						<q-item-label header class="text-grey-7">Разделы</q-item-label>
+						<q-item
+							v-for="nav in navItems"
+							:key="nav.url"
+							clickable
+							v-ripple
+							:to="nav.url"
+						>
+							<q-item-section avatar>
+								<q-icon :name="nav.icon" size="18px" />
+							</q-item-section>
+							<q-item-section>{{ nav.name }}</q-item-section>
+						</q-item>
+					</q-list>
+				</q-menu>
+			</q-btn>
 			<group-steps />
 		</div>
 
@@ -49,6 +69,12 @@
 					<q-tooltip>Действия со шагом</q-tooltip>
 					<q-menu anchor="bottom right" self="top right">
 						<q-list dense style="min-width: 200px">
+							<q-item clickable v-ripple @click="emit('detect')">
+								<q-item-section avatar>
+									<q-icon name="select_all" size="18px" />
+								</q-item-section>
+								<q-item-section>Найти элементы (AI)</q-item-section>
+							</q-item>
 							<q-item clickable v-ripple @click="emit('duplicate')">
 								<q-item-section avatar>
 									<q-icon name="content_copy" size="18px" />
@@ -81,7 +107,16 @@ defineProps({
 	showCrop: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(["preview", "map", "crop", "home", "duplicate"]);
+const navItems = [
+	{ name: "Главная", icon: "home", url: "/personal/home" },
+	{ name: "Библиотека", icon: "menu_book", url: "/personal/library" },
+	{ name: "Мои тренинги", icon: "list_alt", url: "/personal/training" },
+	{ name: "Мои курсы", icon: "school", url: "/personal/courses" },
+	{ name: "Мои организации", icon: "business", url: "/personal/organizations" },
+	{ name: "Поддержка", icon: "help", url: "/personal/help" },
+];
+
+const emit = defineEmits(["preview", "map", "crop", "home", "duplicate", "detect"]);
 </script>
 
 <style scoped>
@@ -100,7 +135,12 @@ const emit = defineEmits(["preview", "map", "crop", "home", "duplicate"]);
 .edit-editor-header__left {
 	display: flex;
 	align-items: center;
+	gap: 4px;
 	min-width: 0;
+}
+
+.edit-editor-header__nav-btn {
+	flex-shrink: 0;
 }
 
 .edit-editor-header__left :deep(.steps-dropdown) {

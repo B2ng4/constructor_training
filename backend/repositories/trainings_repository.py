@@ -10,6 +10,7 @@ from models.trainings import (
     TrainingPassageAttempt,
     TrainingPublication,
     TrainingStep,
+    TrainingTransition,
     TypesAction,
 )
 
@@ -168,6 +169,7 @@ class TrainingRepository:
             selectinload(Training.tags),
             selectinload(Training.level),
             selectinload(Training.steps).selectinload(TrainingStep.action_type),
+            selectinload(Training.transitions),
         ]
 
     async def get_training_steps(self, training_uuid: UUID4) -> List[TrainingStep]:
@@ -295,6 +297,31 @@ class TrainingRepository:
         await self.session.execute(update(TrainingStep), steps_data)
         await self.session.flush()
         return len(steps_data)
+
+    async def get_transitions(self, training_uuid: UUID4) -> List[TrainingTransition]:
+        query = (
+            select(TrainingTransition)
+            .where(TrainingTransition.training_uuid == training_uuid)
+            .order_by(TrainingTransition.source_step_id, TrainingTransition.priority.desc())
+        )
+        result = await self.session.execute(query)
+        return list(result.scalars().all())
+
+    async def replace_transitions(
+        self, training_uuid: UUID4, transitions_data: List[Dict[str, Any]]
+    ) -> List[TrainingTransition]:
+        await self.session.execute(
+            delete(TrainingTransition).where(
+                TrainingTransition.training_uuid == training_uuid
+            )
+        )
+        transitions = [
+            TrainingTransition(training_uuid=training_uuid, **item)
+            for item in transitions_data
+        ]
+        self.session.add_all(transitions)
+        await self.session.flush()
+        return transitions
 
     async def create_or_update_publication(
         self, training_uuid: UUID4, access_token: str, snapshot_data: Dict

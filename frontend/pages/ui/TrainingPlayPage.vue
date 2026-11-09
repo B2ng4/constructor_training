@@ -127,6 +127,9 @@
 				</header>
 
 				<div class="play-layout__main">
+					<aside class="play-layout__task glass-panel">
+						<PassageTaskPanel :selected-step="selectedStep" />
+					</aside>
 					<div class="play-layout__viewport">
 						<transition name="step-fade" mode="out-in">
 							<div :key="selectedStep?.id" class="flow-area">
@@ -152,9 +155,6 @@
 							@toggle-hints="toggleHintsForCurrentStep"
 						/>
 					</div>
-					<aside class="play-layout__task glass-panel">
-						<PassageTaskPanel :selected-step="selectedStep" />
-					</aside>
 				</div>
 			</div>
 		</template>
@@ -288,6 +288,22 @@ function onActionComplete() {
 function onActionWrong() {
 	wrongAttempts.value += 1;
 	totalWrongSession.value += 1;
+	const branchResult = passage.advance("error", {
+		wrong_attempts: wrongAttempts.value,
+		score: Math.max(0, 100 - totalWrongSession.value * 10),
+	});
+	if (branchResult.completed) {
+		finishPassage();
+		return;
+	}
+	if (!branchResult.blocked && branchResult.step) {
+		$q.notify({
+			color: "warning",
+			message: "Открыта дополнительная ветка сценария",
+			position: "bottom-right",
+		});
+		return;
+	}
 	if (flowComponentRef.value) {
 		flowComponentRef.value.triggerWrongFeedback();
 	}
@@ -336,13 +352,27 @@ function reportPassageComplete() {
 		});
 }
 
+function finishPassage() {
+	timer.stop();
+	reportPassageComplete();
+	showCompletionModal.value = true;
+}
+
 function goNext() {
-	if (passage.hasNextStep.value) {
-		passage.nextStep();
-	} else {
-		timer.stop();
-		reportPassageComplete();
-		showCompletionModal.value = true;
+	const result = passage.advance("success", {
+		wrong_attempts: wrongAttempts.value,
+		score: Math.max(0, 100 - totalWrongSession.value * 10),
+	});
+	if (result.completed) {
+		finishPassage();
+		return;
+	}
+	if (result.blocked) {
+		$q.notify({
+			color: "warning",
+			message: "Для этого шага не настроен переход по успешному действию",
+			position: "bottom-right",
+		});
 	}
 }
 
@@ -430,7 +460,9 @@ function toggleHintsForCurrentStep() {
 	z-index: 100;
 	padding: 12px;
 	gap: 12px;
-	border-left: 1px solid rgba(15, 23, 42, 0.08);
+	margin: 12px 0 12px 12px;
+	border-radius: 16px;
+	overflow: hidden;
 }
 
 @media (max-width: 900px) {
@@ -442,17 +474,20 @@ function toggleHintsForCurrentStep() {
 		flex-direction: column;
 	}
 
+	.play-layout__viewport {
+		order: -1;
+	}
+
 	.play-layout__task {
-		width: 100%;
+		width: auto;
 		max-height: min(45vh, 400px);
-		border-left: none;
-		border-top: 1px solid rgba(15, 23, 42, 0.08);
+		margin: 0 12px 12px;
 	}
 
 	.play-top-bar--viewport-only {
 		left: 0;
 		right: 0;
-		padding-right: 12px;
+		padding-left: 12px;
 	}
 }
 
@@ -527,12 +562,12 @@ function toggleHintsForCurrentStep() {
 }
 
 /*
- * Десктоп: задание справа — верхняя панель не заходит на панель задания.
+ * Десктоп: задание слева — верхняя панель не заходит на панель задания.
  */
 .play-top-bar--viewport-only {
 	left: 0;
 	right: 0;
-	padding-right: calc(min(440px, 40vw) + 20px);
+	padding-left: calc(min(440px, 40vw) + 24px);
 }
 
 .play-top-bar__home {

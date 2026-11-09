@@ -1,3 +1,4 @@
+import asyncio
 import io
 import uuid
 from typing import Any, Dict, List, Optional, Union
@@ -26,6 +27,9 @@ from schemas.trainings import (
     PassageAnalyticsResponse,
     PassageCompleteRequest,
     PassageHistoryItemResponse,
+    ScenarioGraphResponse,
+    ScenarioGraphUpdate,
+    ScenarioTransitionResponse,
     StepOrderUpdate,
     TrainingCreate,
     TrainingListResponse,
@@ -178,6 +182,110 @@ class TrainingsService:
         if not training:
             return None
         return TrainingResponse.model_validate(training)
+
+    def _validate_scenario_graph(
+        self,
+        step_ids: set[int],
+        start_step_id: Optional[int],
+        transitions: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        errors: List[str] = []
+        warnings: List[str] = []
+        if step_ids and start_step_id not in step_ids:
+            errors.append("Выберите стартовый шаг сценария")
+
+        outgoing: Dict[int, List[Dict[str, Any]]] = {step_id: [] for step_id in step_ids}
+        incoming: Dict[int, int] = {step_id: 0 for step_id in step_ids}
+        route_keys: set[tuple[int, Optional[int], str]] = set()
+        for item in transitions:
+            source = item.get("source_step_id")
+            target = item.get("target_step_id")
+            route_key = (source, target, item.get("trigger_type", "success"))
+            if route_key in route_keys:
+                errors.append("Обнаружены дублирующиеся переходы")
+                continue
+            route_keys.add(route_key)
+            if source not in step_ids:
+                errors.append(f"Переход ссылается на неизвестный исходный шаг {source}")
+                continue
+            if target is not None and target not in step_ids:
+                errors.append(f"Переход ссылается на неизвестный целевой шаг {target}")
+                continue
+            outgoing[source].append(item)
+            if target is not None:
+                incoming[target] += 1
+
+        if start_step_id in step_ids:
+            reachable: set[int] = set()
+            stack = [start_step_id]
+            while stack:
+                current = stack.pop()
+                if current in reachable:
+                    continue
+                reachable.add(current)
+                stack.extend(
+                    item["target_step_id"]
+                    for item in outgoing[current]
+                    if item.get("target_step_id") is not None
+                )
+            unreachable = step_ids - reachable
+            if unreachable:
+                warnings.append(
+                    "Недостижимые шаги: " + ", ".join(map(str, sorted(unreachable)))
+                )
+
+        dead_ends = [step_id for step_id, routes in outgoing.items() if not routes]
+        if dead_ends:
+            warnings.append(
+                "Шаги без перехода к завершению: "
+                + ", ".join(map(str, sorted(dead_ends)))
+            )
+
+        return {
+            "valid": not errors,
+            "errors": errors,
+            "warnings": warnings,
+            "nodes_count": len(step_ids),
+            "transitions_count": len(transitions),
+        }
+
+    async def get_scenario_graph(self, training_uuid: UUID4) -> ScenarioGraphResponse:
+        training = await self.repo.get_by_uuid(training_uuid)
+        if not training:
+            raise HTTPException(status_code=404, detail="Тренинг не найден")
+        steps = await self.repo.get_training_steps(training_uuid)
+        transitions = await self.repo.get_transitions(training_uuid)
+        data = [
+            ScenarioTransitionResponse.model_validate(item) for item in transitions
+        ]
+        validation = self._validate_scenario_graph(
+            {step.id for step in steps},
+            training.scenario_start_step_id,
+            [item.model_dump() for item in data],
+        )
+        return ScenarioGraphResponse(
+            start_step_id=training.scenario_start_step_id,
+            transitions=data,
+            validation=validation,
+        )
+
+    async def update_scenario_graph(
+        self, training_uuid: UUID4, graph: ScenarioGraphUpdate, user_id: int
+    ) -> ScenarioGraphResponse:
+        training = await self._require_training_owner(training_uuid, user_id)
+        steps = await self.repo.get_training_steps(training_uuid)
+        step_ids = {step.id for step in steps}
+        transitions_data = [item.model_dump() for item in graph.transitions]
+        validation = self._validate_scenario_graph(
+            step_ids, graph.start_step_id, transitions_data
+        )
+        if not validation["valid"]:
+            raise HTTPException(status_code=422, detail=validation)
+
+        training.scenario_start_step_id = graph.start_step_id
+        await self.repo.replace_transitions(training_uuid, transitions_data)
+        await self.session.commit()
+        return await self.get_scenario_graph(training_uuid)
 
     async def publish_training(self, training_uuid: UUID4) -> str:
         """
@@ -346,7 +454,10 @@ class TrainingsService:
         return await self.repo.get_training_steps(training_uuid)
 
     async def create_steps_from_photos(
-        self, training_uuid: UUID4, photo_urls: List[str]
+        self,
+        training_uuid: UUID4,
+        photo_urls: List[str],
+        detect_ui_elements: bool = True,
     ) -> List[Dict]:
         """
         Создание шагов из фотографий с вычислением размеров.
@@ -370,7 +481,15 @@ class TrainingsService:
             next_step_number = len(existing_steps) + 1
 
             for i, photo_url in enumerate(photo_urls):
-                image_meta = self._get_image_dimensions(photo_url)
+                image_bytes = await asyncio.to_thread(
+                    self._fetch_image_bytes, photo_url
+                )
+                image_meta = self._image_dimensions_from_bytes(image_bytes)
+                ui_detections = (
+                    await self._detect_ui_elements_safe(image_bytes)
+                    if detect_ui_elements
+                    else []
+                )
                 sn = next_step_number + i
 
                 steps_data_to_create.append(
@@ -379,6 +498,7 @@ class TrainingsService:
                         "image_url": photo_url,
                         "meta": {
                             "name": f"Шаг {sn}",
+                            "ui_detections": ui_detections,
                         },
                         "photo_dimensions": {
                             "width": image_meta.get("width", 0),
@@ -422,21 +542,58 @@ class TrainingsService:
                 detail=f"Ошибка создания шагов из фотографий: {str(e)}",
             )
 
-    def _get_image_dimensions(self, image_url: str) -> Dict[str, int]:
-        """
-        Загружает картинку из S3 и возвращает размеры.
-        """
+    def _fetch_image_bytes(self, image_url: str) -> Optional[bytes]:
+        """Скачивает картинку по URL и возвращает её байты."""
         try:
-            img_response = requests.get(image_url, stream=True, timeout=5)
+            img_response = requests.get(image_url, timeout=15)
             img_response.raise_for_status()
-            img = Image.open(io.BytesIO(img_response.content))
+            return img_response.content
+        except Exception as e:
+            logger.warning(
+                "Не удалось загрузить изображение {} анонимно: {}", image_url, e
+            )
+        # Фолбэк: приватный бакет (MinIO без public policy) — качаем через S3 API
+        key = _s3_object_key_from_public_url(image_url)
+        if not key:
+            return None
+        try:
+            s3 = S3Service()
+            return s3.download_bytes_sync(key)
+        except Exception as e2:
+            logger.warning("Не удалось получить объект {} из S3: {}", key, e2)
+            return None
+
+    def _image_dimensions_from_bytes(
+        self, image_bytes: Optional[bytes]
+    ) -> Dict[str, int]:
+        """Размеры картинки по её байтам."""
+        if not image_bytes:
+            return {"width": 0, "height": 0}
+        try:
+            img = Image.open(io.BytesIO(image_bytes))
             return {
                 "width": img.width,
                 "height": img.height,
             }
         except Exception as e:
-            logger.warning("Не удалось получить размеры для {}: {}", image_url, e)
+            logger.warning("Не удалось получить размеры изображения: {}", e)
             return {"width": 0, "height": 0}
+
+    async def _detect_ui_elements_safe(
+        self, image_bytes: Optional[bytes]
+    ) -> List[Dict]:
+        """YOLO-детекция UI-элементов. Никогда не роняет основной сценарий."""
+        if not image_bytes:
+            return []
+        try:
+            from services.ui_detection_service import ui_detection_service
+
+            return await asyncio.to_thread(
+                ui_detection_service.detect_elements, image_bytes
+            )
+        except Exception as e:
+            logger.warning("UI-детекция недоступна: {}", e)
+            return []
 
     async def add_step(
         self, training_uuid: UUID4, step_data: TrainingStepCreate
@@ -622,13 +779,35 @@ class TrainingsService:
         object_name = s3_service.generate_unique_filename("step_edit.png")
         image_url = await s3_service.upload_file(png_bytes, object_name, training_uuid)
 
+        # Скриншот изменился — пересчитываем детекции UI-элементов
+        ui_detections = await self._detect_ui_elements_safe(png_bytes)
+
         return await self.update_step(
             training_uuid,
             step_id,
             TrainingStepUpdate(
                 image_url=image_url,
                 photo_dimensions={"width": w, "height": h},
+                meta={"ui_detections": ui_detections},
             ),
+        )
+
+    async def detect_step_ui_elements(
+        self,
+        training_uuid: UUID4,
+        step_id: int,
+        creator_id: int,
+        s3_service: S3Service,
+    ) -> TrainingStepResponse:
+        """Повторная YOLO-детекция UI-элементов на скриншоте шага."""
+        content, _media_type = await self.get_step_screenshot_bytes(
+            training_uuid, step_id, creator_id, s3_service
+        )
+        ui_detections = await self._detect_ui_elements_safe(content)
+        return await self.update_step(
+            training_uuid,
+            step_id,
+            TrainingStepUpdate(meta={"ui_detections": ui_detections}),
         )
 
     async def get_step_screenshot_bytes(
@@ -909,6 +1088,111 @@ class TrainingsService:
                 detail=f"Ошибка AI-анализа видео и создания шагов: {str(e)}",
             )
 
+    @staticmethod
+    def _iou(a: Dict[str, float], b: Dict[str, float]) -> float:
+        ax1, ay1 = a["x"], a["y"]
+        ax2, ay2 = ax1 + a["width"], ay1 + a["height"]
+        bx1, by1 = b["x"], b["y"]
+        bx2, by2 = bx1 + b["width"], by1 + b["height"]
+        ix1, iy1 = max(ax1, bx1), max(ay1, by1)
+        ix2, iy2 = min(ax2, bx2), min(ay2, by2)
+        iw, ih = max(0.0, ix2 - ix1), max(0.0, iy2 - iy1)
+        inter = iw * ih
+        if inter <= 0:
+            return 0.0
+        union = a["width"] * a["height"] + b["width"] * b["height"] - inter
+        return inter / union if union > 0 else 0.0
+
+    def _resolve_ai_bbox_area(
+        self,
+        bbox: List[float],
+        fw: float,
+        fh: float,
+        ui_detections: List[Dict],
+    ) -> Dict[str, Any]:
+        """
+        Превращает bbox модели в пиксельную область скриншота.
+
+        Модель может вернуть координаты в неизвестной шкале (0..1, 0..1000,
+        абсолютные пиксели её внутреннего кадра). Поэтому строим кандидатов
+        и выбираем интерпретацию, которая лучше всего совпадает (IoU) с
+        YOLO-детекциями — они гарантированно в пикселях скриншота.
+        Без детекций — абсолютные пиксели (так просит промт).
+        """
+        b0, b1, b2, b3 = [float(v) for v in bbox]
+
+        def norm_area(x1, y1, x2, y2) -> Dict[str, float]:
+            return {
+                "x": max(0.0, min(fw, min(x1, x2))),
+                "y": max(0.0, min(fh, min(y1, y2))),
+                "width": max(1.0, min(fw, abs(x2 - x1))),
+                "height": max(1.0, min(fh, abs(y2 - y1))),
+            }
+
+        def px(x1, y1, x2, y2) -> Dict[str, float]:
+            xa, xb = min(x1, x2), max(x1, x2)
+            ya, yb = min(y1, y2), max(y1, y2)
+            return {
+                "x": max(0.0, min(fw, xa)),
+                "y": max(0.0, min(fh, ya)),
+                "width": max(1.0, min(fw, xb) - max(0.0, min(fw, xa))),
+                "height": max(1.0, min(fh, yb) - max(0.0, min(fh, ya))),
+            }
+
+        candidates: List[Dict[str, float]] = []
+        if max(b0, b1, b2, b3) <= 1.0:
+            candidates.append(norm_area(b0 * fw, b1 * fh, b2 * fw, b3 * fh))
+        candidates.append(px(b0, b1, b2, b3))
+        # Шкала 0..1000 (тысячные доли) — частый формат VLM
+        candidates.append(norm_area(b0 / 1000 * fw, b1 / 1000 * fh, b2 / 1000 * fw, b3 / 1000 * fh))
+
+        best = None
+        best_score = -1.0
+        best_det = None
+        detections = [d for d in ui_detections if d.get("width") and d.get("height")]
+        if not detections:
+            best = candidates[0]
+        for cand in candidates:
+            for d in detections:
+                score = self._iou(cand, d)
+                if score > best_score:
+                    best_score = score
+                    best = cand
+                    best_det = d
+
+        if detections and best_score >= 0.4 and best_det is not None:
+            # Хорошее совпадение — привязываем область к реальному элементу
+            best = {
+                "x": float(best_det["x"]),
+                "y": float(best_det["y"]),
+                "width": float(best_det["width"]),
+                "height": float(best_det["height"]),
+            }
+            logger.info(
+                "AI bbox {} привязан к элементу '{}' ({}) IoU {:.2f}",
+                bbox,
+                best_det.get("class_ru") or best_det.get("class_name"),
+                {k: round(v, 1) for k, v in best.items()},
+                best_score,
+            )
+        elif detections and best_score < 0.15:
+            # Ни одна интерпретация не совпала с реальными элементами — берём пиксели
+            best = px(b0, b1, b2, b3)
+            logger.warning(
+                "AI bbox {} не совпал ни с одной YOLO-детекцией (best IoU {:.2f}), "
+                "используются пиксели как есть",
+                bbox,
+                best_score,
+            )
+        elif detections:
+            logger.info(
+                "AI bbox {} -> область {} (IoU {:.2f})",
+                bbox,
+                {k: round(v, 1) for k, v in best.items()},
+                best_score,
+            )
+        return best
+
     async def create_steps_from_ai_steps(
         self,
         training_uuid: UUID4,
@@ -973,49 +1257,13 @@ class TrainingsService:
                 bbox = step_data.bbox
                 fw = float(step_data.frame_width or 1)
                 fh = float(step_data.frame_height or 1)
-                b0, b1, b2, b3 = [float(v) for v in bbox]
-                mx = max(b0, b1, b2, b3)
 
-                # Универсальная интерпретация bbox:
-                # - 0..1: нормализованный
-                # - 0..100: проценты
-                # - 0..1000: тысячные доли (legacy)
-                # - иначе: пиксели
-                if mx <= 1.0:
-                    sx = 1.0
-                elif mx <= 100.0:
-                    sx = 0.01
-                elif mx <= 1000.0:
-                    sx = 0.001
-                else:
-                    sx = None
+                # YOLO-детекции на этом же кадре — эталон в пикселях скриншота.
+                ui_detections = await self._detect_ui_elements_safe(
+                    step_data.frame_bytes
+                )
 
-                if sx is not None:
-                    x1 = max(0.0, min(1.0, b0 * sx))
-                    y1 = max(0.0, min(1.0, b1 * sx))
-                    x2 = max(0.0, min(1.0, b2 * sx))
-                    y2 = max(0.0, min(1.0, b3 * sx))
-                    x_min, x_max = min(x1, x2), max(x1, x2)
-                    y_min, y_max = min(y1, y2), max(y1, y2)
-                    area: Dict[str, Any] = {
-                        "x": x_min * fw,
-                        "y": y_min * fh,
-                        "width": max(1.0, (x_max - x_min) * fw),
-                        "height": max(1.0, (y_max - y_min) * fh),
-                    }
-                else:
-                    x1 = max(0.0, min(fw, b0))
-                    y1 = max(0.0, min(fh, b1))
-                    x2 = max(0.0, min(fw, b2))
-                    y2 = max(0.0, min(fh, b3))
-                    x_min, x_max = min(x1, x2), max(x1, x2)
-                    y_min, y_max = min(y1, y2), max(y1, y2)
-                    area = {
-                        "x": x_min,
-                        "y": y_min,
-                        "width": max(1.0, x_max - x_min),
-                        "height": max(1.0, y_max - y_min),
-                    }
+                area = self._resolve_ai_bbox_area(bbox, fw, fh, ui_detections)
 
                 # Жёсткая защита от аномалий размера (слишком крупная/слишком мелкая область)
                 max_w = fw * 0.7
@@ -1036,6 +1284,7 @@ class TrainingsService:
                 step_meta: Dict[str, Any] = {
                     "name": step_data.step_title,
                     "source": "video_ai",
+                    "ui_detections": ui_detections,
                     "ai_timecode": step_data.timecode,
                     "ai_timecode_before": step_data.timecode_before
                     or step_data.timecode,

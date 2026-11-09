@@ -1,101 +1,109 @@
 <template>
-	<div class="training-page">
-		<!-- Заголовок страницы -->
-		<div class="page-header page-header--with-actions animate-fade-in-up">
-			<div>
-				<h1 class="page-title">Мои тренинги</h1>
-				<p class="page-subtitle">Создавайте и управляйте обучающими материалами</p>
-			</div>
-			<div class="header-actions row items-center q-gutter-sm">
-				<q-input outlined dense v-model="searchQuery" placeholder="Поиск..." class="search-input bg-white" color="primary" clearable>
-					<template v-slot:prepend>
-						<q-icon name="search" />
-					</template>
-				</q-input>
-				<q-btn unelevated color="primary" icon="add" label="Создать" class="create-btn text-weight-bold shadow-4 q-px-md" @click="openCreateModal" />
-			</div>
-		</div>
+	<page-shell title="Мои тренинги" subtitle="Создавайте и управляйте обучающими материалами">
+		<template #actions>
+			<q-input
+				outlined
+				dense
+				v-model="searchQuery"
+				placeholder="Поиск..."
+				class="page-search"
+				color="primary"
+				clearable
+			>
+				<template #prepend><q-icon name="search" /></template>
+			</q-input>
+			<q-btn
+				unelevated
+				color="primary"
+				icon="add"
+				label="Создать"
+				class="page-cta"
+				@click="openCreateModal"
+			/>
+		</template>
 
-		<!-- Фильтры -->
-		<q-tabs v-model="filterTab" dense class="text-grey-7 q-mb-lg animate-fade-in-up" active-color="primary" indicator-color="primary" align="left" narrow-indicator>
+		<q-tabs
+			v-model="filterTab"
+			dense
+			class="page-tabs"
+			active-color="primary"
+			indicator-color="primary"
+			align="left"
+			narrow-indicator
+		>
 			<q-tab name="all" label="Все" />
 			<q-tab name="published" label="Опубликованные" />
 			<q-tab name="drafts" label="Черновики" />
 		</q-tabs>
 
-		<!-- Состояние загрузки -->
-		<div v-if="status" class="loading-state q-pa-xl column items-center justify-center">
-			<q-spinner-dots size="48px" color="primary" class="loading-spinner" />
-			<p class="text-grey-7 q-mt-md loading-text">Загрузка тренингов...</p>
+		<div v-if="status" class="page-loading">
+			<q-spinner-dots size="44px" color="primary" />
+			<p class="page-loading__text">Загрузка тренингов...</p>
 		</div>
 
-		<!-- Пустое состояние -->
 		<div
 			v-else-if="filteredTrainings.length === 0 && trainings.length === 0"
-			class="empty-state q-pa-xl column items-center justify-center animate-scale-in"
+			class="page-empty"
 		>
-			<div class="empty-icon-wrap q-mb-lg">
-				<q-icon name="school" size="64px" color="primary" />
+			<div class="page-empty__icon">
+				<q-icon name="school" size="40px" />
 			</div>
-			<h3 class="text-h5 text-weight-bold text-dark q-mb-sm">Пока нет тренингов</h3>
-			<p class="text-body1 text-grey-6 text-center q-mb-lg max-w-md">
+			<h3 class="page-empty__title">Пока нет тренингов</h3>
+			<p class="page-empty__desc">
 				Создайте первый тренинг и начните обучать с помощью интерактивных скриншотов.
 			</p>
 			<q-btn
 				unelevated
 				no-caps
 				color="primary"
-				size="lg"
 				icon="add"
 				label="Создать тренинг"
-				class="shadow-4 text-weight-bold q-px-xl"
-				style="border-radius: 12px;"
+				class="page-empty__btn"
 				@click="openCreateModal"
 			/>
 		</div>
 
-		<!-- Пустое состояние при поиске -->
 		<div
 			v-else-if="filteredTrainings.length === 0"
-			class="empty-state q-pa-xl column items-center justify-center animate-scale-in"
+			class="page-empty"
 		>
 			<q-icon name="search_off" size="64px" color="grey-4" class="q-mb-md" />
-			<h3 class="text-h6 text-weight-bold text-dark q-mb-sm">Ничего не найдено</h3>
-			<p class="text-body2 text-grey-6 text-center">
-				По вашему запросу не найдено ни одного тренинга.
-			</p>
-			<q-btn flat color="primary" label="Сбросить фильтры" class="q-mt-sm" @click="searchQuery = ''; filterTab = 'all'" />
+			<h3 class="page-empty__title">Ничего не найдено</h3>
+			<p class="page-empty__desc">По вашему запросу не найдено ни одного тренинга.</p>
+			<q-btn flat color="primary" label="Сбросить фильтры" @click="searchQuery = ''; filterTab = 'all'" />
 		</div>
 
-		<!-- Сетка карточек -->
-		<div v-else class="trainings-grid q-pb-xl animate-stagger-children">
-			<!-- Карточка создания -->
-			<q-card v-if="filterTab === 'all' && !searchQuery" class="training-card create-card" flat bordered v-ripple @click="openCreateModal">
-				<q-card-section class="create-card-section column items-center justify-center full-height text-center">
-					<div class="create-icon-wrap">
-						<q-icon name="add" size="36px" color="primary" />
-					</div>
-					<div class="text-h6 text-weight-bold text-primary q-mb-xs">Новый тренинг</div>
-					<div class="text-body2 text-grey-6">Нажмите, чтобы создать</div>
-				</q-card-section>
-			</q-card>
+		<div v-else class="page-grid">
+			<div
+				v-if="filterTab === 'all' && !searchQuery"
+				class="page-card page-create-card"
+				v-ripple
+				@click="openCreateModal"
+			>
+				<div class="page-create-icon">
+					<q-icon name="add" size="32px" />
+				</div>
+				<div class="page-create-title">Новый тренинг</div>
+				<div class="page-create-desc">Нажмите, чтобы создать</div>
+			</div>
 
-			<!-- Карточки тренингов -->
 			<q-card
 				v-for="training in filteredTrainings"
 				:key="training.uuid"
-				class="training-card relative-position"
+				class="page-card"
 				flat
 				bordered
 				v-ripple
 				@click="editTraining(training.uuid)"
 			>
 				<q-card-section class="card-content">
-					<div class="row items-center justify-between q-mb-sm">
-						<div class="status-pill" :class="training.publish ? 'status-published' : 'status-draft'">
-							<div class="status-dot"></div>
-							{{ training.publish ? 'Опубликован' : 'Черновик' }}
-						</div>
+					<div class="row items-center justify-between q-mb-md">
+						<span
+							class="page-status"
+							:class="training.publish ? 'page-status--published' : 'page-status--draft'"
+						>
+							{{ training.publish ? "Опубликован" : "Черновик" }}
+						</span>
 						<q-btn-dropdown
 							flat
 							round
@@ -124,7 +132,7 @@
 									<q-item-section avatar>
 										<q-icon :name="training.publish ? 'share' : 'publish'" size="sm" color="primary" />
 									</q-item-section>
-									<q-item-section>{{ training.publish ? 'Поделиться' : 'Опубликовать' }}</q-item-section>
+									<q-item-section>{{ training.publish ? "Поделиться" : "Опубликовать" }}</q-item-section>
 								</q-item>
 								<q-item
 									v-if="training.publish"
@@ -137,7 +145,12 @@
 									</q-item-section>
 									<q-item-section>Статистика</q-item-section>
 								</q-item>
-								<q-item v-if="training.publish" clickable v-close-popup @click="confirmUnpublish(training)">
+								<q-item
+									v-if="training.publish"
+									clickable
+									v-close-popup
+									@click="confirmUnpublish(training)"
+								>
 									<q-item-section avatar>
 										<q-icon name="link_off" size="sm" color="grey-7" />
 									</q-item-section>
@@ -158,17 +171,28 @@
 						<q-avatar v-if="training.icon" size="48px" rounded class="bg-grey-2 q-mr-md shadow-1">
 							<img :src="training.icon" style="object-fit: cover; width: 100%; height: 100%;" />
 						</q-avatar>
-						<div class="text-h6 text-weight-bold text-dark ellipsis" style="flex: 1" :title="training.title">{{ training.title }}</div>
+						<div class="page-card__title ellipsis" style="flex: 1" :title="training.title">
+							{{ training.title }}
+						</div>
 					</div>
-					
+
 					<div class="row items-center text-caption text-grey-6 q-mb-md q-gutter-x-md">
-						<span class="row items-center"><q-icon name="layers" size="18px" class="q-mr-xs"/> {{ training.steps_count ?? training.steps?.length ?? 0 }} шагов</span>
-						<span v-if="training.duration_minutes" class="row items-center"><q-icon name="schedule" size="18px" class="q-mr-xs"/> {{ training.duration_minutes }} мин</span>
-						<span v-if="training.level" class="row items-center"><q-icon name="trending_up" size="18px" class="q-mr-xs"/> {{ training.level.label }}</span>
+						<span class="row items-center">
+							<q-icon name="layers" size="18px" class="q-mr-xs" />
+							{{ training.steps_count ?? training.steps?.length ?? 0 }} шагов
+						</span>
+						<span v-if="training.duration_minutes" class="row items-center">
+							<q-icon name="schedule" size="18px" class="q-mr-xs" />
+							{{ training.duration_minutes }} мин
+						</span>
+						<span v-if="training.level" class="row items-center">
+							<q-icon name="trending_up" size="18px" class="q-mr-xs" />
+							{{ training.level.label }}
+						</span>
 					</div>
 
 					<p class="card-description text-body2 text-grey-7 ellipsis-2 q-mb-md">
-						{{ training.description || 'Описание отсутствует. Добавьте его в настройках тренинга.' }}
+						{{ training.description || "Описание отсутствует. Добавьте его в настройках тренинга." }}
 					</p>
 
 					<div class="row q-gutter-sm q-mt-auto">
@@ -182,162 +206,162 @@
 				</q-card-section>
 			</q-card>
 		</div>
-	</div>
 
-	<training-modal v-model="modal" :mode="modalMode" :editData="editingTraining"/>
-	<publish-modal-training
-		v-model="publishModal"
-		:data="publishTrainingData"
-		@published="onPublished"
-	/>
+		<training-modal v-model="modal" :mode="modalMode" :editData="editingTraining" />
+		<publish-modal-training
+			v-model="publishModal"
+			:data="publishTrainingData"
+			@published="onPublished"
+		/>
 
-	<q-dialog v-model="passageStatsOpen">
-		<q-card class="passage-stats-card" flat bordered>
-			<q-card-section class="passage-stats-header row items-center no-wrap">
-				<q-icon name="bar_chart" size="28px" color="primary" class="q-mr-sm passage-stats-header__icon" />
-				<div class="col passage-stats-header__titles">
-					<div class="text-h6">Статистика прохождений</div>
-					<div
-						v-if="passageStatsTraining"
-						class="text-body2 text-grey-7 ellipsis q-mt-xs"
-					>
-						{{ passageStatsTraining.title }}
-					</div>
-				</div>
-				<q-btn flat round dense icon="close" v-close-popup />
-			</q-card-section>
-
-			<q-separator />
-
-			<q-card-section v-if="passageStatsLoading" class="passage-stats-loading column flex-center q-py-xl">
-				<q-spinner-dots color="primary" size="40px" />
-				<div class="text-body2 text-grey-7 q-mt-md">Загрузка…</div>
-			</q-card-section>
-
-			<template v-else>
-				<q-card-section v-if="passageAnalytics" class="passage-stats-body">
-					<div class="row q-col-gutter-sm">
-						<div class="col-6 col-sm-3">
-							<q-card flat bordered class="passage-stats-metric">
-								<q-card-section class="q-pa-md">
-									<div class="passage-stats-metric__label text-caption text-grey-7">Старты</div>
-									<div class="passage-stats-metric__value text-h6 text-weight-bold text-grey-10">
-										{{ passageAnalytics.total_starts }}
-									</div>
-								</q-card-section>
-							</q-card>
-						</div>
-						<div class="col-6 col-sm-3">
-							<q-card flat bordered class="passage-stats-metric">
-								<q-card-section class="q-pa-md">
-									<div class="passage-stats-metric__label text-caption text-grey-7">Завершения</div>
-									<div class="passage-stats-metric__value text-h6 text-weight-bold text-grey-10">
-										{{ passageAnalytics.total_completions }}
-									</div>
-								</q-card-section>
-							</q-card>
-						</div>
-						<div class="col-6 col-sm-3">
-							<q-card flat bordered class="passage-stats-metric">
-								<q-card-section class="q-pa-md">
-									<div class="passage-stats-metric__label text-caption text-grey-7">До конца</div>
-									<div class="passage-stats-metric__value text-h6 text-weight-bold text-grey-10">
-										{{ formatPercent(passageAnalytics.completion_rate) }}
-									</div>
-								</q-card-section>
-							</q-card>
-						</div>
-						<div class="col-6 col-sm-3">
-							<q-card flat bordered class="passage-stats-metric">
-								<q-card-section class="q-pa-md">
-									<div class="passage-stats-metric__label text-caption text-grey-7">Среднее время</div>
-									<div class="passage-stats-metric__value text-h6 text-weight-bold text-grey-10">
-										{{ formatDurationHuman(passageAnalytics.avg_duration_seconds) }}
-									</div>
-								</q-card-section>
-							</q-card>
+		<q-dialog v-model="passageStatsOpen">
+			<q-card class="passage-stats-card" flat bordered>
+				<q-card-section class="passage-stats-header row items-center no-wrap">
+					<q-icon name="bar_chart" size="28px" color="primary" class="q-mr-sm passage-stats-header__icon" />
+					<div class="col passage-stats-header__titles">
+						<div class="text-h6">Статистика прохождений</div>
+						<div
+							v-if="passageStatsTraining"
+							class="text-body2 text-grey-7 ellipsis q-mt-xs"
+						>
+							{{ passageStatsTraining.title }}
 						</div>
 					</div>
-					<div class="q-mt-md">
-						<div class="text-caption text-grey-7 q-mb-xs">Доля завершивших</div>
-						<q-linear-progress
-							:model-value="completionRateForRing / 100"
-							color="primary"
-							track-color="grey-3"
-							size="4px"
-							rounded
-						/>
-					</div>
+					<q-btn flat round dense icon="close" v-close-popup />
 				</q-card-section>
 
 				<q-separator />
 
-				<q-card-section class="passage-stats-history q-pb-lg">
-					<div class="passage-stats-section-label q-mb-md">
-						<q-icon name="history" size="18px" />
-						<span>Последние попытки</span>
-						<span
-							v-if="passageHistory.length"
-							class="text-caption text-grey-6 q-ml-sm"
-						>
-							({{ passageHistory.length }})
-						</span>
-					</div>
+				<q-card-section v-if="passageStatsLoading" class="passage-stats-loading column flex-center q-py-xl">
+					<q-spinner-dots color="primary" size="40px" />
+					<div class="text-body2 text-grey-7 q-mt-md">Загрузка…</div>
+				</q-card-section>
 
-					<q-scroll-area
-						v-if="passageHistory.length"
-						class="passage-stats-table-wrap"
-						:thumb-style="{ borderRadius: '4px', background: 'rgba(0,0,0,0.2)' }"
-						:bar-style="{ borderRadius: '4px' }"
-					>
-						<q-markup-table flat bordered class="passage-stats-table" wrap-cells>
-							<thead>
-								<tr>
-									<th class="text-left">Начало</th>
-									<th class="text-left">Конец</th>
-									<th class="text-center">Статус</th>
-									<th class="text-right">Время</th>
-									<th class="text-right">Ошибок</th>
-								</tr>
-							</thead>
-							<tbody>
-								<tr v-for="(row, idx) in passageHistory" :key="idx">
-									<td class="text-body2 text-grey-9">{{ formatDt(row.started_at) }}</td>
-									<td class="text-body2 text-grey-9">{{ formatDt(row.finished_at) }}</td>
-									<td class="text-center text-body2">
-										<span v-if="row.is_completed" class="text-positive">Завершено</span>
-										<span v-else class="text-grey-7">Не завершено</span>
-									</td>
-									<td class="text-right text-body2 text-grey-9">
-										{{ formatDurationHuman(row.duration_seconds) }}
-									</td>
-									<td class="text-right text-body2 text-grey-9">
-										{{ row.wrong_attempts_total != null ? row.wrong_attempts_total : "—" }}
-									</td>
-								</tr>
-							</tbody>
-						</q-markup-table>
-					</q-scroll-area>
-
-					<q-card
-						v-else
-						flat
-						class="passage-stats-empty bg-grey-3 q-pa-lg"
-					>
-						<div class="row items-start no-wrap">
-							<q-icon name="info_outline" color="grey-7" size="22px" class="q-mr-md passage-stats-empty__lead-icon" />
-							<div>
-								<div class="text-subtitle2 text-grey-8 q-mb-xs">Пока нет записей</div>
-								<div class="text-body2 text-grey-7">
-									После прохождения тренинга по публичной ссылке здесь появится история попыток.
-								</div>
+				<template v-else>
+					<q-card-section v-if="passageAnalytics" class="passage-stats-body">
+						<div class="row q-col-gutter-sm">
+							<div class="col-6 col-sm-3">
+								<q-card flat bordered class="passage-stats-metric">
+									<q-card-section class="q-pa-md">
+										<div class="passage-stats-metric__label text-caption text-grey-7">Старты</div>
+										<div class="passage-stats-metric__value text-h6 text-weight-bold text-grey-10">
+											{{ passageAnalytics.total_starts }}
+										</div>
+									</q-card-section>
+								</q-card>
+							</div>
+							<div class="col-6 col-sm-3">
+								<q-card flat bordered class="passage-stats-metric">
+									<q-card-section class="q-pa-md">
+										<div class="passage-stats-metric__label text-caption text-grey-7">Завершения</div>
+										<div class="passage-stats-metric__value text-h6 text-weight-bold text-grey-10">
+											{{ passageAnalytics.total_completions }}
+										</div>
+									</q-card-section>
+								</q-card>
+							</div>
+							<div class="col-6 col-sm-3">
+								<q-card flat bordered class="passage-stats-metric">
+									<q-card-section class="q-pa-md">
+										<div class="passage-stats-metric__label text-caption text-grey-7">До конца</div>
+										<div class="passage-stats-metric__value text-h6 text-weight-bold text-grey-10">
+											{{ formatPercent(passageAnalytics.completion_rate) }}
+										</div>
+									</q-card-section>
+								</q-card>
+							</div>
+							<div class="col-6 col-sm-3">
+								<q-card flat bordered class="passage-stats-metric">
+									<q-card-section class="q-pa-md">
+										<div class="passage-stats-metric__label text-caption text-grey-7">Среднее время</div>
+										<div class="passage-stats-metric__value text-h6 text-weight-bold text-grey-10">
+											{{ formatDurationHuman(passageAnalytics.avg_duration_seconds) }}
+										</div>
+									</q-card-section>
+								</q-card>
 							</div>
 						</div>
-					</q-card>
-				</q-card-section>
-			</template>
-		</q-card>
-	</q-dialog>
+						<div class="q-mt-md">
+							<div class="text-caption text-grey-7 q-mb-xs">Доля завершивших</div>
+							<q-linear-progress
+								:model-value="completionRateForRing / 100"
+								color="primary"
+								track-color="grey-3"
+								size="4px"
+								rounded
+							/>
+						</div>
+					</q-card-section>
+
+					<q-separator />
+
+					<q-card-section class="passage-stats-history q-pb-lg">
+						<div class="passage-stats-section-label q-mb-md">
+							<q-icon name="history" size="18px" />
+							<span>Последние попытки</span>
+							<span
+								v-if="passageHistory.length"
+								class="text-caption text-grey-6 q-ml-sm"
+							>
+								({{ passageHistory.length }})
+							</span>
+						</div>
+
+						<q-scroll-area
+							v-if="passageHistory.length"
+							class="passage-stats-table-wrap"
+							:thumb-style="{ borderRadius: '4px', background: 'rgba(0,0,0,0.2)' }"
+							:bar-style="{ borderRadius: '4px' }"
+						>
+							<q-markup-table flat bordered class="passage-stats-table" wrap-cells>
+								<thead>
+									<tr>
+										<th class="text-left">Начало</th>
+										<th class="text-left">Конец</th>
+										<th class="text-center">Статус</th>
+										<th class="text-right">Время</th>
+										<th class="text-right">Ошибок</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr v-for="(row, idx) in passageHistory" :key="idx">
+										<td class="text-body2 text-grey-9">{{ formatDt(row.started_at) }}</td>
+										<td class="text-body2 text-grey-9">{{ formatDt(row.finished_at) }}</td>
+										<td class="text-center text-body2">
+											<span v-if="row.is_completed" class="text-positive">Завершено</span>
+											<span v-else class="text-grey-7">Не завершено</span>
+										</td>
+										<td class="text-right text-body2 text-grey-9">
+											{{ formatDurationHuman(row.duration_seconds) }}
+										</td>
+										<td class="text-right text-body2 text-grey-9">
+											{{ row.wrong_attempts_total != null ? row.wrong_attempts_total : "—" }}
+										</td>
+									</tr>
+								</tbody>
+							</q-markup-table>
+						</q-scroll-area>
+
+						<q-card
+							v-else
+							flat
+							class="passage-stats-empty bg-grey-3 q-pa-lg"
+						>
+							<div class="row items-start no-wrap">
+								<q-icon name="info_outline" color="grey-7" size="22px" class="q-mr-md passage-stats-empty__lead-icon" />
+								<div>
+									<div class="text-subtitle2 text-grey-8 q-mb-xs">Пока нет записей</div>
+									<div class="text-body2 text-grey-7">
+										После прохождения тренинга по публичной ссылке здесь появится история попыток.
+									</div>
+								</div>
+							</div>
+						</q-card>
+					</q-card-section>
+				</template>
+			</q-card>
+		</q-dialog>
+	</page-shell>
 </template>
 
 <script setup>
@@ -348,6 +372,7 @@ import { useQuasar } from "quasar";
 import { trainingEvents } from "@utils/eventBus.js";
 import TrainingModal from "@components/features/training_page/TrainingModal.vue";
 import PublishModalTraining from "@components/features/training_page/PublishModalTraining.vue";
+import PageShell from "@components/common/PageShell.vue";
 
 const router = useRouter();
 const $q = useQuasar();
@@ -366,7 +391,6 @@ const filterTab = ref("all");
 const handleTaskUpdate = (event) => {
 	const data = event.detail;
 	if (data.status === "completed") {
-		// Обновляем список тренингов в фоновом режиме (без спиннера)
 		getTrainings(true);
 	}
 };
@@ -387,21 +411,22 @@ onUnmounted(() => {
 
 const filteredTrainings = computed(() => {
 	let result = trainings.value;
-	
-	if (filterTab.value === 'published') {
-		result = result.filter(t => t.publish);
-	} else if (filterTab.value === 'drafts') {
-		result = result.filter(t => !t.publish);
+
+	if (filterTab.value === "published") {
+		result = result.filter((t) => t.publish);
+	} else if (filterTab.value === "drafts") {
+		result = result.filter((t) => !t.publish);
 	}
-	
+
 	if (searchQuery.value) {
 		const q = searchQuery.value.toLowerCase();
-		result = result.filter(t => 
-			t.title.toLowerCase().includes(q) || 
-			(t.description && t.description.toLowerCase().includes(q))
+		result = result.filter(
+			(t) =>
+				t.title.toLowerCase().includes(q) ||
+				(t.description && t.description.toLowerCase().includes(q))
 		);
 	}
-	
+
 	return result;
 });
 
@@ -579,169 +604,14 @@ function editTraining(uuid) {
 	const route = router.resolve(`/edit/${uuid}`);
 	window.open(route.href, "_blank");
 }
-
 </script>
 
 <style scoped>
-.training-page {
-	min-height: 60vh;
-	max-width: 1400px;
-	margin: 0 auto;
-	padding: 32px 40px 24px;
-}
-
-/* ——— Header ——— */
-.page-header {
-	margin-bottom: 32px;
-	position: relative;
-	z-index: 2;
-}
-
-.page-header--with-actions {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	flex-wrap: wrap;
-	gap: 16px;
-}
-
-.page-title {
-	font-size: 32px;
-	font-weight: 800;
-	color: #0f172a;
-	margin: 0 0 8px 0;
-	letter-spacing: -0.02em;
-	line-height: 1.2;
-}
-
-.page-subtitle {
-	font-size: 16px;
-	color: #64748b;
-	margin: 0;
-	font-weight: 500;
-	line-height: 1.5;
-}
-
-.search-input {
-	width: 260px;
-}
-.search-input :deep(.q-field__control) {
-	border-radius: 12px;
-}
-
-.create-btn {
-	border-radius: 12px;
-	height: 40px;
-}
-
-.loading-state {
-	position: relative;
-	z-index: 2;
-}
-
-.empty-icon-wrap {
-	width: 120px;
-	height: 120px;
-	border-radius: 32px;
-	background: rgba(80, 100, 247, 0.1);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	backdrop-filter: blur(12px);
-	-webkit-backdrop-filter: blur(12px);
-}
-
-.empty-state {
-	position: relative;
-	z-index: 2;
-}
-
-.max-w-md {
-	max-width: 400px;
-}
-
-.trainings-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-	gap: 24px;
-	position: relative;
-	z-index: 2;
-}
-
-.training-card {
-	border-radius: 20px;
-	cursor: pointer;
-	transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-	border: 1px solid rgba(0, 0, 0, 0.06);
-	background: rgba(255, 255, 255, 0.85);
-	backdrop-filter: blur(12px);
-	-webkit-backdrop-filter: blur(12px);
-	display: flex;
-	flex-direction: column;
-	height: 250px;
-	box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
-}
-
-.training-card:hover {
-	transform: translateY(-6px);
-	box-shadow: 0 20px 40px rgba(15, 23, 42, 0.06);
-	border-color: rgba(255, 255, 255, 1);
-	background: rgba(255, 255, 255, 0.9);
-}
-
 .card-content {
-	padding: 24px;
+	padding: 0;
 	flex: 1;
 	display: flex;
 	flex-direction: column;
-}
-
-.status-pill {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	padding: 6px 12px;
-	border-radius: 10px;
-	font-size: 13px;
-	font-weight: 600;
-	letter-spacing: 0.02em;
-}
-
-.status-dot {
-	width: 6px;
-	height: 6px;
-	border-radius: 50%;
-}
-
-.status-published {
-	background: #ecfdf5;
-	color: #059669;
-	border: 1px solid #d1fae5;
-}
-.status-published .status-dot {
-	background: #10b981;
-	box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-}
-
-.status-draft {
-	background: #f8fafc;
-	color: #475569;
-	border: 1px solid #e2e8f0;
-}
-.status-draft .status-dot {
-	background: #94a3b8;
-}
-
-.training-card-menu-trigger {
-	margin-right: -8px;
-	margin-top: -4px;
-	opacity: 0.88;
-	transition: opacity 0.2s ease, background 0.2s ease;
-}
-
-.card-description {
-	line-height: 1.5;
-	flex: 1;
 }
 
 .badge-tag {
@@ -749,52 +619,47 @@ function editTraining(uuid) {
 	color: #475569;
 	border: 1px solid #e2e8f0;
 	border-radius: 8px;
-	padding: 6px 12px;
-	font-size: 13px;
+	padding: 5px 10px;
+	font-size: 12px;
 	font-weight: 500;
 }
 
-.create-card {
-	background: rgba(255, 255, 255, 0.5);
-	border: 2px dashed rgba(15, 23, 42, 0.15);
-	box-shadow: none;
-	backdrop-filter: none;
-	-webkit-backdrop-filter: none;
+.card-description {
+	line-height: 1.5;
+	flex: 1;
 }
 
-.create-card:hover {
-	border-color: rgba(80, 100, 247, 0.6);
-	background: rgba(239, 246, 255, 0.6);
-	box-shadow: none;
+.ellipsis {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 }
 
-.create-icon-wrap {
-	width: 64px;
-	height: 64px;
-	border-radius: 20px;
-	background: #ffffff;
-	box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	margin-bottom: 16px;
-	transition: transform 0.3s var(--anim-ease-spring);
+.ellipsis-2 {
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
 }
 
-.create-card:hover .create-icon-wrap {
-	transform: scale(1.1);
-	background: #5064f7;
-	color: #ffffff !important;
-}
-.create-card:hover .create-icon-wrap .q-icon {
-	color: #ffffff !important;
+.training-card-menu-trigger {
+	margin-right: -10px;
+	margin-top: -6px;
+	opacity: 0.75;
+	transition: opacity 0.2s ease, background 0.2s ease;
 }
 
-/* В духе TrainingModal / PublishModal: спокойно, без ярких градиентов */
+.training-card-menu-trigger:hover {
+	opacity: 1;
+	background: rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Stats dialog styles */
 .passage-stats-card {
 	min-width: min(480px, 94vw);
 	max-width: 700px;
 	width: 100%;
+	border-radius: 20px !important;
 	overflow: hidden;
 	border-color: rgba(0, 0, 0, 0.08) !important;
 }
@@ -806,10 +671,6 @@ function editTraining(uuid) {
 
 .passage-stats-header__icon {
 	flex-shrink: 0;
-}
-
-.passage-stats-header__titles {
-	min-width: 0;
 }
 
 .passage-stats-header .text-h6 {
@@ -834,6 +695,7 @@ function editTraining(uuid) {
 
 .passage-stats-metric__label {
 	letter-spacing: 0.02em;
+	font-size: 12px;
 }
 
 .passage-stats-metric__value {
@@ -901,29 +763,8 @@ function editTraining(uuid) {
 .passage-stats-empty__lead-icon {
 	flex-shrink: 0;
 }
-
-.training-card-menu-trigger:hover {
-	opacity: 1;
-	background: rgba(0, 0, 0, 0.05) !important;
-}
-
-@media (max-width: 768px) {
-	.training-page {
-		padding: 24px 16px 20px;
-	}
-	.page-header {
-		margin-bottom: 24px;
-	}
-	.page-title {
-		font-size: 26px;
-	}
-	.page-subtitle {
-		font-size: 14px;
-	}
-}
 </style>
 
-/* Меню рендерится в портале — стили без scoped */
 <style>
 .training-card-actions-menu {
 	border-radius: 14px !important;

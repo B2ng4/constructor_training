@@ -4,6 +4,19 @@
 		class="screenshot-node"
 		:style="nodeStyle"
 	>
+		<!-- Кликабельные области, найденные YOLO-детектором -->
+		<template v-if="boxesVisible">
+			<div
+				v-for="(det, i) in uiDetections"
+				:key="i"
+				class="det-box"
+				:style="detBoxStyle(det)"
+				@mousedown.stop.prevent="onDetectionSelect(det)"
+			>
+				<span class="det-box__label">{{ det.class_ru }}</span>
+			</div>
+		</template>
+
 		<!-- Область для рисования (прозрачный оверлей) -->
 		<div
 			v-if="drawingEnabled"
@@ -26,6 +39,9 @@
 <script setup>
 import { ref, computed, inject } from "vue";
 import { useVueFlow } from "@vue-flow/core";
+import { useTrainingData } from "@store/editTraining.js";
+import { eventRequiresArea } from "@utils/actionTypes.js";
+import { findToolbarEventById } from "@utils/stepActionSequence.js";
 
 const props = defineProps({
 	id: { type: String, default: '' },
@@ -54,6 +70,50 @@ const drawingEnabled = computed(() =>
 		? drawingEnabledRef.value
 		: !!drawingEnabledRef
 );
+
+const store = useTrainingData();
+
+/** Детекции UI-элементов (YOLO) в пикселях исходного скриншота */
+const uiDetections = computed(() => {
+	const list = store.selectedStep?.meta?.ui_detections;
+	return Array.isArray(list) ? list : [];
+});
+
+/**
+ * Боксы видны всегда, пока выбранное действие не исключает область
+ * (для «Нажатие клавиши» и т.п. область не нужна — боксы прячем).
+ */
+const boxesVisible = computed(() => {
+	if (!uiDetections.value.length) return false;
+	const ev = store.selectedEvent;
+	if (!ev) return true;
+	return eventRequiresArea(ev);
+});
+
+function detBoxStyle(det) {
+	return {
+		left: `${Number(det.x) || 0}px`,
+		top: `${Number(det.y) || 0}px`,
+		width: `${Math.max(4, Number(det.width) || 0)}px`,
+		height: `${Math.max(4, Number(det.height) || 0)}px`,
+	};
+}
+
+function onDetectionSelect(det) {
+	if (!onAreaDrawn) return;
+	// Если действие не выбрано — подставляем «Левый клик», клик по боксу сразу назначает область.
+	if (!drawingEnabled.value) {
+		const ev = store.selectedEvent;
+		if (ev && !eventRequiresArea(ev)) return;
+		store.selectEvent({ ...findToolbarEventById(1) });
+	}
+	const x = Math.round(Number(det.x) || 0);
+	const y = Math.round(Number(det.y) || 0);
+	const w = Math.round(Number(det.width) || 0);
+	const h = Math.round(Number(det.height) || 0);
+	if (w < 2 || h < 2) return;
+	onAreaDrawn({ x, y, width: w, height: h });
+}
 
 function getImageNode() {
 	return vueFlow.findNode?.('fullscreen-image') ?? null;
@@ -172,6 +232,8 @@ function onMouseLeave() {
 	inset: 0;
 	cursor: crosshair;
 	z-index: 1;
+	/* обёртка .vue-flow__node имеет pointer-events: none для non-selectable нод */
+	pointer-events: auto;
 }
 
 .draw-preview {
@@ -179,5 +241,41 @@ function onMouseLeave() {
 	border: 2px solid var(--q-primary);
 	background: rgba(80, 100, 247, 0.15);
 	pointer-events: none;
+}
+
+.det-box {
+	position: absolute;
+	border: 1.5px dashed rgba(34, 197, 94, 0.85);
+	background: rgba(34, 197, 94, 0.06);
+	cursor: pointer;
+	z-index: 2;
+	pointer-events: auto;
+	transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.det-box:hover {
+	background: rgba(34, 197, 94, 0.22);
+	border-style: solid;
+	border-color: rgb(22, 163, 74);
+}
+
+.det-box__label {
+	position: absolute;
+	top: -18px;
+	left: -1px;
+	padding: 0 4px;
+	font-size: 11px;
+	line-height: 16px;
+	color: #fff;
+	background: rgba(22, 163, 74, 0.9);
+	border-radius: 3px;
+	white-space: nowrap;
+	opacity: 0;
+	transition: opacity 0.12s ease;
+	pointer-events: none;
+}
+
+.det-box:hover .det-box__label {
+	opacity: 1;
 }
 </style>

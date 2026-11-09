@@ -361,7 +361,7 @@ export default { name: 'LandingPage' };
 /* ==================== BASE ==================== */
 .landing-layout {
   background-color: #ffffff;
-  font-family: 'Inter', 'Segoe UI', sans-serif;
+  font-family: var(--font-sans);
 }
 .landing-page {
   min-height: 100vh;

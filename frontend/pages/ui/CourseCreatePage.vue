@@ -1,37 +1,31 @@
 <template>
-	<div class="course-page">
-		<div class="page-header page-header--with-actions animate-fade-in-up">
-			<div>
-				<h1 class="page-title">Мои курсы</h1>
-				<p class="page-subtitle">Собирайте курсы из существующих тренингов и запускайте прохождение</p>
-			</div>
-			<div class="header-actions row items-center q-gutter-sm">
-				<q-input
-					outlined
-					dense
-					v-model="searchQuery"
-					placeholder="Поиск курса..."
-					class="search-input bg-white"
-					color="primary"
-					clearable
-				>
-					<template #prepend><q-icon name="search" /></template>
-				</q-input>
-				<q-btn
-					unelevated
-					color="primary"
-					icon="add"
-					label="Создать"
-					class="create-btn btn-rounded text-weight-bold shadow-4 q-px-md"
-					@click="openCreateModal"
-				/>
-			</div>
-		</div>
+	<page-shell title="Мои курсы" subtitle="Собирайте курсы из существующих тренингов и запускайте прохождение">
+		<template #actions>
+			<q-input
+				outlined
+				dense
+				v-model="searchQuery"
+				placeholder="Поиск курса..."
+				class="page-search"
+				color="primary"
+				clearable
+			>
+				<template #prepend><q-icon name="search" /></template>
+			</q-input>
+			<q-btn
+				unelevated
+				color="primary"
+				icon="add"
+				label="Создать"
+				class="page-cta"
+				@click="openCreateModal"
+			/>
+		</template>
 
 		<q-tabs
 			v-model="filterTab"
 			dense
-			class="text-grey-7 q-mb-lg animate-fade-in-up"
+			class="page-tabs"
 			active-color="primary"
 			indicator-color="primary"
 			align="left"
@@ -42,73 +36,66 @@
 			<q-tab name="draft" label="Черновые" />
 		</q-tabs>
 
-		<div v-if="loading" class="loading-state q-pa-xl column items-center justify-center">
-			<q-spinner-dots size="48px" color="primary" class="loading-spinner" />
-			<p class="text-grey-7 q-mt-md loading-text">Загрузка курсов...</p>
+		<div v-if="loading" class="page-loading">
+			<q-spinner-dots size="44px" color="primary" />
+			<p class="page-loading__text">Загрузка курсов...</p>
 		</div>
 
-		<div
-			v-else-if="courses.length === 0"
-			class="empty-state q-pa-xl column items-center justify-center animate-scale-in"
-		>
-			<div class="empty-icon-wrap q-mb-lg">
-				<q-icon name="school" size="64px" color="primary" />
+		<div v-else-if="courses.length === 0" class="page-empty">
+			<div class="page-empty__icon">
+				<q-icon name="school" size="40px" />
 			</div>
-			<h3 class="text-h5 text-weight-bold text-dark q-mb-sm">Пока нет курсов</h3>
-			<p class="text-body1 text-grey-6 text-center q-mb-lg max-w-md">
-				Создайте курс и добавьте в него нужные тренинги.
-			</p>
+			<h3 class="page-empty__title">Пока нет курсов</h3>
+			<p class="page-empty__desc">Создайте курс и добавьте в него нужные тренинги.</p>
 			<q-btn
 				unelevated
 				no-caps
 				color="primary"
-				size="lg"
 				icon="add"
 				label="Создать курс"
-				class="shadow-4 text-weight-bold q-px-xl"
-				style="border-radius: 12px;"
+				class="page-empty__btn"
 				@click="openCreateModal"
 			/>
 		</div>
 
-		<div
-			v-else-if="filteredCourses.length === 0"
-			class="empty-state q-pa-xl column items-center justify-center animate-scale-in"
-		>
+		<div v-else-if="filteredCourses.length === 0" class="page-empty">
 			<q-icon name="search_off" size="64px" color="grey-4" class="q-mb-md" />
-			<h3 class="text-h6 text-weight-bold text-dark q-mb-sm">Ничего не найдено</h3>
-			<p class="text-body2 text-grey-6 text-center">
-				По вашему запросу курсы не найдены.
-			</p>
-			<q-btn flat color="primary" label="Сбросить фильтры" class="q-mt-sm" @click="resetFilters" />
+			<h3 class="page-empty__title">Ничего не найдено</h3>
+			<p class="page-empty__desc">По вашему запросу курсы не найдены.</p>
+			<q-btn flat color="primary" label="Сбросить фильтры" @click="resetFilters" />
 		</div>
 
-		<div v-else class="courses-grid q-pb-xl animate-stagger-children">
-			<q-card class="course-card create-card" flat bordered v-ripple @click="openCreateModal">
-				<q-card-section class="create-card-section column items-center justify-center full-height text-center">
-					<div class="create-icon-wrap">
-						<q-icon name="add" size="36px" color="primary" />
-					</div>
-					<div class="text-h6 text-weight-bold text-primary q-mb-xs">Новый курс</div>
-					<div class="text-body2 text-grey-6">Нажмите, чтобы создать</div>
-				</q-card-section>
-			</q-card>
+		<div v-else class="page-grid">
+			<div
+				v-if="filterTab === 'all' && !searchQuery"
+				class="page-card page-create-card"
+				v-ripple
+				@click="openCreateModal"
+			>
+				<div class="page-create-icon">
+					<q-icon name="add" size="32px" />
+				</div>
+				<div class="page-create-title">Новый курс</div>
+				<div class="page-create-desc">Нажмите, чтобы создать</div>
+			</div>
 
 			<q-card
 				v-for="course in filteredCourses"
 				:key="course.id"
-				class="course-card relative-position"
+				class="page-card"
 				flat
 				bordered
 				v-ripple
 				@click="openDetails(course)"
 			>
 				<q-card-section class="card-content">
-					<div class="row items-center justify-between q-mb-sm">
-						<div class="status-pill" :class="courseStatusClass(course)">
-							<div class="status-dot"></div>
+					<div class="row items-center justify-between q-mb-md">
+						<span
+							class="page-status"
+							:class="courseStatusClass(course)"
+						>
 							{{ courseStatusLabel(course) }}
-						</div>
+						</span>
 						<q-btn
 							flat
 							round
@@ -119,7 +106,7 @@
 						/>
 					</div>
 
-					<div class="text-h6 text-weight-bold text-dark ellipsis q-mb-xs" :title="course.title">
+					<div class="page-card__title ellipsis" :title="course.title">
 						{{ course.title }}
 					</div>
 
@@ -130,7 +117,7 @@
 						</span>
 						<span class="row items-center">
 							<q-icon name="public" size="18px" class="q-mr-xs" />
-							{{ publishedCount(course) }} опублик.
+							{{ publishedCount(course) }} опубл.
 						</span>
 					</div>
 
@@ -142,27 +129,27 @@
 						<q-badge
 							v-for="training in (course.trainings || []).slice(0, 3)"
 							:key="training.uuid"
-							class="badge-tag"
+							class="course-badge"
 							:label="training.title"
 						/>
 						<q-badge
 							v-if="(course.trainings?.length || 0) > 3"
-							class="badge-tag badge-tag--more"
+							class="course-badge course-badge--more"
 							:label="`+${course.trainings.length - 3}`"
 						/>
 					</div>
+
+					<div class="page-card__footer">
+						<span class="text-caption text-grey-6">Создан: {{ formatDate(course.created_at) }}</span>
+						<span class="row items-center text-caption text-primary text-weight-bold">
+							<q-icon name="visibility" size="16px" class="q-mr-xs" />
+							Открыть
+						</span>
+					</div>
 				</q-card-section>
-				<q-separator />
-				<q-card-actions class="justify-between q-px-md q-py-sm">
-					<span class="text-caption text-grey-6">Создан: {{ formatDate(course.created_at) }}</span>
-					<span class="row items-center text-caption text-primary text-weight-medium">
-						<q-icon name="visibility" size="16px" class="q-mr-xs" />
-						Открыть
-					</span>
-				</q-card-actions>
 			</q-card>
 		</div>
-	</div>
+	</page-shell>
 
 	<q-dialog v-model="createModal">
 		<q-card class="course-modal" flat bordered>
@@ -233,46 +220,54 @@
 					<q-icon name="school" size="28px" color="primary" />
 				</div>
 				<div class="col">
-					<div class="text-h5 text-weight-bold text-dark">{{ selectedCourse?.title || "Курс" }}</div>
-					<div class="text-caption text-grey-7 q-mt-xs">
+					<div class="text-h6">{{ selectedCourse?.title || "Курс" }}</div>
+					<div class="text-body2 text-grey-7 q-mt-xs">
 						Тренингов в курсе: {{ selectedCourse?.trainings?.length || 0 }}
 					</div>
 				</div>
 				<q-btn icon="close" flat round dense v-close-popup color="grey-7" />
 			</q-card-section>
 			<q-separator />
-			<q-card-section class="details-body bg-grey-1">
-				<div v-if="!(selectedCourse?.trainings?.length)" class="empty-trainings-list column flex-center q-py-xl">
-					<q-icon name="auto_stories" size="48px" color="grey-4" class="q-mb-md" />
-					<div class="text-subtitle1 text-grey-7">В этом курсе пока нет тренингов</div>
+			<q-card-section class="details-body">
+				<div v-if="!(selectedCourse?.trainings?.length)" class="page-empty" style="border: none; background: transparent;">
+					<div class="page-empty__icon" style="width: 64px; height: 64px; margin-bottom: 16px;">
+						<q-icon name="auto_stories" size="32px" />
+					</div>
+					<h3 class="page-empty__title" style="font-size: 18px;">В этом курсе пока нет тренингов</h3>
 				</div>
 
-				<div v-else class="trainings-list q-gutter-y-sm">
+				<div v-else class="course-trainings-list">
 					<div
 						v-for="(training, index) in selectedCourse?.trainings || []"
 						:key="training.uuid"
-						class="training-list-item row items-center no-wrap bg-white"
+						class="page-list-item"
 					>
-						<div class="training-list-item__number text-grey-5 text-weight-bold q-mr-md">
-							{{ index + 1 }}
-						</div>
-						<div class="training-list-item__icon q-mr-md">
-							<q-icon name="play_lesson" size="24px" color="primary" />
+						<div class="page-list-item__number">{{ index + 1 }}</div>
+						<div class="page-list-item__icon">
+							<q-icon name="play_lesson" size="22px" />
 						</div>
 						<div class="col overflow-hidden q-pr-md">
 							<div class="text-subtitle1 text-weight-bold text-dark ellipsis q-mb-xs" :title="training.title">
 								{{ training.title }}
 							</div>
 							<div class="row items-center text-caption text-grey-6 q-gutter-x-md">
-								<span class="row items-center"><q-icon name="trending_up" size="16px" class="q-mr-xs"/> {{ training.level?.label ?? "Без уровня" }}</span>
-								<span class="row items-center"><q-icon name="schedule" size="16px" class="q-mr-xs"/> {{ training.duration_minutes || "—" }} мин</span>
-								<span class="status-pill-small" :class="training.publish ? 'status-published' : 'status-draft'">
-									<span class="status-dot"></span>
+								<span class="row items-center">
+									<q-icon name="trending_up" size="16px" class="q-mr-xs" />
+									{{ training.level?.label ?? "Без уровня" }}
+								</span>
+								<span class="row items-center">
+									<q-icon name="schedule" size="16px" class="q-mr-xs" />
+									{{ training.duration_minutes || "—" }} мин
+								</span>
+								<span
+									class="page-status"
+									:class="training.publish ? 'page-status--published' : 'page-status--draft'"
+								>
 									{{ training.publish ? "Опубликован" : "Черновик" }}
 								</span>
 							</div>
 						</div>
-						<div class="training-list-item__actions row items-center q-gutter-x-sm no-wrap">
+						<div class="row items-center q-gutter-x-sm no-wrap">
 							<q-btn
 								flat
 								dense
@@ -281,7 +276,7 @@
 								icon="edit"
 								class="btn-rounded q-px-sm"
 								label="Открыть"
-								@click="openTrainingEditor(training.uuid)"
+								@click.stop="openTrainingEditor(training.uuid)"
 							/>
 							<q-btn
 								unelevated
@@ -291,7 +286,7 @@
 								icon="play_arrow"
 								class="btn-rounded q-px-sm"
 								label="Пройти"
-								@click="startTrainingPassage(training)"
+								@click.stop="startTrainingPassage(training)"
 							/>
 						</div>
 					</div>
@@ -306,6 +301,7 @@ import { computed, onMounted, ref } from "vue";
 import { useQuasar } from "quasar";
 import { useRouter } from "vue-router";
 import { CourseApi, TrainingApi } from "@api";
+import PageShell from "@components/common/PageShell.vue";
 
 const $q = useQuasar();
 const router = useRouter();
@@ -388,9 +384,9 @@ function courseStatusLabel(course) {
 function courseStatusClass(course) {
 	const total = (course.trainings || []).length;
 	const pub = publishedCount(course);
-	if (total === 0 || pub === 0) return "status-draft";
-	if (pub === total) return "status-published";
-	return "status-mixed";
+	if (total === 0 || pub === 0) return "page-status--draft";
+	if (pub === total) return "page-status--published";
+	return "page-status--mixed";
 }
 
 function resetCreateForm() {
@@ -513,166 +509,27 @@ onMounted(fetchData);
 </script>
 
 <style scoped>
-.course-page {
-	min-height: 60vh;
-	max-width: 1400px;
-	margin: 0 auto;
-	padding: 32px 40px 24px;
-}
-
-.page-header {
-	margin-bottom: 32px;
-	position: relative;
-	z-index: 2;
-}
-
-.page-header--with-actions {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	flex-wrap: wrap;
-	gap: 16px;
-}
-
-.page-title {
-	font-size: 32px;
-	font-weight: 800;
-	color: #0f172a;
-	margin: 0 0 8px 0;
-	letter-spacing: -0.02em;
-	line-height: 1.2;
-}
-
-.page-subtitle {
-	font-size: 16px;
-	color: #64748b;
-	margin: 0;
-	font-weight: 500;
-	line-height: 1.5;
-}
-
-.search-input {
-	width: 280px;
-}
-
-.search-input :deep(.q-field__control) {
-	border-radius: 12px;
-}
-
-.create-btn {
-	border-radius: 12px;
-	height: 40px;
-}
-
-.btn-rounded {
-	border-radius: 12px;
-}
-
-.loading-state,
-.empty-state {
-	min-height: 300px;
-	position: relative;
-	z-index: 2;
-}
-
-.empty-icon-wrap {
-	width: 120px;
-	height: 120px;
-	border-radius: 32px;
-	background: rgba(80, 100, 247, 0.1);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	backdrop-filter: blur(12px);
-	-webkit-backdrop-filter: blur(12px);
-}
-
-.max-w-md {
-	max-width: 400px;
-}
-
-.courses-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-	gap: 24px;
-	position: relative;
-	z-index: 2;
-}
-
-.course-card {
-	border-radius: 20px;
-	transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-	border: 1px solid rgba(0, 0, 0, 0.06);
-	background: rgba(255, 255, 255, 0.85);
-	backdrop-filter: blur(12px);
-	-webkit-backdrop-filter: blur(12px);
-	display: flex;
-	flex-direction: column;
-	height: 275px;
-	box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
-	cursor: pointer;
-}
-
-.course-card:hover {
-	transform: translateY(-6px);
-	box-shadow: 0 20px 40px rgba(15, 23, 42, 0.06);
-	border-color: rgba(255, 255, 255, 1);
-	background: rgba(255, 255, 255, 0.9);
-}
-
 .card-content {
-	padding: 24px;
+	padding: 0;
 	flex: 1;
 	display: flex;
 	flex-direction: column;
 }
 
-.status-pill {
-	display: inline-flex;
-	align-items: center;
-	gap: 6px;
-	padding: 6px 12px;
-	border-radius: 10px;
-	font-size: 13px;
-	font-weight: 600;
-	letter-spacing: 0.02em;
-}
-
-.status-dot {
-	width: 6px;
-	height: 6px;
-	border-radius: 50%;
-}
-
-.status-published {
-	background: #ecfdf5;
-	color: #059669;
-	border: 1px solid #d1fae5;
-}
-
-.status-published .status-dot {
-	background: #10b981;
-	box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
-}
-
-.status-draft {
-	background: #f8fafc;
+.course-badge {
+	background: #f1f5f9;
 	color: #475569;
 	border: 1px solid #e2e8f0;
+	border-radius: 8px;
+	padding: 5px 10px;
+	font-size: 12px;
+	font-weight: 500;
 }
 
-.status-draft .status-dot {
-	background: #94a3b8;
-}
-
-.status-mixed {
-	background: #eff6ff;
-	color: #1d4ed8;
-	border: 1px solid #bfdbfe;
-}
-
-.status-mixed .status-dot {
-	background: #3b82f6;
+.course-badge--more {
+	color: #5064f7;
+	background: rgba(80, 100, 247, 0.08);
+	border-color: rgba(80, 100, 247, 0.2);
 }
 
 .card-description {
@@ -693,66 +550,12 @@ onMounted(fetchData);
 	overflow: hidden;
 }
 
-.badge-tag {
-	background: #f1f5f9;
-	color: #475569;
-	border: 1px solid #e2e8f0;
-	border-radius: 8px;
-	padding: 6px 12px;
-	font-size: 13px;
-	font-weight: 500;
-}
-
-.badge-tag--more {
-	color: #5064f7;
-	background: rgba(80, 100, 247, 0.08);
-	border-color: rgba(80, 100, 247, 0.2);
-}
-
-.create-card {
-	background: rgba(255, 255, 255, 0.5);
-	border: 2px dashed rgba(15, 23, 42, 0.15);
-	box-shadow: none;
-	backdrop-filter: none;
-	-webkit-backdrop-filter: none;
-}
-
-.create-card:hover {
-	border-color: rgba(80, 100, 247, 0.6);
-	background: rgba(239, 246, 255, 0.6);
-	box-shadow: none;
-}
-
-.create-card-section {
-	min-height: 100%;
-}
-
-.create-icon-wrap {
-	width: 64px;
-	height: 64px;
-	border-radius: 20px;
-	background: #ffffff;
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	margin-bottom: 16px;
-	transition: transform 0.3s var(--anim-ease-spring);
-}
-
-.create-card:hover .create-icon-wrap {
-	transform: scale(1.1);
-	background: #5064f7;
-}
-
-.create-card:hover .create-icon-wrap .q-icon {
-	color: #fff !important;
-}
-
 .course-modal,
 .details-modal {
 	width: min(820px, 95vw);
 	max-width: 95vw;
+	border-radius: 20px !important;
+	overflow: hidden;
 }
 
 .trainings-select-list {
@@ -762,14 +565,14 @@ onMounted(fetchData);
 }
 
 .details-header {
-	padding: 24px 32px;
+	padding: 20px 24px;
 	background: linear-gradient(135deg, rgba(80, 100, 247, 0.04) 0%, rgba(80, 100, 247, 0.01) 100%);
 }
 
 .details-header-icon {
-	width: 56px;
-	height: 56px;
-	border-radius: 16px;
+	width: 52px;
+	height: 52px;
+	border-radius: 14px;
 	background: rgba(80, 100, 247, 0.1);
 	display: flex;
 	align-items: center;
@@ -777,71 +580,18 @@ onMounted(fetchData);
 }
 
 .details-body {
-	padding: 24px 32px;
+	padding: 20px 24px;
 	max-height: 65vh;
 	overflow-y: auto;
 }
 
-.trainings-list {
+.course-trainings-list {
 	display: flex;
 	flex-direction: column;
+	gap: 12px;
 }
 
-.training-list-item {
-	padding: 16px 20px;
-	border-radius: 16px;
-	border: 1px solid rgba(0, 0, 0, 0.06);
-	transition: all 0.25s ease;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
-}
-
-.training-list-item:hover {
-	border-color: rgba(80, 100, 247, 0.3);
-	box-shadow: 0 4px 16px rgba(80, 100, 247, 0.08);
-	transform: translateY(-2px);
-}
-
-.training-list-item__number {
-	font-size: 18px;
-	min-width: 24px;
-	text-align: center;
-}
-
-.training-list-item__icon {
-	width: 48px;
-	height: 48px;
-	border-radius: 12px;
-	background: rgba(80, 100, 247, 0.06);
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.status-pill-small {
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-	padding: 2px 8px;
-	border-radius: 6px;
-	font-size: 11px;
-	font-weight: 600;
-}
-
-@media (max-width: 768px) {
-	.course-page {
-		padding: 24px 16px 20px;
-	}
-
-	.page-header {
-		margin-bottom: 24px;
-	}
-
-	.page-title {
-		font-size: 26px;
-	}
-
-	.page-subtitle {
-		font-size: 14px;
-	}
+.btn-rounded {
+	border-radius: 10px;
 }
 </style>

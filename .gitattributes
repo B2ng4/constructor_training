@@ -1,4 +1,4 @@
 * text=auto eol=lf
 backend/requirements.txt text eol=lf
-backend/dockerfile text eol=lf
+backend/docker-entrypoint.sh text eol=lf
 docker-compose.yml text eol=lf

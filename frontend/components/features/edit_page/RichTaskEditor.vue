@@ -348,7 +348,7 @@ onBeforeUnmount(() => {
 
 .rich-task-editor-prose {
 	outline: none;
-	font-family: "Inter", system-ui, -apple-system, sans-serif;
+	font-family: var(--font-sans);
 	font-size: 18px;
 	line-height: 1.7;
 	color: #1e293b;

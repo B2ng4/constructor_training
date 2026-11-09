@@ -9,7 +9,9 @@ export default defineConfig({
     quasar(),
   ],
   define: {
-    __BASE__URL__: JSON.stringify('/api')
+    __BASE__URL__: JSON.stringify(
+      process.env.VITE_API_BASE_URL || 'https://evidently-devout-dassie.cloudpub.ru'
+    ),
   },
   resolve: {
     alias: {
@@ -24,6 +26,6 @@ export default defineConfig({
     }
   },
   server: {
-    allowedHosts: ['http://109.196.99.95']
+    allowedHosts: ['righteously-ladylike-nightjar.cloudpub.ru', 'righteously-ladylike-nightjar.cloudpub.ru']
   }
 });

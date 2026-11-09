@@ -30,10 +30,11 @@ export class MetaTrainingApi extends BaseApi {
 		return this.createRequest();
 	}
 
-	uploadImages(uuid, data) {
+	uploadImages(uuid, data, detectUiElements = true) {
 		super.httpMethod = "post";
 		super.sourceUrl = `/training/upload-photos/${uuid}`;
 		super.data = data;
+		super.params = { detect_ui_elements: detectUiElements };
 		return super.createRequest();
 	}
 

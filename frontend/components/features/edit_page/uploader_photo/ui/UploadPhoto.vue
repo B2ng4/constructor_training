@@ -76,6 +76,17 @@
 
 			<!-- Режим скриншотов -->
 			<template v-if="uploadMode === 'photos'">
+				<div class="row justify-center q-mb-md">
+					<q-toggle
+						v-model="autoDetect"
+						color="primary"
+						icon="auto_awesome"
+						label="Автоматически определять элементы"
+						left-label
+					>
+						<q-tooltip>Запускать YOLO-разметку UI-элементов после загрузки скриншотов</q-tooltip>
+					</q-toggle>
+				</div>
 				<div v-if="images.length === 0" class="dropzone-wrap">
 					<form-upload-photo
 						@add-image="addImage"
@@ -421,6 +432,7 @@ const route = useRoute();
 const router = useRouter();
 const loading = ref(false);
 const uploadMode = ref("photos");
+const autoDetect = ref(true);
 const videoFile = ref(null);
 const videoInputRef = ref(null);
 const pdfFile = ref(null);
@@ -810,7 +822,7 @@ const uploadImages = async () => {
 		images.value.forEach((el) => {
 			formData.append("files", el.originalFile);
 		});
-		await metaApi.uploadImages(route.params.uuid, formData);
+		await metaApi.uploadImages(route.params.uuid, formData, autoDetect.value);
 
 		const { data } = await trainingApi.getTrainingByUuid(route.params.uuid);
 		store.setTrainingData(data);

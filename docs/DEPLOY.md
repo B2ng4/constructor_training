@@ -1,6 +1,6 @@
 # Запуск на сервере (Docker)
 
-Полный стек: **frontend**, **backend (API)**, **celery_worker**, **PostgreSQL**, **Redis**, **nginx**, **certbot**.
+Полный стек: **frontend**, **backend (API)**, **celery_worker**, **PostgreSQL**, **Redis**.
 
 ## Быстрый старт
 
@@ -24,9 +24,11 @@ docker compose logs -f celery_worker
 > Все переменные — в **`backend/.env`**. Корневой `.env` не обязателен (только симлинк для compose).
 
 После старта:
-- Сайт: `https://<ваш-домен>/` (через nginx)
-- API: `https://<ваш-домен>/api/`
-- WebSocket уведомлений: `wss://<ваш-домен>/api/ws/notifications`
+- Сайт: `http://<хост>/` (frontend, порт 80)
+- API: `http://<хост>:8001/` (backend, порт 8001)
+- WebSocket уведомлений: `ws://<хост>:8001/ws/notifications`
+
+> Фронт собирается с `VITE_API_BASE_URL` — URL API, зашитый в сборку (compose-значение по умолчанию `http://localhost:8001`). На сервере передайте свой URL через build-arg или настройте внешний reverse proxy (`/` → frontend, API → backend:8001).
 
 ## Сервисы
 
@@ -36,8 +38,7 @@ docker compose logs -f celery_worker
 | `celery_worker` | Фоновая обработка видео (AI + S3) |
 | `redis` | Брокер Celery + pub/sub для WebSocket |
 | `db` | PostgreSQL 15 |
-| `frontend` | Статика Vue (nginx внутри контейнера) |
-| `nginx` | Reverse proxy, SSL, `/api/` → backend |
+| `frontend` | Статика Vue (`serve`, порт 80) |
 
 ## Celery worker
 
@@ -71,56 +72,6 @@ git pull
 docker compose up -d --build
 # миграции применяются при рестарте backend (alembic upgrade head)
 ```
-
-## CI/CD из GitHub Actions
-
-В репозитории добавлен workflow: `.github/workflows/deploy.yml`.
-
-Он запускается при `push` в `main` (и вручную через `workflow_dispatch`) и выполняет на сервере:
-
-```bash
-docker compose down
-docker compose up -d --build
-```
-
-### 1) Одноразово на сервере
-
-```bash
-# под пользователем деплоя
-mkdir -p ~/.ssh && chmod 700 ~/.ssh
-cd /opt
-git clone <ваш-repo-url> events_knastu
-cd events_knastu
-cp backend/.env.example backend/.env
-nano backend/.env
-docker compose up -d --build
-```
-
-### 2) Секреты в GitHub
-
-Repo → Settings → Secrets and variables → Actions → New repository secret:
-
-- `DEPLOY_HOST` — IP/домен сервера
-- `DEPLOY_PORT` — обычно `22`
-- `DEPLOY_USER` — пользователь на сервере (например `deploy`)
-- `DEPLOY_SSH_KEY` — приватный SSH-ключ (целиком, включая `BEGIN/END`)
-- `DEPLOY_PATH` — путь к репозиторию на сервере (например `/opt/events_knastu`)
-
-### 3) Публичный ключ на сервер
-
-Добавьте публичную часть ключа в `~/.ssh/authorized_keys` пользователя `DEPLOY_USER`.
-
-Проверка:
-
-```bash
-ssh -i <private_key> <DEPLOY_USER>@<DEPLOY_HOST>
-```
-
-### 4) Триггер деплоя
-
-Сделайте push в `main` — workflow сам подключится по SSH и выполнит пересборку.
-
-Если нужен ручной запуск: GitHub → Actions → `Deploy To Server` → Run workflow.
 
 ## Локальная разработка без Docker
 
@@ -160,10 +111,6 @@ Compose переопределяет для Docker: `DB_HOST=db`, `DB_PASS` из
 
 `DB_HOST=localhost` в `backend/.env` **игнорируется** — compose задаёт `DB_HOST=db`.
 
-## SSL (Let's Encrypt)
-
-Nginx ожидает сертификаты в `./certbot/conf`. Первичная выдача — стандартная процедура certbot с webroot `./certbot/www`. Конфиг nginx: `nginx/conf.d/default.conf` (домен `ai-csis.ru` — замените на свой).
-
 ## Troubleshooting
 
 **Видео загружается, но шаги не создаются**
@@ -171,14 +118,14 @@ Nginx ожидает сертификаты в `./certbot/conf`. Первичн�
 - Redis: `docker compose exec redis redis-cli ping` → `PONG`
 - S3 и AI ключи в `backend/.env`
 
-**502 Bad Gateway на `/api/*` или WebSocket**
+**API или WebSocket недоступны**
 
-Nginx работает, **backend недоступен**. Проверьте:
+**Backend недоступен**. Проверьте:
 
 ```bash
 docker compose ps
 docker compose logs backend --tail 50
-docker compose exec nginx-proxy wget -qO- http://backend:8001/ || echo "backend unreachable"
+curl -s http://localhost:8001/ || echo "backend unreachable"
 ```
 
 Если backend `Restarting` или `unhealthy` — сначала почините БД (см. выше `InvalidPasswordError`):
@@ -186,11 +133,10 @@ docker compose exec nginx-proxy wget -qO- http://backend:8001/ || echo "backend 
 ```bash
 grep '^DB_' backend/.env
 docker compose exec db psql -U postgres -d postgres -c "ALTER USER postgres WITH PASSWORD 'ВАШ_DB_PASS';"
-docker compose up -d --build backend celery_worker
-docker compose restart nginx-proxy
+docker compose up -d --build backend celery_worker frontend
 ```
 
-Когда backend `healthy`, API и `wss://.../api/ws/notifications` заработают.
+Когда backend `healthy`, API и `ws://<хост>:8001/ws/notifications` заработают.
 
 
 **Worker падает при второй задаче (только dev на Windows)**

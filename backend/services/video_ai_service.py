@@ -41,11 +41,13 @@ ANALYSIS_PROMPT = """
   ]
 }}
 
+Размер кадра видео: {frame_w}x{frame_h} пикселей.
+
 ОБЯЗАТЕЛЬНЫЕ ПРАВИЛА:
 1. title начинается с глагола действия на русском.
 2. timecode_before в формате "MM:SS.mmm" — кадр непосредственно перед действием.
 3. timecode_after в формате "MM:SS.mmm" — стабильный кадр после действия.
-4. bbox строго 0..1, минимальный вокруг целевого элемента.
+4. bbox — АБСОЛЮТНЫЕ ПИКСЕЛИ кадра {frame_w}x{frame_h}, целые числа [x1, y1, x2, y2], минимальный прямоугольник вокруг целевого элемента. НЕ нормализуй координаты.
 5. action_type строго по фактическому действию.
 6. text_input -> expected_text обязателен.
 7. key_chord -> key_chord обязателен.
@@ -65,7 +67,7 @@ FALLBACK_ANALYSIS_PROMPT = """
       "instruction_md": "Краткая инструкция НА РУССКОМ ЯЗЫКЕ.",
       "interaction": {
         "type": "left_click|right_click|double_click|hover|text_input|key_chord",
-        "bbox": [x1, y1, x2, y2],
+        "bbox": [x1, y1, x2, y2]  // АБСОЛЮТНЫЕ ПИКСЕЛИ кадра, целые числа, НЕ 0..1
         "expected_text": null,
         "key_chord": null
       }
@@ -77,7 +79,8 @@ FALLBACK_ANALYSIS_PROMPT = """
 REPAIR_JSON_PROMPT = """
 Предыдущий ответ не удалось разобрать как JSON. Проанализируй то же видео ещё раз.
 Верни ТОЛЬКО один JSON-объект:
-{"steps":[{"timecode_before":"M:SS.mmm","timecode_after":"M:SS.mmm","title":"Название шага НА РУССКОМ","instruction_md":"Инструкция НА РУССКОМ","interaction":{"type":"left_click","bbox":[0.1,0.2,0.15,0.25]}}]}
+{"steps":[{"timecode_before":"M:SS.mmm","timecode_after":"M:SS.mmm","title":"Название шага НА РУССКОМ","instruction_md":"Инструкция НА РУССКОМ","interaction":{"type":"left_click","bbox":[120,240,200,320]}}]}
+bbox — АБСОЛЮТНЫЕ ПИКСЕЛИ кадра видео [x1,y1,x2,y2], целые числа, НЕ 0..1.
 """
 
 MAX_FRAME_SIDE = 1280
@@ -344,7 +347,13 @@ class VideoAIService:
                 if aw > 0 and ah > 0:
                     analysis_frame_size = (aw, ah)
             cap_compressed.release()
-            prompt_with_time = ANALYSIS_PROMPT.format(start_time=0, end_time=duration)
+            fw_prompt, fh_prompt = (analysis_frame_size or (0, 0))
+            prompt_with_time = ANALYSIS_PROMPT.format(
+                start_time=0,
+                end_time=duration,
+                frame_w=fw_prompt or "ширина",
+                frame_h=fh_prompt or "высота",
+            )
             logger.info(
                 f"Sending to AI: fps {source_file_fps:.1f}→{compressed_fps:.1f}"
             )
@@ -437,14 +446,11 @@ class VideoAIService:
                 temperature=0.0,
             )
             if hasattr(completion, "usage") and completion.usage:
-                logger.info("💰 TOKEN USAGE 💰")
                 logger.info(
-                    f"  Prompt tokens (входящие): {completion.usage.prompt_tokens}"
+                    f"Token usage: prompt={completion.usage.prompt_tokens}, "
+                    f"completion={completion.usage.completion_tokens}, "
+                    f"total={completion.usage.total_tokens}"
                 )
-                logger.info(
-                    f"  Completion tokens (исходящие): {completion.usage.completion_tokens}"
-                )
-                logger.info(f"  Total tokens: {completion.usage.total_tokens}")
             content = completion.choices[0].message.content
             if content is None:
                 raise HTTPException(
@@ -542,13 +548,6 @@ class VideoAIService:
                 return None
         return None
 
-    def _normalize_bbox_scale(self, bbox: List[float]) -> List[float]:
-        if not bbox or len(bbox) != 4:
-            return bbox
-        if all(0.0 <= b <= 100.0 for b in bbox) and any(b > 1.0 for b in bbox):
-            return [b / 100.0 for b in bbox]
-        return bbox
-
     def _normalize_instruction_md(self, raw: str) -> str:
         s = str(raw or "").strip()
         if not s:
@@ -589,14 +588,6 @@ class VideoAIService:
             bbox = item.get("bbox")
             expected_text = item.get("expected_text")
             key_chord = _normalize_key_chord(item.get("key_chord"))
-
-            logger.info("=== DEBUG bbox ===")
-            logger.info(f"Шаг: {title if title else 'без названия'}")
-            logger.info(f"timecode_before: {timecode_before}")
-            logger.info(f"action_type: {action_type}")
-            logger.info(f"RAW bbox from AI: {bbox}")
-            logger.info(f"Тип bbox: {type(bbox)}")
-            logger.info("===================")
 
             if action_type:
                 itype = _normalize_interaction_type(str(action_type))
@@ -649,7 +640,6 @@ class VideoAIService:
                 logger.warning(f"Пропущен шаг {timecode_before}: нет текста задания")
                 continue
 
-            bbox = self._normalize_bbox_scale(bbox)
             x1, y1, x2, y2 = bbox
             bbox = [min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2)]
             is_norm = all(0.0 <= b <= 1.0 for b in bbox)

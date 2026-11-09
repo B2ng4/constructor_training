@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from core.config import configs
 from fastapi.responses import JSONResponse, Response, StreamingResponse
 from pydantic import UUID4
@@ -19,6 +19,8 @@ from schemas.trainings import (
     PassageAnalyticsResponse,
     PassageCompleteRequest,
     PassageHistoryItemResponse,
+    ScenarioGraphResponse,
+    ScenarioGraphUpdate,
     StepBulkCreateRequest,
     StepsReorderRequest,
     TrainingCreate,
@@ -152,6 +154,7 @@ async def upload_icon_for_training(
 async def upload_photos_by_training(
     training_uuid: UUID4,
     files: List[UploadFile] = File(..., description="Загрузка фото"),
+    detect_ui_elements: bool = Query(True, description="Запустить YOLO-детекцию UI-элементов после загрузки"),
     s3_service: S3Service = Depends(get_s3_service),
     trainings_service: TrainingsService = Depends(get_trainings_service),
     token: str = Depends(oauth2_scheme),
@@ -178,7 +181,7 @@ async def upload_photos_by_training(
             await file.close()
 
     created_steps = await trainings_service.create_steps_from_photos(
-        training_uuid, uploaded_urls
+        training_uuid, uploaded_urls, detect_ui_elements=detect_ui_elements
     )
 
     return {
@@ -354,6 +357,30 @@ async def replace_step_screenshot(
         await file.close()
 
 
+@router.post(
+    "/{training_uuid}/steps/{step_id}/detect-elements",
+    response_model=TrainingStepResponse,
+    name="Детекция UI-элементов на скриншоте шага (YOLO)",
+)
+async def detect_step_ui_elements(
+    training_uuid: UUID4,
+    step_id: int,
+    token: str = Depends(oauth2_scheme),
+    service: TrainingsService = Depends(get_trainings_service),
+    user_service: UserService = Depends(get_user_service),
+    s3_service: S3Service = Depends(get_s3_service),
+):
+    user = await user_service.get_current_user(token)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Не авторизован",
+        )
+    return await service.detect_step_ui_elements(
+        training_uuid, step_id, user.id, s3_service
+    )
+
+
 @router.delete("/{training_uuid}/steps/{step_id}", summary="Удалить шаг тренинга")
 async def delete_training_step(
     training_uuid: UUID4,
@@ -388,6 +415,38 @@ async def get_training_steps(
     """Получение всех шагов тренинга"""
     steps = await service.get_training_steps(training_uuid)
     return [TrainingStepResponse.model_validate(step) for step in steps]
+
+
+@router.get(
+    "/{training_uuid}/scenario",
+    response_model=ScenarioGraphResponse,
+    name="Получить сценарный граф тренинга",
+)
+async def get_scenario_graph(
+    training_uuid: UUID4,
+    token: str = Depends(oauth2_scheme),
+    service: TrainingsService = Depends(get_trainings_service),
+    user_service: UserService = Depends(get_user_service),
+):
+    user = await user_service.get_current_user(token)
+    await service._require_training_owner(training_uuid, user.id)
+    return await service.get_scenario_graph(training_uuid)
+
+
+@router.put(
+    "/{training_uuid}/scenario",
+    response_model=ScenarioGraphResponse,
+    name="Сохранить сценарный граф тренинга",
+)
+async def update_scenario_graph(
+    training_uuid: UUID4,
+    graph: ScenarioGraphUpdate,
+    token: str = Depends(oauth2_scheme),
+    service: TrainingsService = Depends(get_trainings_service),
+    user_service: UserService = Depends(get_user_service),
+):
+    user = await user_service.get_current_user(token)
+    return await service.update_scenario_graph(training_uuid, graph, user.id)
 
 
 @router.post("/{training_uuid}/publish", name="Опубликовать тренинг")

@@ -2,7 +2,7 @@
 	<div class="it-root" :class="{ 'it-root--focused': focused }">
 		
 		<!-- ═══ Floating Tool Bar ═══ -->
-		<div v-show="focused || focusedToolbar" class="it-toolbar nodrag" @mouseenter="focusedToolbar = true" @mouseleave="focusedToolbar = false" @click.stop>
+		<div v-show="focused || focusedToolbar" class="it-toolbar" @mouseenter="focusedToolbar = true" @mouseleave="focusedToolbar = false" @click.stop>
 			<!-- ═══ Drag handle ═══ -->
 			<div class="it-handle" title="Перетащить область">
 				<svg class="it-handle__grip" viewBox="0 0 20 8" fill="none">
@@ -25,7 +25,7 @@
 			</div>
 
 			<!-- ═══ Mode tabs ═══ -->
-			<div class="it-tabs">
+			<div class="it-tabs nodrag">
 				<button class="it-tab" :class="{ 'it-tab--active': localMode === 'exact' }" @click.stop="setMode('exact')">
 					<span class="it-tab__icon">✎</span> Точный текст
 				</button>
@@ -35,7 +35,7 @@
 			</div>
 
 			<!-- ═══ Pattern mode ═══ -->
-			<div v-if="localMode === 'regex'" class="it-pattern">
+			<div v-if="localMode === 'regex'" class="it-pattern nodrag">
 				<div class="it-presets">
 					<button v-for="p in PRESETS" :key="p.id" class="it-preset" :class="{ 'it-preset--active': localPreset === p.id }" @click.stop="selectPreset(p)">
 						<span class="it-preset__icon">{{ p.icon }}</span>
@@ -56,7 +56,7 @@
 			</div>
 
 			<!-- ═══ Font size bar ═══ -->
-			<div class="it-bar">
+			<div class="it-bar nodrag">
 				<button class="it-bar__btn" title="Уменьшить шрифт" @click.stop="changeFontSize(-2)">
 					<span class="it-bar__a it-bar__a--sm">A</span>
 				</button>

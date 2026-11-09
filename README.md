@@ -14,7 +14,7 @@ docker compose logs -f backend
 
 Полная инструкция: **[docs/DEPLOY.md](docs/DEPLOY.md)**
 
-Стек: FastAPI + Celery + Redis + PostgreSQL + Vue + nginx.
+Стек: FastAPI + Celery + Redis + PostgreSQL + Vue.
 
 ## Локальная разработка
 

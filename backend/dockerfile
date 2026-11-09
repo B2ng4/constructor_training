@@ -6,9 +6,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
 
-# ffmpeg — обработка видео; curl — healthcheck (опционально)
+# ffmpeg — обработка видео; libgl1/libglib2.0 — зависимости opencv (ultralytics)
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ffmpeg \
+    && apt-get install -y --no-install-recommends ffmpeg libgl1 libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
@@ -17,7 +17,8 @@ RUN pip install --upgrade pip \
 
 COPY . .
 
+RUN chmod +x docker-entrypoint.sh
+
 EXPOSE 8001
 
-# Миграции при старте API; worker переопределяет CMD в docker-compose
-CMD ["sh", "-c", "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8001 --loop asyncio"]
+ENTRYPOINT ["./docker-entrypoint.sh"]
