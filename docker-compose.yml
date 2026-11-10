@@ -1,13 +1,32 @@
 services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - app-network
+    restart: unless-stopped
+    depends_on:
+      frontend:
+        condition: service_started
+      backend:
+        condition: service_started
+
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_BASE_URL: http://localhost:8001
+        VITE_API_BASE_URL: https://api.aicsis.ru
     container_name: frontend
-    ports:
-      - "80:80"
+    expose:
+      - "80"
     networks:
       - app-network
     restart: unless-stopped
@@ -20,8 +39,8 @@ services:
       context: ./backend
       dockerfile: dockerfile
     container_name: backend
-    ports:
-      - "8001:8001"
+    expose:
+      - "8001"
     env_file:
       - ./backend/.env
     environment:
@@ -126,6 +145,8 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  caddy_data:
+  caddy_config:
 
 networks:
   app-network:

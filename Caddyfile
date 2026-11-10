@@ -1,0 +1,7 @@
+aicsis.ru, www.aicsis.ru {
+	reverse_proxy frontend:80
+}
+
+api.aicsis.ru {
+	reverse_proxy backend:8001
+}
