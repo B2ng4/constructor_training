@@ -18,10 +18,26 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.config import configs
 from core.logging_config import logger
 
+# Типы, которые можно отдавать браузеру inline. Остальное — octet-stream,
+# чтобы бакет нельзя было использовать для хостинга исполняемого контента
+# (HTML/SVG с JS = фишинг/XSS на s3-домене).
+_SAFE_INLINE_PREFIXES = ("image/", "video/", "audio/")
+_SAFE_INLINE_TYPES = {"application/pdf"}
+
+
+def _safe_content_type(object_name: str, content_type: Optional[str]) -> str:
+    ct = content_type or mimetypes.guess_type(object_name)[0] or "application/octet-stream"
+    if ct == "image/svg+xml":
+        return "application/octet-stream"
+    if ct.startswith(_SAFE_INLINE_PREFIXES) or ct in _SAFE_INLINE_TYPES:
+        return ct
+    return "application/octet-stream"
+
 
 class S3Service:
-    _bucket_checked: bool = False
+    _bucket_checked_at: float = 0.0
     _bucket_check_lock = threading.Lock()
+    _BUCKET_RECHECK_INTERVAL_SEC = 300
 
     def __init__(
         self,
@@ -46,13 +62,17 @@ class S3Service:
         self.endpoint_url = endpoint_url
 
     def _ensure_bucket_exists_once(self) -> None:
-        if self.__class__._bucket_checked:
+        import time
+
+        now = time.monotonic()
+        cls = self.__class__
+        if now - cls._bucket_checked_at < cls._BUCKET_RECHECK_INTERVAL_SEC:
             return
-        with self.__class__._bucket_check_lock:
-            if self.__class__._bucket_checked:
+        with cls._bucket_check_lock:
+            if time.monotonic() - cls._bucket_checked_at < cls._BUCKET_RECHECK_INTERVAL_SEC:
                 return
             self._ensure_bucket_exists()
-            self.__class__._bucket_checked = True
+            cls._bucket_checked_at = time.monotonic()
 
     def _ensure_bucket_exists(self):
         """Проверяет существование бакета и создает его если не существует"""
@@ -103,10 +123,7 @@ class S3Service:
         self, file_content: bytes, object_name: str, content_type: str | None = None
     ) -> str:
         self._ensure_bucket_exists_once()
-        if content_type is None:
-            content_type, _ = mimetypes.guess_type(object_name)
-        if content_type is None:
-            content_type = "application/octet-stream"
+        content_type = _safe_content_type(object_name, content_type)
         self.s3_client.put_object(
             Bucket=self.bucket_name,
             Key=object_name,
@@ -120,10 +137,7 @@ class S3Service:
         self, file_obj: BinaryIO, object_name: str, content_type: str | None = None
     ) -> str:
         self._ensure_bucket_exists_once()
-        if content_type is None:
-            content_type, _ = mimetypes.guess_type(object_name)
-        if content_type is None:
-            content_type = "application/octet-stream"
+        content_type = _safe_content_type(object_name, content_type)
         self.s3_client.upload_fileobj(
             Fileobj=file_obj,
             Bucket=self.bucket_name,
@@ -154,9 +168,7 @@ class S3Service:
         import asyncio
         await asyncio.to_thread(self._ensure_bucket_exists_once)
 
-        content_type, _ = mimetypes.guess_type(object_name)
-        if content_type is None:
-            content_type = "application/octet-stream"
+        content_type = _safe_content_type(object_name, None)
 
         try:
             # Выполняем синхронный вызов boto3 в отдельном потоке

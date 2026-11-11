@@ -1,7 +1,9 @@
+import time
+from collections import defaultdict, deque
 from typing import Optional
 from urllib.parse import quote
 
-from fastapi import APIRouter, Body, Depends, Form, HTTPException
+from fastapi import APIRouter, Body, Depends, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from loguru import logger
 from pydantic import BaseModel
@@ -22,6 +24,30 @@ router = APIRouter(
     prefix="/auth",
     tags=["Auth"],
 )
+
+
+_RATE_BUCKETS: dict = defaultdict(deque)
+
+
+def _throttle(request: Request, bucket: str, limit: int, window_sec: int) -> None:
+    """Простой rate-limit по IP (X-Forwarded-For за прокси)."""
+    fwd = request.headers.get("x-forwarded-for")
+    ip = (
+        fwd.split(",")[0].strip()
+        if fwd
+        else (request.client.host if request.client else "unknown")
+    )
+    key = (bucket, ip)
+    now = time.monotonic()
+    dq = _RATE_BUCKETS[key]
+    while dq and now - dq[0] > window_sec:
+        dq.popleft()
+    if len(dq) >= limit:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Слишком много попыток. Попробуйте позже.",
+        )
+    dq.append(now)
 
 
 def _sanitize_oauth_next(raw: Optional[str]) -> str:
@@ -149,13 +175,12 @@ async def yandex_oauth_token(
 @router.post("/register", name="регистрация пользователя")
 async def register_user(
     user_data: UserRegister,
+    request: Request,
     user_service: UserService = Depends(get_user_service),
-) -> None:
+) -> dict:
+    _throttle(request, "register", limit=5, window_sec=60)
     if await user_service.register(user_data):
-        raise HTTPException(
-            status_code=200,
-            detail="Вы успешно зарегистрированы! На ваш email отправлено письмо.",
-        )
+        return {"detail": "Вы успешно зарегистрированы! На ваш email отправлено письмо."}
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -165,11 +190,13 @@ async def register_user(
 
 @router.post("/login", name="Логин")
 async def login_user(
+    request: Request,
     username: Optional[str] = Form(default=None),
     password: Optional[str] = Form(default=None),
     user_data: Optional[UserLogin] = Body(default=None),
     user_service: UserService = Depends(get_user_service),
 ) -> dict:
+    _throttle(request, "login", limit=10, window_sec=60)
     if user_data:
         final_user_data = user_data
     elif username and password:

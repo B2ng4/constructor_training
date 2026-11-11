@@ -31,8 +31,14 @@ class Configs(BaseSettings):
         default="HS256", env="ALGORITHM"
     )  # Алгоритм шифрования для JWT
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(
-        default=600000, env="ACCESS_TOKEN_EXPIRE_MINUTES"
+        default=720, env="ACCESS_TOKEN_EXPIRE_MINUTES"
     )  # Время жизни токена
+
+    # ------------ Окружение ------------
+    # Создавать ли тестового пользователя test@example.com при пустой БД.
+    SEED_TEST_USER: bool = Field(default=False, env="SEED_TEST_USER")
+    # CORS: список origin через запятую, либо "*" (без credentials).
+    CORS_ORIGINS: str = Field(default="*", env="CORS_ORIGINS")
 
     # ------------ БД ------------
     DB_HOST: Optional[str] = Field(default="localhost", env="DB_HOST")
@@ -152,6 +158,22 @@ class Configs(BaseSettings):
             self.YANDEX_REDIRECT_URI = "http://localhost:8002/auth/yandex/callback"
         return self
 
+    @model_validator(mode="after")
+    def _secret_key_not_default(self) -> "Configs":
+        """Слабый/дефолтный SECRET_KEY заменяется случайным — иначе JWT подделываются."""
+        weak = {"", "your-secret-key", "your-secret-key-change-in-production", "secret"}
+        if (self.SECRET_KEY or "").strip().lower() in weak:
+            import secrets
+            import logging
+
+            logging.getLogger("configs").warning(
+                "SECRET_KEY не задан или дефолтный — сгенерирован случайный. "
+                "Все JWT инвалидируются при каждом рестарте. "
+                "Задайте SECRET_KEY в backend/.env"
+            )
+            self.SECRET_KEY = secrets.token_urlsafe(48)
+        return self
+
     model_config = SettingsConfigDict(
         env_file=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".env"),
         extra="ignore",
@@ -172,3 +194,13 @@ def get_db_url():
 
 def get_auth_data():
     return {"secret_key": configs.SECRET_KEY, "algorithm": configs.ALGORITHM}
+
+
+def get_frontend_base_url() -> str:
+    """Базовый URL фронтенда для внешних ссылок; фолбэк — SERVER_HOST."""
+    return (configs.FRONTEND_PUBLIC_URL or configs.SERVER_HOST or "").rstrip("/")
+
+
+def public_passage_link(access_token: str) -> str:
+    """Полная публичная ссылка прохождения тренинга."""
+    return f"{get_frontend_base_url()}/training/passage/{access_token}"

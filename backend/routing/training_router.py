@@ -1,20 +1,31 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
-from core.config import configs
+from core.config import public_passage_link
 from fastapi.responses import JSONResponse, Response, StreamingResponse
 from pydantic import UUID4
 
 from depends import (
+    get_current_creator,
+    get_current_user,
     get_gigachat_tts_service,
     get_s3_service,
     get_trainings_service,
-    get_user_service,
     get_video_ai_service,
-    oauth2_scheme,
-    get_current_creator,
 )
 from models.users import User
+from utils.upload_validation import (
+    IMAGE_EXTENSIONS,
+    MAX_ICON_BYTES,
+    MAX_IMAGE_BYTES,
+    MAX_PDF_BYTES,
+    MAX_VIDEO_BYTES,
+    PDF_EXTENSIONS,
+    VIDEO_EXTENSIONS,
+    check_declared_size,
+    check_extension,
+    read_limited,
+)
 from schemas.trainings import (
     PassageAnalyticsResponse,
     PassageCompleteRequest,
@@ -38,22 +49,21 @@ from services.external_services.gigachat_tts_service import GigaChatTTSService
 from services.external_services.s3_service import S3Service
 from services.pdf_ai_service import PdfAiService
 from services.trainings_service import TrainingsService
-from services.user_service import UserService
 from services.video_ai_service import VideoAIService
 
 router = APIRouter(prefix="/training", tags=["Тренинги"])
+
+MAX_PHOTO_FILES_PER_REQUEST = 50
 
 
 @router.post("/create_training", name="Создание тренинга")
 async def create_training(
     ser_data: TrainingCreate,
-    token: str = Depends(oauth2_scheme),
     training_service: TrainingsService = Depends(get_trainings_service),
-    user_service: UserService = Depends(get_user_service),
+    user: User = Depends(get_current_creator),
 ):
     """Создание нового тренинга"""
-    creator_id = await user_service.get_current_user(token)
-    created_training = await training_service.create_training(ser_data, creator_id.id)
+    created_training = await training_service.create_training(ser_data, user.id)
 
     if created_training:
         return {"status": status.HTTP_201_CREATED, "data": created_training.dict()}
@@ -63,11 +73,15 @@ async def create_training(
 
 @router.get("/{training_uuid}", name="Получение конкретного тренинга")
 async def get_training(
-    training_uuid: UUID4, service: TrainingsService = Depends(get_trainings_service)
+    training_uuid: UUID4,
+    service: TrainingsService = Depends(get_trainings_service),
+    user: User = Depends(get_current_user),
 ):
     training = await service.get_training(training_uuid)
     if not training:
-        return JSONResponse(status_code=200, content={"detail": "Нет тренингов"})
+        raise HTTPException(status_code=404, detail="Тренинг не найден")
+    if not training.publish and training.creator_id != user.id:
+        raise HTTPException(status_code=403, detail="Нет доступа к этому тренингу")
     return training
 
 
@@ -77,11 +91,9 @@ async def get_training(
     name="Получение всех тренингов пользователя",
 )
 async def get_my_trainings(
-    token: str = Depends(oauth2_scheme),
-    user_service: UserService = Depends(get_user_service),
+    user: User = Depends(get_current_user),
     training_service: TrainingsService = Depends(get_trainings_service),
 ):
-    user = await user_service.get_current_user(token)
     if user.role == UserRole.EMPLOYEE:
         return []
     trainings = await training_service.get_trainings_by_user_id(user.id)
@@ -95,14 +107,11 @@ async def get_my_trainings(
 async def patch_training(
     training_uuid: UUID4,
     training_data: TrainingUpdate,
-    token: str = Depends(oauth2_scheme),
     service: TrainingsService = Depends(get_trainings_service),
-    user_service: UserService = Depends(get_user_service),
+    user: User = Depends(get_current_creator),
 ):
     """Частичное обновление тренинга и/или его шагов"""
-    user = await user_service.get_current_user(token)
-
-    # Обновление тренинга
+    await service._require_training_owner(training_uuid, user.id)
     updated_training = await service.patch_training(training_uuid, training_data)
 
     return {
@@ -114,8 +123,11 @@ async def patch_training(
 
 @router.delete("/{training_uuid}", name="Удаление тренинга по uuid")
 async def delete_training(
-    training_uuid: UUID4, service: TrainingsService = Depends(get_trainings_service)
+    training_uuid: UUID4,
+    service: TrainingsService = Depends(get_trainings_service),
+    user: User = Depends(get_current_creator),
 ):
+    await service._require_training_owner(training_uuid, user.id)
     if await service.delete_training(training_uuid):
         return {"detail": "Тренинг успешно удален"}
     else:
@@ -128,18 +140,12 @@ async def upload_icon_for_training(
     file: UploadFile = File(...),
     s3_service: S3Service = Depends(get_s3_service),
     trainings_service: TrainingsService = Depends(get_trainings_service),
-    user_service: UserService = Depends(get_user_service),
-    token: str = Depends(oauth2_scheme),
+    user: User = Depends(get_current_creator),
 ):
-    user = await user_service.get_current_user(token)
     await trainings_service._require_training_owner(training_uuid, user.id)
 
-    if not file.filename:
-        raise HTTPException(status_code=400, detail="Имя файла обязательно")
-
-    content = await file.read()
-    if not content:
-        raise HTTPException(status_code=400, detail="Пустой файл")
+    check_extension(file.filename, IMAGE_EXTENSIONS, "иконки")
+    content = await read_limited(file, MAX_ICON_BYTES, "Иконка")
 
     object_name = s3_service.generate_unique_filename(file.filename)
     file_url = await s3_service.upload_file(content, object_name, training_uuid)
@@ -157,21 +163,31 @@ async def upload_photos_by_training(
     detect_ui_elements: bool = Query(True, description="Запустить YOLO-детекцию UI-элементов после загрузки"),
     s3_service: S3Service = Depends(get_s3_service),
     trainings_service: TrainingsService = Depends(get_trainings_service),
-    token: str = Depends(oauth2_scheme),
+    user: User = Depends(get_current_creator),
 ):
     if not files:
         raise HTTPException(status_code=400, detail="Файлы не предоставлены")
+    if len(files) > MAX_PHOTO_FILES_PER_REQUEST:
+        raise HTTPException(
+            status_code=400,
+            detail=f"За один раз можно загрузить не более {MAX_PHOTO_FILES_PER_REQUEST} файлов",
+        )
+
+    await trainings_service._require_training_owner(training_uuid, user.id)
 
     uploaded_urls = []
 
     for file in files:
         try:
+            check_extension(file.filename, IMAGE_EXTENSIONS, "изображения")
             object_name = s3_service.generate_unique_filename(file.filename)
-            file_content = await file.read()
+            file_content = await read_limited(file, MAX_IMAGE_BYTES, "Изображение")
             file_url = await s3_service.upload_file(
                 file_content, object_name, training_uuid
             )
             uploaded_urls.append(file_url)
+        except HTTPException:
+            raise
         except Exception as e:
             raise HTTPException(
                 status_code=500,
@@ -202,10 +218,10 @@ async def upload_video_for_training_async(
     file: UploadFile = File(..., description="Видеофайл"),
     s3_service: S3Service = Depends(get_s3_service),
     trainings_service: TrainingsService = Depends(get_trainings_service),
-    user_service: UserService = Depends(get_user_service),
-    token: str = Depends(oauth2_scheme),
+    user: User = Depends(get_current_creator),
 ):
-    user = await user_service.get_current_user(token)
+    check_extension(file.filename, VIDEO_EXTENSIONS, "видео")
+    check_declared_size(file, MAX_VIDEO_BYTES, "Видео")
     result = await trainings_service.start_async_video_processing(
         training_uuid=training_uuid,
         user_id=user.id,
@@ -229,12 +245,11 @@ async def upload_video_for_training_async(
 async def add_step(
     training_uuid: UUID4,
     step_data: TrainingStepCreate,
-    token: str = Depends(oauth2_scheme),
     service: TrainingsService = Depends(get_trainings_service),
-    user_service: UserService = Depends(get_user_service),
+    user: User = Depends(get_current_creator),
 ):
     """Добавление одного шага к тренингу"""
-    user = await user_service.get_current_user(token)
+    await service._require_training_owner(training_uuid, user.id)
     step = await service.add_step(training_uuid, step_data)
     return step
 
@@ -247,12 +262,11 @@ async def add_step(
 async def add_steps_bulk(
     training_uuid: UUID4,
     request: StepBulkCreateRequest,
-    token: str = Depends(oauth2_scheme),
     service: TrainingsService = Depends(get_trainings_service),
-    user_service: UserService = Depends(get_user_service),
+    user: User = Depends(get_current_creator),
 ):
     """Массовое добавление шагов к тренингу"""
-    user = await user_service.get_current_user(token)
+    await service._require_training_owner(training_uuid, user.id)
     steps = await service.add_steps_bulk(training_uuid, request.steps)
     return steps
 
@@ -266,8 +280,9 @@ async def reorder_training_steps(
     training_uuid: UUID4,
     request: StepsReorderRequest,
     service: TrainingsService = Depends(get_trainings_service),
-    token: str = Depends(oauth2_scheme),
+    user: User = Depends(get_current_creator),
 ):
+    await service._require_training_owner(training_uuid, user.id)
     """
     Эндпойнт для массового обновления порядковых номеров (step_number)
     шагов в тренинге.
@@ -290,8 +305,10 @@ async def update_training_step(
     step_id: int,
     step_data: TrainingStepUpdate,
     service: TrainingsService = Depends(get_trainings_service),
+    user: User = Depends(get_current_creator),
 ):
     """Обновление шага по UUID тренинга и ID шага"""
+    await service._require_training_owner(training_uuid, user.id)
     return await service.update_step(training_uuid, step_id, step_data)
 
 
@@ -302,17 +319,10 @@ async def update_training_step(
 async def get_step_screenshot_source(
     training_uuid: UUID4,
     step_id: int,
-    token: str = Depends(oauth2_scheme),
     service: TrainingsService = Depends(get_trainings_service),
-    user_service: UserService = Depends(get_user_service),
+    user: User = Depends(get_current_creator),
     s3_service: S3Service = Depends(get_s3_service),
 ):
-    user = await user_service.get_current_user(token)
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Не авторизован",
-        )
     content, media_type = await service.get_step_screenshot_bytes(
         training_uuid, step_id, user.id, s3_service
     )
@@ -332,18 +342,12 @@ async def replace_step_screenshot(
     training_uuid: UUID4,
     step_id: int,
     file: UploadFile = File(...),
-    token: str = Depends(oauth2_scheme),
     service: TrainingsService = Depends(get_trainings_service),
-    user_service: UserService = Depends(get_user_service),
+    user: User = Depends(get_current_creator),
     s3_service: S3Service = Depends(get_s3_service),
 ):
-    user = await user_service.get_current_user(token)
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Не авторизован",
-        )
-    content = await file.read()
+    check_extension(file.filename, IMAGE_EXTENSIONS, "скриншота")
+    content = await read_limited(file, MAX_IMAGE_BYTES, "Скриншот")
     try:
         return await service.replace_step_screenshot(
             training_uuid,
@@ -365,17 +369,10 @@ async def replace_step_screenshot(
 async def detect_step_ui_elements(
     training_uuid: UUID4,
     step_id: int,
-    token: str = Depends(oauth2_scheme),
     service: TrainingsService = Depends(get_trainings_service),
-    user_service: UserService = Depends(get_user_service),
+    user: User = Depends(get_current_creator),
     s3_service: S3Service = Depends(get_s3_service),
 ):
-    user = await user_service.get_current_user(token)
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Не авторизован",
-        )
     return await service.detect_step_ui_elements(
         training_uuid, step_id, user.id, s3_service
     )
@@ -386,8 +383,10 @@ async def delete_training_step(
     training_uuid: UUID4,
     step_id: int,
     service: TrainingsService = Depends(get_trainings_service),
+    user: User = Depends(get_current_creator),
 ):
     """Удаление шага по UUID тренинга и ID шага"""
+    await service._require_training_owner(training_uuid, user.id)
     await service.delete_step(training_uuid, step_id)
     return {"message": f"Шаг {step_id} успешно удалён"}
 
@@ -397,8 +396,10 @@ async def delete_training_steps_bulk(
     training_uuid: UUID4,
     step_ids: List[int],
     service: TrainingsService = Depends(get_trainings_service),
+    user: User = Depends(get_current_creator),
 ):
     """Массовое удаление шагов по UUID тренинга и списку ID"""
+    await service._require_training_owner(training_uuid, user.id)
     result = await service.delete_steps_bulk(training_uuid, step_ids)
     return result
 
@@ -411,8 +412,14 @@ async def delete_training_steps_bulk(
 async def get_training_steps(
     training_uuid: UUID4,
     service: TrainingsService = Depends(get_trainings_service),
+    user: User = Depends(get_current_user),
 ):
     """Получение всех шагов тренинга"""
+    training = await service.repo.get_by_uuid(training_uuid)
+    if not training:
+        raise HTTPException(status_code=404, detail="Тренинг не найден")
+    if not training.publish and training.creator_id != user.id:
+        raise HTTPException(status_code=403, detail="Нет доступа к этому тренингу")
     steps = await service.get_training_steps(training_uuid)
     return [TrainingStepResponse.model_validate(step) for step in steps]
 
@@ -424,11 +431,9 @@ async def get_training_steps(
 )
 async def get_scenario_graph(
     training_uuid: UUID4,
-    token: str = Depends(oauth2_scheme),
     service: TrainingsService = Depends(get_trainings_service),
-    user_service: UserService = Depends(get_user_service),
+    user: User = Depends(get_current_creator),
 ):
-    user = await user_service.get_current_user(token)
     await service._require_training_owner(training_uuid, user.id)
     return await service.get_scenario_graph(training_uuid)
 
@@ -441,11 +446,9 @@ async def get_scenario_graph(
 async def update_scenario_graph(
     training_uuid: UUID4,
     graph: ScenarioGraphUpdate,
-    token: str = Depends(oauth2_scheme),
     service: TrainingsService = Depends(get_trainings_service),
-    user_service: UserService = Depends(get_user_service),
+    user: User = Depends(get_current_creator),
 ):
-    user = await user_service.get_current_user(token)
     return await service.update_scenario_graph(training_uuid, graph, user.id)
 
 
@@ -453,12 +456,13 @@ async def update_scenario_graph(
 async def publish_training(
     training_uuid: UUID4,
     service: TrainingsService = Depends(get_trainings_service),
+    user: User = Depends(get_current_creator),
 ):
+    await service._require_training_owner(training_uuid, user.id)
     token = await service.publish_training(training_uuid)
-    BASE_URL = f"{configs.SERVER_HOST}/training/passage"
     return {
         "success": True,
-        "public_link": f"{BASE_URL}/{token}",
+        "public_link": public_passage_link(token),
         "access_token": token,
     }
 
@@ -467,7 +471,9 @@ async def publish_training(
 async def unpublish_training(
     training_uuid: UUID4,
     service: TrainingsService = Depends(get_trainings_service),
+    user: User = Depends(get_current_creator),
 ):
+    await service._require_training_owner(training_uuid, user.id)
     await service.unpublish_training(training_uuid)
     return {"success": True, "message": "Тренинг снят с публикации"}
 
@@ -502,11 +508,9 @@ async def complete_passage_attempt(
 )
 async def get_passage_analytics(
     training_uuid: UUID4,
-    token: str = Depends(oauth2_scheme),
     service: TrainingsService = Depends(get_trainings_service),
-    user_service: UserService = Depends(get_user_service),
+    user: User = Depends(get_current_creator),
 ):
-    user = await user_service.get_current_user(token)
     return await service.get_passage_analytics_for_creator(training_uuid, user.id)
 
 
@@ -519,11 +523,9 @@ async def get_passage_history(
     training_uuid: UUID4,
     skip: int = 0,
     limit: int = 20,
-    token: str = Depends(oauth2_scheme),
     service: TrainingsService = Depends(get_trainings_service),
-    user_service: UserService = Depends(get_user_service),
+    user: User = Depends(get_current_creator),
 ):
-    user = await user_service.get_current_user(token)
     return await service.get_passage_history_for_creator(
         training_uuid, user.id, skip=skip, limit=limit
     )
@@ -543,7 +545,7 @@ async def get_public_training(
 async def ai_rewrite_task(
     request: TextRewriteRequest,
     video_ai_service: VideoAIService = Depends(get_video_ai_service),
-    token: str = Depends(oauth2_scheme),
+    user: User = Depends(get_current_creator),
 ):
     try:
 
@@ -568,7 +570,7 @@ async def generate_step_tts(
     tts_service: GigaChatTTSService = Depends(get_gigachat_tts_service),
     s3_service: S3Service = Depends(get_s3_service),
     training_service: TrainingsService = Depends(get_trainings_service),
-    token: str = Depends(oauth2_scheme),
+    user: User = Depends(get_current_creator),
 ):
     """Генерация аудиофайла для задания шага через SaluteSpeech и сохранение в S3"""
     import traceback
@@ -576,6 +578,8 @@ async def generate_step_tts(
     from core.logging_config import logger
 
     try:
+        await training_service._require_training_owner(training_uuid, user.id)
+
         # Получаем шаг из БД
         steps = await training_service.get_training_steps(training_uuid)
         step = next((s for s in steps if s.id == step_id), None)
@@ -620,19 +624,14 @@ async def upload_pdf_for_training(
     file: UploadFile = File(..., description="PDF-файл инструкции"),
     s3_service: S3Service = Depends(get_s3_service),
     trainings_service: TrainingsService = Depends(get_trainings_service),
-    token: str = Depends(oauth2_scheme),
     user: User = Depends(get_current_creator),
 ):
     """
     Принимает PDF-инструкцию и ставит задачу на анализ каждой страницы через VLM в очередь.
     Возвращает ID задачи для отслеживания.
     """
-    if not file.filename or not file.filename.lower().endswith(".pdf"):
-        raise HTTPException(status_code=400, detail="Загрузите файл в формате PDF")
-
-    pdf_bytes = await file.read()
-    if len(pdf_bytes) == 0:
-        raise HTTPException(status_code=400, detail="Файл PDF пустой")
+    check_extension(file.filename, PDF_EXTENSIONS, "инструкции")
+    pdf_bytes = await read_limited(file, MAX_PDF_BYTES, "PDF")
 
     # Save to S3 for background worker
     from models.tasks import TaskType
@@ -641,9 +640,7 @@ async def upload_pdf_for_training(
     import asyncio
 
     # Ensure training exists and user is owner
-    training_exists = await trainings_service.repo.check_training_exists(training_uuid)
-    if not training_exists:
-        raise HTTPException(status_code=404, detail="Тренинг не найден")
+    await trainings_service._require_training_owner(training_uuid, user.id)
 
     # upload bytes to S3
     object_key = s3_service.generate_task_object_key(

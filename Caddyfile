@@ -1,11 +1,25 @@
 aicsis.ru, www.aicsis.ru {
 	reverse_proxy frontend:80
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+	}
+	encode gzip
 }
 
 api.aicsis.ru {
 	reverse_proxy backend:{$PORT:8001}
+	header {
+		X-Content-Type-Options nosniff
+	}
+	encode gzip
 }
 
 s3.aicsis.ru {
 	reverse_proxy minio:9000
+	header {
+		X-Content-Type-Options nosniff
+	}
 }

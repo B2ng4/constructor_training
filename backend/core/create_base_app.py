@@ -19,8 +19,10 @@ from services.temp_employee_accounts_service import TempEmployeeAccountsService
 from utils.pg_sequences import sync_training_steps_id_sequence
 
 
-async def create_initial_user():
-    """Создаёт тестового пользователя при первом запуске"""
+async def create_initial_user(enabled: bool):
+    """Создаёт тестового пользователя при первом запуске (только по флагу SEED_TEST_USER)"""
+    if not enabled:
+        return
     async for session in get_async_session():
         repo = UserRepository(session)
         if await repo.count_users() == 0:
@@ -36,7 +38,7 @@ def create_base_app(configs):
         loop = asyncio.get_running_loop()
         loop.set_default_executor(io_executor)
         logger.info("Инициализация приложения...")
-        await create_initial_user()
+        await create_initial_user(configs.SEED_TEST_USER)
         await create_initial_actions()
         await create_initial_tags()
         await create_initial_levels()
@@ -58,10 +60,12 @@ def create_base_app(configs):
         description=configs.PROJECT_DESCRIPTION,
     )
 
+    cors_origins = [o.strip() for o in (configs.CORS_ORIGINS or "*").split(",") if o.strip()]
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
+        allow_origins=cors_origins or ["*"],
+        # credentials + "*" несовместимы; с Bearer-токенами куки не нужны
+        allow_credentials="*" not in cors_origins,
         allow_methods=["*"],
         allow_headers=["*"],
     )

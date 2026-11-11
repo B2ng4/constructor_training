@@ -30,11 +30,22 @@ def _notify_task(task, status: str, **kwargs) -> None:
         publish_task_notification(task.user_id, payload)
 
 
+async def _task_still_active(task_id: str) -> bool:
+    fresh = await _get_task_async(UUID(task_id))
+    if not fresh:
+        return False
+    return fresh.status in (TaskStatus.PENDING.value, TaskStatus.PROCESSING.value)
+
+
 async def _run_training_pdf_async(task_id: str) -> dict:
     task = await _get_task_async(UUID(task_id))
     if not task or not task.training_uuid:
         logger.error("Задача {} не найдена или без training_uuid", task_id)
         return {"ok": False, "error": "invalid_task"}
+
+    if task.status in (TaskStatus.FAILED.value, TaskStatus.COMPLETED.value):
+        logger.info("Задача {} уже в статусе {}, пропуск", task_id, task.status)
+        return {"ok": False, "error": "task_not_active"}
 
     training_uuid = task.training_uuid
     user_id = task.user_id
@@ -68,6 +79,10 @@ async def _run_training_pdf_async(task_id: str) -> dict:
             message="Анализ PDF через VLM...",
         )
 
+        if not await _task_still_active(task_id):
+            logger.info("Задача {} отменена до анализа, шаги не создаются", task_id)
+            return {"ok": False, "error": "cancelled"}
+
         SessionFactory = get_worker_session_factory()
         async with SessionFactory() as session:
             pdf_ai = PdfAiService()
@@ -81,7 +96,12 @@ async def _run_training_pdf_async(task_id: str) -> dict:
                 s3_service=s3,
             )
             num_steps = len(created_steps)
-        
+
+        # Задача могла быть отменена, пока шёл анализ — не перезаписываем её статус.
+        if not await _task_still_active(task_id):
+            logger.info("Задача {} отменена во время анализа", task_id)
+            return {"ok": False, "error": "cancelled"}
+
         await _update_task_async(
             UUID(task_id),
             TaskStatus.COMPLETED.value,

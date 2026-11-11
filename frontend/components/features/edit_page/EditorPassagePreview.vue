@@ -7,60 +7,76 @@
 		@update:model-value="emit('update:modelValue', $event)"
 	>
 		<q-card class="editor-passage-preview column">
-			<q-card-section class="editor-passage-preview__header row items-center">
-				<div>
-					<div class="text-h6">Превью прохождения</div>
-					<div class="text-caption text-grey-7">
-						Пробел — открыть/закрыть · ← → — шаги · Esc — закрыть
-					</div>
+			<!-- Верхняя панель как в прохождении: шаги слева, 💡 и закрытие справа -->
+			<header class="preview-top-bar">
+				<div class="preview-top-bar__left">
+					<span class="preview-step-pill">
+						Шаг {{ selectedStep?.step_number ?? "—" }} / {{ stepsCount }}
+					</span>
 				</div>
-				<q-space />
-				<q-toggle
-					v-model="showHints"
-					dense
-					color="amber-8"
-					label="Показать подсказки (области)"
-					class="q-mr-md"
-				/>
-				<q-btn flat round dense icon="close" v-close-popup />
-			</q-card-section>
-
-			<q-separator />
-
-			<div class="editor-passage-preview__body row no-wrap">
-				<div class="editor-passage-preview__canvas col">
-					<PassageFlowComponent
-						v-if="selectedStep"
-						:selected-step="selectedStep"
-						mode="passage"
-						:show-hint-highlight="showHints"
-					/>
+				<div class="preview-top-bar__spacer"></div>
+				<div class="preview-top-bar__right">
+					<q-btn
+						flat
+						round
+						dense
+						:icon="hintsEnabled ? 'lightbulb' : 'lightbulb_outline'"
+						:text-color="hintsEnabled ? 'amber-9' : 'grey-7'"
+						class="preview-hint-btn"
+						@click="hintsEnabled = !hintsEnabled"
+					>
+						<q-tooltip>
+							{{
+								hintsEnabled
+									? "Подсказки включены: подсветка области и текст подсказки"
+									: "Включить подсказки"
+							}}
+						</q-tooltip>
+					</q-btn>
+					<q-btn flat round dense icon="close" v-close-popup>
+						<q-tooltip>Закрыть превью (Esc)</q-tooltip>
+					</q-btn>
 				</div>
-				<aside class="editor-passage-preview__aside">
+			</header>
+
+			<div class="preview-main">
+				<aside class="preview-task">
 					<PassageTaskPanel :selected-step="selectedStep" />
 				</aside>
-			</div>
 
-			<div class="editor-passage-preview__footer row items-center justify-center q-gutter-sm">
-				<q-btn
-					flat
-					round
-					icon="chevron_left"
-					color="primary"
-					:disable="!hasPrevious"
-					@click="store.goToPreviousStep()"
-				/>
-				<span class="text-body2 text-grey-8">
-					Шаг {{ selectedStep?.step_number ?? "—" }} / {{ stepsCount }}
-				</span>
-				<q-btn
-					flat
-					round
-					icon="chevron_right"
-					color="primary"
-					:disable="!hasNext"
-					@click="store.goToNextStep()"
-				/>
+				<div class="preview-viewport">
+					<PassageFlowComponent
+						v-if="selectedStep"
+						:key="selectedStep.id"
+						:selected-step="selectedStep"
+						mode="passage"
+						:show-hint-highlight="hintsEnabled"
+					/>
+
+					<!-- Всплывающая текстовая подсказка, как у ученика -->
+					<transition name="hint-pop">
+						<div
+							v-if="hintsEnabled && hintText"
+							class="preview-hint-bubble"
+							role="note"
+						>
+							<q-icon name="lightbulb" size="18px" color="amber-9" />
+							<span>{{ hintText }}</span>
+						</div>
+					</transition>
+
+					<PassageToolbar
+						:has-previous-step="hasPrevious"
+						:has-next-step="hasNext"
+						:selected-step="selectedStep"
+						:skip-steps="!!trainingData?.skip_steps"
+						:hints-enabled="hintsEnabled"
+						:hints-available="hintsAvailable"
+						@prev="store.goToPreviousStep()"
+						@next="store.goToNextStep()"
+						@toggle-hints="hintsEnabled = !hintsEnabled"
+					/>
+				</div>
 			</div>
 		</q-card>
 	</q-dialog>
@@ -70,8 +86,11 @@
 import { computed, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import { useTrainingData } from "@store/editTraining.js";
-import { PassageFlowComponent } from "@components/features/passage_page";
-import PassageTaskPanel from "@components/features/passage_page/PassageTaskPanel.vue";
+import {
+	PassageFlowComponent,
+	PassageTaskPanel,
+	PassageToolbar,
+} from "@components/features/passage_page";
 
 defineProps({
 	modelValue: { type: Boolean, default: false },
@@ -80,8 +99,11 @@ defineProps({
 const emit = defineEmits(["update:modelValue"]);
 
 const store = useTrainingData();
-const { selectedStep, steps } = storeToRefs(store);
-const showHints = ref(false);
+const { selectedStep, trainingData } = storeToRefs(store);
+const hintsEnabled = ref(false);
+
+const hintsAvailable = computed(() => trainingData.value?.hints_enabled !== false);
+const hintText = computed(() => (selectedStep.value?.hint ?? "").trim());
 
 const stepsList = computed(() => store.sortedSteps());
 const stepsCount = computed(() => stepsList.value.length);
@@ -99,7 +121,7 @@ const hasNext = computed(
 watch(
 	() => selectedStep.value?.id,
 	() => {
-		showHints.value = false;
+		hintsEnabled.value = false;
 	},
 );
 </script>
@@ -108,53 +130,135 @@ watch(
 .editor-passage-preview {
 	width: 100%;
 	height: 100%;
-	background: #f8fafc;
+	background: #e8eaef;
+	position: relative;
 }
 
-.editor-passage-preview__header {
-	flex-shrink: 0;
-	padding: 12px 16px;
-	background: rgba(255, 255, 255, 0.94);
+/* Верхняя панель — плавает как в прохождении */
+.preview-top-bar {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 150;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 12px;
+	min-height: 56px;
+	pointer-events: none;
+	box-sizing: border-box;
+}
+.preview-top-bar__left {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding-left: calc(min(440px, 40vw) + 24px);
+	pointer-events: auto;
+}
+.preview-top-bar__spacer {
+	flex: 1;
+	pointer-events: none;
+}
+.preview-top-bar__right {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	pointer-events: auto;
+}
+.preview-step-pill {
+	font-size: 13px;
+	font-weight: 600;
+	color: #334155;
+	background: rgba(255, 255, 255, 0.92);
+	border: 1px solid rgba(15, 23, 42, 0.06);
+	border-radius: 999px;
+	padding: 8px 16px;
+	box-shadow: 0 2px 14px rgba(15, 23, 42, 0.08);
+}
+.preview-hint-btn {
+	background: rgba(255, 255, 255, 0.9) !important;
+	border: 1px solid rgba(255, 255, 255, 0.6);
+	width: 44px;
+	height: 44px;
 }
 
-.editor-passage-preview__body {
+/* Основная зона: панель задания слева + viewport — как .play-layout__main */
+.preview-main {
+	display: flex;
 	flex: 1;
 	min-height: 0;
+	width: 100%;
+}
+.preview-task {
+	width: min(440px, 40vw);
+	flex-shrink: 0;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	padding: 12px;
+	margin: 12px 0 12px 12px;
+	border-radius: 16px;
+	background: rgba(255, 255, 255, 0.72);
+	backdrop-filter: blur(16px);
+	border: 1px solid rgba(255, 255, 255, 0.5);
+	box-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
 	overflow: hidden;
 }
-
-.editor-passage-preview__canvas {
+.preview-viewport {
+	position: relative;
+	flex: 1;
 	min-width: 0;
 	min-height: 0;
 	display: flex;
 	flex-direction: column;
+	padding-top: 56px;
 }
 
-.editor-passage-preview__aside {
-	width: min(380px, 34vw);
-	flex-shrink: 0;
-	padding: 12px;
-	border-left: 1px solid rgba(15, 23, 42, 0.08);
-	overflow: auto;
+/* Всплывающая подсказка */
+.preview-hint-bubble {
+	position: absolute;
+	bottom: 96px;
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 1200;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	max-width: min(520px, 80%);
+	padding: 12px 20px;
+	border-radius: 14px;
+	background: rgba(255, 251, 235, 0.97);
+	border: 1px solid rgba(245, 158, 11, 0.4);
+	box-shadow: 0 12px 32px rgba(245, 158, 11, 0.18);
+	font-size: 14px;
+	font-weight: 500;
+	color: #78350f;
 }
-
-.editor-passage-preview__footer {
-	flex-shrink: 0;
-	padding: 10px;
-	background: rgba(255, 255, 255, 0.94);
-	border-top: 1px solid rgba(15, 23, 42, 0.08);
+.hint-pop-enter-active,
+.hint-pop-leave-active {
+	transition: all 0.25s ease;
+}
+.hint-pop-enter-from,
+.hint-pop-leave-to {
+	opacity: 0;
+	transform: translateX(-50%) translateY(10px);
 }
 
 @media (max-width: 900px) {
-	.editor-passage-preview__body {
+	.preview-main {
 		flex-direction: column;
 	}
-
-	.editor-passage-preview__aside {
-		width: 100%;
-		max-height: 38vh;
-		border-left: none;
-		border-top: 1px solid rgba(15, 23, 42, 0.08);
+	.preview-viewport {
+		order: -1;
+	}
+	.preview-task {
+		width: auto;
+		max-height: min(45vh, 400px);
+		margin: 0 12px 12px;
+	}
+	.preview-top-bar__left {
+		padding-left: 12px;
 	}
 }
 </style>

@@ -13,7 +13,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from core.config import configs
+from core.config import configs, public_passage_link
 from core.logging_config import logger
 from models.trainings import (
     Tags,
@@ -369,7 +369,7 @@ class TrainingsService:
             item = TrainingListResponse.model_validate(training)
             active_pub = next((p for p in training.publications if p.is_active), None)
             if active_pub:
-                item.public_link = f"/training/passage/{active_pub.access_token}"
+                item.public_link = public_passage_link(active_pub.access_token)
             item.steps_count = len(training.steps) if training.steps else 0
             result.append(item)
         return result

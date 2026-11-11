@@ -11,6 +11,7 @@ from models.users import UserRole
 from models.trainings import Training
 from repositories.organizations_repository import OrganizationsRepository
 from repositories.trainings_repository import TrainingRepository
+from core.config import public_passage_link
 from repositories.users_repository import UserRepository
 from schemas.organizations import (
     AssignedTrainingResponse,
@@ -98,7 +99,7 @@ class OrganizationsService:
         pubs = getattr(training, "publications", None) or []
         active = next((p for p in pubs if getattr(p, "is_active", False)), None)
         if active:
-            link = f"/training/passage/{active.access_token}"
+            link = public_passage_link(active.access_token)
         return OrganizationTrainingBrief(
             uuid=training.uuid,
             title=training.title,
@@ -376,7 +377,7 @@ class OrganizationsService:
                 continue
             seen.add(key)
             pub = await self.repo.get_active_publication(training.uuid)
-            link = f"/training/passage/{pub.access_token}" if pub else None
+            link = public_passage_link(pub.access_token) if pub else None
             out.append(
                 AssignedTrainingResponse(
                     organization_id=org.id,

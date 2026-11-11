@@ -95,8 +95,8 @@ export const useNotificationsStore = defineStore("notifications", {
 				this._clearSocket();
 			}
 
-			const url = `${wsBaseUrl()}/ws/notifications?token=${encodeURIComponent(token)}`;
-			const ws = new WebSocket(url);
+			const url = `${wsBaseUrl()}/ws/notifications`;
+			const ws = new WebSocket(url, [`bearer.${token}`]);
 
 			ws.onopen = () => {
 				this.connected = true;
