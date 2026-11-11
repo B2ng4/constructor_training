@@ -115,7 +115,7 @@ services:
     restart: unless-stopped
 
   minio:
-    image: dockerhub.timeweb.cloud/minio/minio:RELEASE.2024-11-07T00-52-19Z
+    image: minio/minio:latest
     container_name: minio
     command: server /data --console-address ":9001"
     env_file:
@@ -134,7 +134,7 @@ services:
     restart: unless-stopped
 
   minio-init:
-    image: dockerhub.timeweb.cloud/minio/mc:RELEASE.2024-11-05T11-25-42Z
+    image: minio/mc:latest
     container_name: minio-init
     env_file:
       - ./backend/.env
