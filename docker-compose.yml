@@ -115,17 +115,23 @@ services:
     restart: unless-stopped
 
   minio:
-    image: minio/minio:latest
+    image: bitnamilegacy/minio:latest
     container_name: minio
-    command: server /data --console-address ":9001"
     env_file:
       - ./backend/.env
+    environment:
+      MINIO_API_PORT_NUMBER: "9000"
+      MINIO_CONSOLE_PORT_NUMBER: "9001"
     volumes:
-      - minio_data:/data
+      - minio_data:/bitnami/minio/data
     expose:
       - "9000"
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test:
+        [
+          "CMD-SHELL",
+          'curl -f http://localhost:9000/minio/health/live || exit 1',
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -134,7 +140,7 @@ services:
     restart: unless-stopped
 
   minio-init:
-    image: minio/mc:latest
+    image: bitnamilegacy/minio-client:latest
     container_name: minio-init
     env_file:
       - ./backend/.env
