@@ -115,7 +115,7 @@ services:
     restart: unless-stopped
 
   minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:latest
     container_name: minio
     command: server /data --console-address ":9001"
     env_file:
@@ -134,7 +134,7 @@ services:
     restart: unless-stopped
 
   minio-init:
-    image: minio/mc:latest
+    image: quay.io/minio/mc:latest
     container_name: minio-init
     env_file:
       - ./backend/.env
