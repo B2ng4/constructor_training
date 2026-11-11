@@ -1,354 +1,350 @@
 <template>
   <q-layout view="lHh Lpr lFf" class="landing-layout">
-    <!-- Header with Auth Links -->
     <q-header class="landing-header" flat>
-      <q-toolbar class="container q-py-md">
-        <div class="text-h5 text-weight-bolder text-primary" style="letter-spacing: -0.5px;">SkillSnap</div>
+      <q-toolbar class="container">
+        <div class="logo">
+          <div class="logo-mark"><q-icon name="ads_click" size="20px" /></div>
+          <span>SkillSnap</span>
+        </div>
         <q-space />
-        <q-btn flat color="dark" label="Войти" to="/login" class="text-weight-bold q-mr-sm" />
-        <q-btn unelevated color="primary" label="Регистрация" to="/registration" rounded class="text-weight-bold" />
+        <nav class="landing-nav gt-sm">
+          <a href="#how" class="nav-link">Как это работает</a>
+          <a href="#features" class="nav-link">Возможности</a>
+          <a href="#team" class="nav-link">Команда</a>
+        </nav>
+        <q-space />
+        <q-btn flat no-caps color="dark" label="Войти" to="/login" class="text-weight-medium" />
+        <q-btn
+          unelevated
+          no-caps
+          color="primary"
+          label="Начать бесплатно"
+          to="/registration"
+          class="text-weight-bold header-cta"
+        />
       </q-toolbar>
     </q-header>
 
     <q-page-container>
-      <q-page class="landing-page relative-position overflow-hidden">
+      <q-page class="landing-page">
 
-        <!-- Background Blobs -->
-        <div class="blob-bg blob-1"></div>
-        <div class="blob-bg blob-2"></div>
-        <div class="blob-bg blob-3"></div>
-
-        <!-- ======= 1. HERO SECTION ======= -->
-        <section class="hero-section">
-          <div class="container">
-            <div class="hero-tag animate-fade-in-up animate-stagger-1">
-              <span class="tag-dot"></span>
-              Корпоративное обучение нового поколения
-            </div>
-
-            <h1 class="hero-title animate-fade-in-up animate-stagger-2">
-              SkillSnap — <span class="text-gradient">тренажёры</span><br/>
-              для обучения работе в ПО
-            </h1>
-
-            <p class="hero-subtitle animate-fade-in-up animate-stagger-3">
-              Превращаем скриншоты, инструкции и материалы компании в интерактивные симуляторы,
-              которые помогают сотрудникам не просто изучить интерфейс, а начать уверенно работать в системе.
-            </p>
-
-            <div class="hero-markers animate-fade-in-up animate-stagger-3">
-              <div class="marker-item" v-for="m in markers" :key="m">
-                <q-icon name="check_circle" color="primary" size="18px" />
-                <span>{{ m }}</span>
+        <!-- ======= HERO ======= -->
+        <section class="hero">
+          <div class="container hero-grid">
+            <div class="hero-copy">
+              <div class="hero-badge">
+                <span class="hero-badge-dot"></span>
+                Интерактивные тренажёры для корпоративного обучения
               </div>
-            </div>
-
-            <div class="hero-actions animate-fade-in-up animate-stagger-4">
-              <q-btn
-                unelevated
-                rounded
-                color="primary"
-                label="Запустить демо"
-                size="lg"
-                class="hero-btn hero-btn--primary q-px-xl text-weight-bold"
-                to="/login"
-              />
-              <q-btn
-                outline
-                rounded
-                color="primary"
-                size="lg"
-                class="hero-btn hero-btn--outline q-px-xl"
-                @click="openVideoDialog"
-              >
-                <q-icon name="play_circle_outline" class="q-mr-sm" />
-                Посмотреть, как это работает
-              </q-btn>
-              <q-btn
-                flat
-                rounded
-                color="grey-8"
-                label="Обсудить пилот"
-                size="lg"
-                class="hero-btn q-px-xl"
-                href="mailto:hello@skillsnap.ru"
-              />
-            </div>
-          </div>
-        </section>
-
-        <!-- ======= 2. HOW IT WORKS ======= -->
-        <section class="section-how bg-white">
-          <div class="container">
-            <div class="section-header text-center q-mb-xl">
-              <div class="section-tag">Решение</div>
-              <h2 class="section-title">
-                Видео учит смотреть,<br/>
-                <span class="text-gradient">симулятор — делать</span>
-              </h2>
-              <p class="section-subtitle">
-                SkillSnap помогает собирать интерактивные тренажёры из материалов клиента
-                и обучать сотрудников через пошаговую практику в интерфейсе.
+              <h1 class="hero-title">
+                Научите сотрудников работать в ПО — <span class="text-gradient">на практике</span>, а не по инструкциям
+              </h1>
+              <p class="hero-subtitle">
+                SkillSnap превращает скриншоты и материалы компании в пошаговые симуляторы:
+                пользователь кликает, вводит текст и проходит реальный сценарий — в безопасной среде, без риска что-то сломать.
               </p>
-            </div>
-
-            <div class="how-grid">
-              <!-- Left: short description -->
-              <div class="how-left">
-                <div class="before-after-card glass-card">
-                  <div class="ba-col ba-before">
-                    <div class="ba-label ba-label--before">До</div>
-                    <div class="ba-icon">📄</div>
-                    <div class="ba-heading">Обычная инструкция</div>
-                    <ul class="ba-list">
-                      <li>Статичный PDF</li>
-                      <li>Нет практики</li>
-                      <li>Сотрудник читает, но не делает</li>
-                      <li>Нет обратной связи</li>
-                    </ul>
-                  </div>
-                  <div class="ba-divider">
-                    <q-icon name="arrow_forward" color="primary" size="28px" />
-                  </div>
-                  <div class="ba-col ba-after">
-                    <div class="ba-label ba-label--after">После</div>
-                    <div class="ba-icon">🎯</div>
-                    <div class="ba-heading">SkillSnap симулятор</div>
-                    <ul class="ba-list">
-                      <li>Интерактивный сценарий</li>
-                      <li>Пошаговая практика</li>
-                      <li>Сотрудник делает сам</li>
-                      <li>Аналитика и прогресс</li>
-                    </ul>
-                  </div>
-                </div>
+              <div class="hero-actions">
+                <q-btn
+                  unelevated
+                  no-caps
+                  color="primary"
+                  size="lg"
+                  label="Попробовать демо"
+                  to="/login"
+                  class="hero-btn-primary"
+                />
+                <q-btn
+                  outline
+                  no-caps
+                  color="primary"
+                  size="lg"
+                  label="Обсудить пилот"
+                  href="mailto:hello@skillsnap.ru"
+                  class="hero-btn-secondary"
+                />
               </div>
-
-              <!-- Right: 4 steps -->
-              <div class="how-right">
-                <div
-                  class="step-item"
-                  v-for="(step, idx) in steps"
-                  :key="idx"
-                >
-                  <div class="step-number" :style="{ background: step.gradient }">
-                    {{ idx + 1 }}
-                  </div>
-                  <div class="step-connector" v-if="idx < steps.length - 1"></div>
-                  <div class="step-body">
-                    <div class="step-title">{{ step.title }}</div>
-                    <div class="step-desc">{{ step.desc }}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- ======= 3. TECH + METRICS ======= -->
-        <section class="section-tech">
-          <div class="container">
-            <div class="section-header text-center q-mb-xl">
-              <div class="section-tag">Технология и метрики</div>
-              <h2 class="section-title">
-                Технология, которую<br/>
-                <span class="text-gradient">можно измерить</span>
-              </h2>
-            </div>
-
-            <div class="tech-grid">
-              <!-- Left: Technology -->
-              <div class="tech-left glass-card">
-                <div class="tech-block-title">
-                  <q-icon name="memory" color="primary" size="28px" class="q-mr-sm" />
-                  Технологии
-                </div>
-                <div class="tech-list">
-                  <div class="tech-list-item" v-for="t in techList" :key="t.text">
-                    <div class="tech-bullet" :style="{ background: t.color }"></div>
-                    <span>{{ t.text }}</span>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Right: Metrics -->
-              <div class="tech-right">
-                <div
-                  class="metric-card glass-card"
-                  v-for="m in metrics"
-                  :key="m.label"
-                >
-                  <div class="metric-value" :style="{ color: m.color }">{{ m.value }}</div>
-                  <div class="metric-label">{{ m.label }}</div>
+              <div class="hero-markers">
+                <div class="hero-marker" v-for="m in markers" :key="m">
+                  <q-icon name="check_circle" size="18px" color="positive" />
+                  <span>{{ m }}</span>
                 </div>
               </div>
             </div>
 
-            <div class="tech-footer">
-              В ядре — повторяемая SaaS-логика, а рост подтверждается продуктовой и коммерческой метрикой.
-            </div>
-          </div>
-        </section>
-
-        <!-- ======= 4. TEAM SECTION ======= -->
-        <section class="section-team bg-white">
-          <div class="container">
-            <div class="section-header text-center q-mb-xl">
-              <div class="section-tag">Команда</div>
-              <h2 class="section-title">Создатели платформы</h2>
-              <p class="section-subtitle">Люди, которые воплощают амбициозные идеи в реальность.</p>
-            </div>
-
-            <div class="row q-col-gutter-xl justify-center">
-              <div class="col-12 col-md-6 col-lg-4" v-for="member in team" :key="member.name">
-                <q-card flat class="team-card glass-card-solid full-height flex column">
-                  <div class="row justify-center q-mt-lg q-mb-md">
-                    <div class="team-squircle shadow-4">
-                      <img :src="member.photo" class="team-image" />
+            <!-- Макет продукта -->
+            <div class="hero-visual" aria-hidden="true">
+              <div class="mock-window">
+                <div class="mock-window-bar">
+                  <span class="mock-dot mock-dot--red"></span>
+                  <span class="mock-dot mock-dot--yellow"></span>
+                  <span class="mock-dot mock-dot--green"></span>
+                  <div class="mock-url">skillsnap.ru/training</div>
+                </div>
+                <div class="mock-body">
+                  <div class="mock-sidebar">
+                    <div class="mock-line mock-line--strong"></div>
+                    <div class="mock-line"></div>
+                    <div class="mock-line"></div>
+                    <div class="mock-line mock-line--short"></div>
+                  </div>
+                  <div class="mock-screen">
+                    <div class="mock-toolbar"></div>
+                    <div class="mock-content">
+                      <div class="mock-block"></div>
+                      <div class="mock-block mock-block--wide"></div>
+                      <div class="mock-hotspot">
+                        <span class="mock-hotspot-ring"></span>
+                      </div>
+                      <div class="mock-block"></div>
+                    </div>
+                    <div class="mock-hint">
+                      <q-icon name="ads_click" size="16px" color="primary" />
+                      Нажмите «Отправка и получение»
                     </div>
                   </div>
-                  <q-card-section class="q-pt-sm q-pb-xl q-px-lg flex-grow-1 text-center">
-                    <div class="text-h5 text-weight-bolder q-mb-xs text-dark">{{ member.name }}</div>
-                    <div class="team-role q-mb-md" :style="{ color: member.roleColor }">{{ member.role }}</div>
-                    <q-separator class="q-mb-md" />
-                    <div class="text-body2 text-grey-8 desc-text text-left">{{ member.bio }}</div>
-                  </q-card-section>
-                </q-card>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- ======= 5. CTA SECTION ======= -->
-        <section class="section-cta">
-          <div class="container">
-            <div class="cta-card">
-              <div class="cta-glow"></div>
-              <div class="cta-content">
-                <h2 class="cta-title">Готовы запустить первый симулятор?</h2>
-                <p class="cta-subtitle">
-                  Свяжитесь с нами — обсудим вашу задачу и покажем демо на реальных данных.
-                </p>
-                <div class="cta-actions">
-                  <q-btn
-                    unelevated
-                    color="white"
-                    text-color="primary"
-                    label="Запустить демо"
-                    size="lg"
-                    class="text-weight-bold hero-btn q-px-xl shadow-4"
-                    to="/login"
-                    rounded
-                  />
-                  <q-btn
-                    outline
-                    color="white"
-                    label="Обсудить пилот"
-                    size="lg"
-                    class="hero-btn q-px-xl"
-                    href="mailto:hello@skillsnap.ru"
-                    rounded
-                  />
                 </div>
               </div>
             </div>
           </div>
         </section>
+
+        <!-- ======= ДО / ПОСЛЕ ======= -->
+        <section class="section">
+          <div class="container">
+            <div class="section-header">
+              <div class="section-tag">Зачем</div>
+              <h2 class="section-title">Видео учит смотреть.<br/>Симулятор учит делать.</h2>
+              <p class="section-subtitle">
+                Сотрудник не запоминает интерфейс по PDF — он запоминает его руками.
+              </p>
+            </div>
+            <div class="compare-grid">
+              <div class="compare-card compare-card--before">
+                <div class="compare-label compare-label--before">Обычно</div>
+                <div class="compare-heading">
+                  <q-icon name="description" size="28px" color="grey-6" />
+                  Инструкция в PDF
+                </div>
+                <ul class="compare-list">
+                  <li><q-icon name="close" color="negative" size="16px" />Читают один раз и забывают</li>
+                  <li><q-icon name="close" color="negative" size="16px" />Нет практики и обратной связи</li>
+                  <li><q-icon name="close" color="negative" size="16px" />Ошибки — уже в боевой системе</li>
+                  <li><q-icon name="close" color="negative" size="16px" />Прогресс не измерить</li>
+                </ul>
+              </div>
+              <div class="compare-card compare-card--after">
+                <div class="compare-label compare-label--after">Со SkillSnap</div>
+                <div class="compare-heading">
+                  <q-icon name="ads_click" size="28px" color="primary" />
+                  Интерактивный симулятор
+                </div>
+                <ul class="compare-list">
+                  <li><q-icon name="check" color="positive" size="16px" />Пошаговая практика на скриншотах</li>
+                  <li><q-icon name="check" color="positive" size="16px" />Подсказки после ошибки</li>
+                  <li><q-icon name="check" color="positive" size="16px" />Безопасная среда без последствий</li>
+                  <li><q-icon name="check" color="positive" size="16px" />Статистика прохождений</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ======= КАК ЭТО РАБОТАЕТ ======= -->
+        <section class="section section--alt" id="how">
+          <div class="container">
+            <div class="section-header">
+              <div class="section-tag">Процесс</div>
+              <h2 class="section-title">От материалов до тренажёра —<br/>за один день</h2>
+            </div>
+            <div class="steps-grid">
+              <div class="step-card" v-for="(s, i) in steps" :key="s.title">
+                <div class="step-num">{{ String(i + 1).padStart(2, '0') }}</div>
+                <div class="step-icon"><q-icon :name="s.icon" size="26px" color="primary" /></div>
+                <div class="step-title">{{ s.title }}</div>
+                <div class="step-desc">{{ s.desc }}</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ======= ВОЗМОЖНОСТИ ======= -->
+        <section class="section" id="features">
+          <div class="container">
+            <div class="section-header">
+              <div class="section-tag">Возможности</div>
+              <h2 class="section-title">Всё для запуска<br/>обучения в компании</h2>
+            </div>
+            <div class="features-grid">
+              <div class="feature-card" v-for="f in features" :key="f.title">
+                <div class="feature-icon" :style="{ background: f.bg, color: f.color }">
+                  <q-icon :name="f.icon" size="22px" />
+                </div>
+                <div class="feature-title">{{ f.title }}</div>
+                <div class="feature-desc">{{ f.desc }}</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ======= КОМАНДА ======= -->
+        <section class="section section--alt" id="team">
+          <div class="container">
+            <div class="section-header">
+              <div class="section-tag">Команда</div>
+              <h2 class="section-title">Кто делает продукт</h2>
+            </div>
+            <div class="team-grid">
+              <div class="team-card" v-for="member in team" :key="member.name">
+                <div class="team-avatar">
+                  <img :src="member.photo" :alt="member.name" />
+                </div>
+                <div class="team-name">{{ member.name }}</div>
+                <div class="team-role">{{ member.role }}</div>
+                <div class="team-bio">{{ member.bio }}</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ======= CTA ======= -->
+        <section class="section">
+          <div class="container">
+            <div class="cta-card">
+              <h2 class="cta-title">Запустите первый тренажёр уже сегодня</h2>
+              <p class="cta-subtitle">
+                Покажем демо на ваших материалах и обсудим пилотный проект.
+              </p>
+              <div class="cta-actions">
+                <q-btn
+                  unelevated
+                  no-caps
+                  color="white"
+                  text-color="primary"
+                  size="lg"
+                  label="Начать бесплатно"
+                  to="/registration"
+                  class="text-weight-bold cta-btn-primary"
+                />
+                <q-btn
+                  outline
+                  no-caps
+                  color="white"
+                  size="lg"
+                  label="Написать нам"
+                  href="mailto:hello@skillsnap.ru"
+                  class="cta-btn-secondary"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ======= FOOTER ======= -->
+        <footer class="landing-footer">
+          <div class="container footer-inner">
+            <div class="logo logo--footer">
+              <div class="logo-mark"><q-icon name="ads_click" size="18px" /></div>
+              <span>SkillSnap</span>
+            </div>
+            <div class="footer-copy">© {{ new Date().getFullYear() }} SkillSnap. Интерактивные тренажёры для бизнеса.</div>
+            <a class="footer-mail" href="mailto:hello@skillsnap.ru">hello@skillsnap.ru</a>
+          </div>
+        </footer>
 
       </q-page>
     </q-page-container>
-
-    <!-- Video Dialog -->
-    <q-dialog v-model="videoDialog" maximized>
-      <q-card class="video-dialog-card">
-        <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6 text-weight-bold">Как это работает</div>
-          <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
-        </q-card-section>
-        <q-card-section class="video-dialog-body" style="height: calc(100vh - 66px); display: flex; align-items: center; justify-content: center; padding: 0 24px 24px;">
-          <video
-            src=""
-            controls
-            autoplay
-            style="width: 100%; height: 100%; max-height: 85vh; border-radius: 16px; object-fit: contain; background: #000;"
-          ></video>
-        </q-card-section>
-      </q-card>
-    </q-dialog>
   </q-layout>
 </template>
 
 <script setup>
 import { ref } from 'vue';
 
-const videoDialog = ref(false);
-const openVideoDialog = () => { videoDialog.value = true; };
-
 const markers = ref([
   'Практика вместо PDF и видео',
-  'Быстрый запуск сценариев',
-  'Подходит для корпоративного контура и enterprise-внедрения',
+  'Запуск без интеграций',
+  'On-premise и корпоративный контур',
 ]);
 
 const steps = ref([
   {
-    title: 'Загружаем материалы',
-    desc: 'Скриншоты, инструкции, сценарии — всё, что есть у клиента.',
-    gradient: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+    icon: 'upload_file',
+    title: 'Загружаете материалы',
+    desc: 'Скриншоты, инструкции, записи экрана — то, что уже есть у компании.',
   },
   {
-    title: 'Система собирает логику симулятора',
-    desc: 'ИИ анализирует контент и конструирует интерактивный сценарий.',
-    gradient: 'linear-gradient(135deg, #7c3aed, #a21caf)',
+    icon: 'dashboard_customize',
+    title: 'Собираете сценарий',
+    desc: 'В редакторе размечаете области, действия и ветвления — без кода.',
   },
   {
-    title: 'Пользователь проходит тренировку',
-    desc: 'Безопасная среда, пошаговая практика, мгновенная обратная связь.',
-    gradient: 'linear-gradient(135deg, #0891b2, #0d9488)',
+    icon: 'school',
+    title: 'Сотрудник проходит тренинг',
+    desc: 'Пошаговая практика: клики, ввод текста, горячие клавиши — как в реальной системе.',
   },
   {
-    title: 'Компания получает результат',
-    desc: 'Более быстрое освоение ПО и управляемый, измеримый итог обучения.',
-    gradient: 'linear-gradient(135deg, #059669, #16a34a)',
+    icon: 'monitoring',
+    title: 'Видите результат',
+    desc: 'Статистика прохождений, ошибки по шагам, время — всё измеримо.',
   },
 ]);
 
-const techList = ref([
-  { text: 'ИИ ускоряет сборку сценариев', color: '#4f46e5' },
-  { text: 'Симуляторы обучают действием, а не только контентом', color: '#7c3aed' },
-  { text: 'Поддерживается работа в enterprise-среде', color: '#0891b2' },
-]);
-
-const metrics = ref([
-  { value: '1–3 дня', label: 'Time-to-value', color: '#4f46e5' },
-  { value: '45 дней', label: 'Time-to-first-simulator', color: '#7c3aed' },
-  { value: '60%', label: 'Activation rate', color: '#0891b2' },
-  { value: '18%', label: 'Trial-to-paid', color: '#059669' },
-  { value: '105–112%', label: 'NRR', color: '#d97706' },
+const features = ref([
+  {
+    icon: 'ads_click',
+    title: 'Интерактивные шаги',
+    desc: 'Клики, двойные клики, наведение, ввод текста и хоткеи с проверкой правильности.',
+    bg: 'rgba(79, 70, 229, 0.1)', color: '#4f46e5',
+  },
+  {
+    icon: 'account_tree',
+    title: 'Ветвящиеся сценарии',
+    desc: 'Визуальный граф переходов: разные пути по успеху, ошибке или условию.',
+    bg: 'rgba(8, 145, 178, 0.1)', color: '#0891b2',
+  },
+  {
+    icon: 'lightbulb',
+    title: 'Подсказки после ошибки',
+    desc: 'Подсветка области и автоподстановка текста — пользователь не застревает.',
+    bg: 'rgba(217, 119, 6, 0.1)', color: '#d97706',
+  },
+  {
+    icon: 'link',
+    title: 'Публичные ссылки',
+    desc: 'Прохождение без регистрации — отправили ссылку, человек тренируется.',
+    bg: 'rgba(124, 58, 237, 0.1)', color: '#7c3aed',
+  },
+  {
+    icon: 'monitoring',
+    title: 'Аналитика прохождений',
+    desc: 'Кто прошёл, где ошибался, сколько времени заняло — по каждой попытке.',
+    bg: 'rgba(5, 150, 105, 0.1)', color: '#059669',
+  },
+  {
+    icon: 'business',
+    title: 'Организации и сотрудники',
+    desc: 'Структура компании, роли и выдача тренингов команде.',
+    bg: 'rgba(220, 38, 127, 0.1)', color: '#be185d',
+  },
 ]);
 
 const team = ref([
   {
     name: 'Абарникова Елена',
-    role: 'Founder / Product Lead',
-    roleColor: '#4f46e5',
+    role: 'Founder · Product',
     photo: '/team/abarnikova.png',
-    bio: 'Опыт в EdTech и e‑learning 20+. Разрабатывала образовательные программы и цифровые курсы для корпоративных клиентов. Отвечает за продуктовую стратегию. Победитель хакатона «Лидеры цифровой трансформации-2024».',
+    bio: '20+ лет в EdTech и корпоративном обучении. Продуктовая стратегия и методология. Победитель хакатона «Лидеры цифровой трансформации-2024».',
   },
   {
     name: 'Сидорин Тимофей',
-    role: 'Co‑founder & CTO (ML / Backend)',
-    roleColor: '#0891b2',
+    role: 'Co-founder · Backend / ML',
     photo: '/team/sidorin.png',
-    bio: 'Опыт в машинном обучении и backend‑разработке 3+. Строит ядро ИИ‑моделей, отвечает за серверную часть и надёжность платформы. Призёр хакатона «Лидеры цифровой трансформации 2024 ЯКУТИЯ». Призёр Гагарин Хакатона 2024.',
+    bio: 'Серверная часть и надёжность платформы. Призёр «Лидеры цифровой трансформации 2024 ЯКУТИЯ» и Гагарин Хакатона 2024.',
   },
   {
     name: 'Черненко Константин',
-    role: 'CTO (UX/UI / Frontend)',
-    roleColor: '#7c3aed',
+    role: 'Frontend / UX-UI',
     photo: '/team/chernenko.png',
-    bio: 'UX/UI и frontend‑часть продукта. Опыт проектирования интерфейсов для сложных веб‑приложений 3+. Фокусируется на удобстве для методистов и корпоративных пользователей. Призёр хакатона «Лидеры цифровой трансформации 2024 ЯКУТИЯ».',
+    bio: 'Интерфейсы сложных веб-приложений. Фокус — удобство для методистов и пользователей. Призёр «Лидеры цифровой трансформации 2024 ЯКУТИЯ».',
   },
 ]);
 </script>
@@ -360,49 +356,61 @@ export default { name: 'LandingPage' };
 <style scoped>
 /* ==================== BASE ==================== */
 .landing-layout {
-  background-color: #ffffff;
-  font-family: var(--font-sans);
-}
-.landing-page {
-  min-height: 100vh;
+  background: #fff;
 }
 .container {
-  max-width: 1200px;
+  max-width: 1160px;
   margin: 0 auto;
-  padding: 0 40px;
+  padding: 0 32px;
 }
-.flex-grow-1 { flex-grow: 1; }
 
 /* ==================== HEADER ==================== */
 .landing-header {
-  background: rgba(255, 255, 255, 0.8) !important;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
 }
+.landing-header .q-toolbar {
+  min-height: 68px;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: #0f172a;
+}
+.logo-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
+}
+.landing-nav {
+  display: flex;
+  gap: 28px;
+}
+.nav-link {
+  font-size: 14px;
+  font-weight: 500;
+  color: #475569;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.nav-link:hover { color: #4f46e5; }
+.header-cta { border-radius: 10px; }
 
-/* ==================== BG BLOBS ==================== */
-.blob-bg {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(120px);
-  z-index: 0;
-  opacity: 0.35;
-  pointer-events: none;
-  animation: blob-float 18s infinite alternate ease-in-out;
-}
-.blob-1 { top: -8%; left: -8%; width: 50vw; height: 50vw; background: rgba(79, 70, 229, 0.3); }
-.blob-2 { top: 35%; right: -10%; width: 40vw; height: 40vw; background: rgba(124, 58, 237, 0.2); animation-delay: -6s; }
-.blob-3 { bottom: -10%; left: 10%; width: 55vw; height: 35vw; background: rgba(8, 145, 178, 0.18); animation-delay: -12s; }
-@keyframes blob-float {
-  0%   { transform: translate(0, 0) scale(1); }
-  50%  { transform: translate(4%, 6%) scale(1.05); }
-  100% { transform: translate(-3%, 8%) scale(0.95); }
-}
-
-/* ==================== TYPOGRAPHY ==================== */
+/* ==================== TYPO ==================== */
 .text-gradient {
-  background: linear-gradient(135deg, #4f46e5, #7c3aed, #a21caf);
+  background: linear-gradient(120deg, #4f46e5, #7c3aed 55%, #0891b2);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -411,463 +419,483 @@ export default { name: 'LandingPage' };
   display: inline-block;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 1.5px;
+  letter-spacing: 1.6px;
   text-transform: uppercase;
   color: #4f46e5;
-  background: rgba(79, 70, 229, 0.08);
-  border-radius: 999px;
-  padding: 6px 18px;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 .section-title {
-  font-size: 2.6rem;
+  font-size: clamp(1.9rem, 3.6vw, 2.7rem);
   font-weight: 800;
-  line-height: 1.2;
-  letter-spacing: -0.5px;
+  line-height: 1.15;
+  letter-spacing: -0.8px;
   color: #0f172a;
   margin: 0 0 16px;
 }
 .section-subtitle {
-  font-size: 1.1rem;
+  font-size: 1.08rem;
   color: #64748b;
   max-width: 620px;
   margin: 0 auto;
-  line-height: 1.7;
+  line-height: 1.65;
 }
+.section-header { text-align: center; margin-bottom: 56px; }
 
 /* ==================== HERO ==================== */
-.hero-section {
+.hero {
   position: relative;
-  z-index: 1;
-  padding: 140px 0 100px;
-  text-align: center;
+  padding: 96px 0 110px;
+  overflow: hidden;
+  background:
+    radial-gradient(60% 50% at 15% 0%, rgba(79, 70, 229, 0.09), transparent 70%),
+    radial-gradient(50% 45% at 90% 20%, rgba(8, 145, 178, 0.08), transparent 70%);
 }
-.hero-tag {
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 64px;
+  align-items: center;
+}
+.hero-badge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 9px;
   font-size: 13px;
   font-weight: 600;
-  color: #4f46e5;
+  color: #4338ca;
   background: rgba(79, 70, 229, 0.08);
-  border: 1px solid rgba(79, 70, 229, 0.2);
+  border: 1px solid rgba(79, 70, 229, 0.18);
   border-radius: 999px;
-  padding: 8px 20px;
-  margin-bottom: 32px;
+  padding: 8px 18px;
+  margin-bottom: 28px;
 }
-.tag-dot {
+.hero-badge-dot {
   width: 8px; height: 8px;
-  background: #4f46e5;
   border-radius: 50%;
-  animation: pulse-dot 2s infinite;
+  background: #4f46e5;
+  animation: hero-pulse 2s infinite;
 }
-@keyframes pulse-dot {
+@keyframes hero-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(0.7); }
+  50% { opacity: 0.45; transform: scale(0.75); }
 }
 .hero-title {
-  font-size: clamp(3rem, 5.5vw, 4.8rem);
-  font-weight: 900;
-  line-height: 1.05;
-  letter-spacing: -2px;
+  font-size: clamp(2.3rem, 4.4vw, 3.6rem);
+  font-weight: 850;
+  line-height: 1.08;
+  letter-spacing: -1.6px;
   color: #0f172a;
-  margin: 0 0 24px;
+  margin: 0 0 22px;
 }
 .hero-subtitle {
-  font-size: 1.25rem;
+  font-size: 1.14rem;
   color: #475569;
-  max-width: 680px;
-  margin: 0 auto 40px;
-  line-height: 1.6;
+  line-height: 1.65;
+  margin: 0 0 34px;
+  max-width: 560px;
 }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 34px; }
+.hero-btn-primary {
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(79, 70, 229, 0.3);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.hero-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px rgba(79, 70, 229, 0.42);
+}
+.hero-btn-secondary {
+  border-radius: 12px;
+  transition: transform 0.25s ease;
+}
+.hero-btn-secondary:hover { transform: translateY(-2px); }
 .hero-markers {
   display: flex;
-  justify-content: center;
   flex-wrap: wrap;
-  gap: 12px 24px;
-  margin-bottom: 48px;
+  gap: 10px 22px;
 }
-.marker-item {
+.hero-marker {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 15px;
+  gap: 7px;
+  font-size: 14px;
   font-weight: 500;
   color: #334155;
 }
-.hero-actions {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-.hero-btn {
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-}
-.hero-btn:hover { transform: translateY(-3px); }
-.hero-btn--primary {
-  box-shadow: 0 12px 28px rgba(79, 70, 229, 0.35);
-}
-.hero-btn--primary:hover {
-  box-shadow: 0 16px 36px rgba(79, 70, 229, 0.5);
-}
-.hero-btn--outline {
-  background: white !important;
-  border: 1px solid #e2e8f0 !important;
-  color: #0f172a !important;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-}
-.hero-btn--outline:hover {
-  border-color: #cbd5e1 !important;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-}
 
-/* ==================== HOW IT WORKS ==================== */
-.section-how {
-  position: relative;
-  z-index: 1;
-  padding: 100px 0;
+/* Макет продукта */
+.hero-visual { position: relative; }
+.mock-window {
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow:
+    0 24px 60px rgba(15, 23, 42, 0.14),
+    0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+  overflow: hidden;
+  transform: perspective(1400px) rotateY(-7deg) rotateX(3deg);
+  transition: transform 0.6s ease;
 }
-.how-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 60px;
-  align-items: start;
+.hero-visual:hover .mock-window {
+  transform: perspective(1400px) rotateY(-3deg) rotateX(1deg);
 }
-@media (max-width: 900px) {
-  .how-grid { grid-template-columns: 1fr; }
-}
-
-/* Before/After card */
-.before-after-card {
-  padding: 32px;
+.mock-window-bar {
   display: flex;
-  gap: 0;
-  align-items: stretch;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
 }
-.ba-col {
+.mock-dot { width: 10px; height: 10px; border-radius: 50%; }
+.mock-dot--red { background: #fca5a5; }
+.mock-dot--yellow { background: #fcd34d; }
+.mock-dot--green { background: #86efac; }
+.mock-url {
+  margin-left: 12px;
+  font-size: 11px;
+  color: #94a3b8;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  border-radius: 6px;
+  padding: 2px 10px;
+}
+.mock-body { display: flex; height: 320px; }
+.mock-sidebar {
+  width: 148px;
+  padding: 16px 14px;
+  background: #f8fafc;
+  border-right: 1px solid rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mock-line {
+  height: 9px;
+  border-radius: 5px;
+  background: #e2e8f0;
+}
+.mock-line--strong { background: #c7d2fe; }
+.mock-line--short { width: 60%; }
+.mock-screen {
   flex: 1;
   display: flex;
   flex-direction: column;
+  padding: 14px;
   gap: 12px;
+  position: relative;
 }
-.ba-before { padding-right: 24px; }
-.ba-after { padding-left: 24px; }
-.ba-divider {
+.mock-toolbar {
+  height: 26px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #eef2ff, #f8fafc);
+}
+.mock-content {
+  flex: 1;
+  position: relative;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 8px;
+  flex-direction: column;
+  gap: 10px;
 }
-.ba-label {
+.mock-block {
+  height: 26px;
+  border-radius: 7px;
+  background: #f1f5f9;
+}
+.mock-block--wide { width: 70%; }
+.mock-hotspot {
+  position: relative;
+  height: 34px;
+  width: 55%;
+  border-radius: 8px;
+  border: 2px solid #4f46e5;
+  background: rgba(79, 70, 229, 0.1);
+}
+.mock-hotspot-ring {
+  position: absolute;
+  top: -6px; right: -6px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #4f46e5;
+  animation: hotspot-ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes hotspot-ping {
+  0% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.5); }
+  80%, 100% { box-shadow: 0 0 0 14px rgba(79, 70, 229, 0); }
+}
+.mock-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0f172a;
+  background: #eef2ff;
+  border: 1px solid rgba(79, 70, 229, 0.2);
+  border-radius: 999px;
+  padding: 7px 14px;
+}
+
+/* ==================== SECTIONS ==================== */
+.section { padding: 96px 0; }
+.section--alt { background: #f8fafc; }
+
+/* До / после */
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  max-width: 940px;
+  margin: 0 auto;
+}
+.compare-card {
+  border-radius: 20px;
+  padding: 32px;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+}
+.compare-card--before { background: #fafafa; }
+.compare-card--after {
+  background: #fff;
+  border-color: rgba(79, 70, 229, 0.25);
+  box-shadow: 0 16px 40px rgba(79, 70, 229, 0.1);
+}
+.compare-label {
   display: inline-block;
   font-size: 11px;
   font-weight: 700;
-  text-transform: uppercase;
   letter-spacing: 1px;
+  text-transform: uppercase;
   border-radius: 999px;
-  padding: 3px 12px;
+  padding: 4px 14px;
+  margin-bottom: 18px;
 }
-.ba-label--before { background: #fee2e2; color: #dc2626; }
-.ba-label--after { background: #d1fae5; color: #059669; }
-.ba-icon { font-size: 32px; }
-.ba-heading { font-weight: 700; font-size: 15px; color: #0f172a; }
-.ba-list {
-  margin: 0; padding: 0;
+.compare-label--before { background: #fee2e2; color: #b91c1c; }
+.compare-label--after { background: #e0e7ff; color: #4338ca; }
+.compare-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 18px;
+}
+.compare-list {
   list-style: none;
+  margin: 0; padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
 }
-.ba-list li {
-  font-size: 13px;
-  color: #64748b;
-  padding-left: 16px;
-  position: relative;
-}
-.ba-list li::before {
-  content: '—';
-  position: absolute;
-  left: 0;
-  color: #cbd5e1;
+.compare-list li {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 14px;
+  color: #475569;
 }
 
-/* Steps */
-.how-right {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-.step-item {
-  display: flex;
-  align-items: flex-start;
+/* Шаги */
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
-  position: relative;
-  padding-bottom: 8px;
 }
-.step-number {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
+.step-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  border-radius: 18px;
+  padding: 28px 24px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.step-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(79, 70, 229, 0.3);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.09);
+}
+.step-num {
+  position: absolute;
+  top: 20px; right: 22px;
+  font-size: 34px;
+  font-weight: 800;
+  color: #eef2ff;
+  line-height: 1;
+}
+.step-icon {
+  width: 48px; height: 48px;
+  border-radius: 13px;
+  background: rgba(79, 70, 229, 0.09);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
-  font-weight: 800;
-  color: white;
-  flex-shrink: 0;
-  position: relative;
-  z-index: 1;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  margin-bottom: 16px;
 }
-.step-connector {
-  position: absolute;
-  left: 21px;
-  top: 50px;
-  width: 2px;
-  height: calc(100% - 8px);
-  background: linear-gradient(to bottom, #e2e8f0, transparent);
-}
-.step-body {
-  padding-bottom: 32px;
-}
-.step-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #0f172a;
-  margin-bottom: 6px;
-}
-.step-desc {
-  font-size: 14px;
-  color: #64748b;
-  line-height: 1.6;
-}
+.step-title { font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
+.step-desc { font-size: 13.5px; color: #64748b; line-height: 1.55; }
 
-/* ==================== TECH + METRICS ==================== */
-.section-tech {
-  position: relative;
-  z-index: 1;
-  padding: 100px 0;
-}
-.tech-grid {
+/* Фичи */
+.features-grid {
   display: grid;
-  grid-template-columns: 1fr 1.5fr;
-  gap: 40px;
-  align-items: start;
-}
-@media (max-width: 900px) {
-  .tech-grid { grid-template-columns: 1fr; }
-}
-.tech-left {
-  padding: 36px;
-}
-.tech-block-title {
-  display: flex;
-  align-items: center;
-  font-size: 18px;
-  font-weight: 700;
-  color: #0f172a;
-  margin-bottom: 28px;
-}
-.tech-list {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-.tech-list-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  font-size: 15px;
-  color: #334155;
-  line-height: 1.5;
-}
-.tech-bullet {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  margin-top: 6px;
-}
-.tech-right {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
 }
-@media (max-width: 600px) {
-  .tech-right { grid-template-columns: 1fr; }
+.feature-card {
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  border-radius: 18px;
+  padding: 26px 24px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
-.metric-card {
-  padding: 28px 24px;
-  text-align: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
 }
-.metric-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+.feature-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
 }
-.metric-value {
-  font-size: 2.2rem;
-  font-weight: 900;
-  letter-spacing: -1px;
-  line-height: 1;
-  margin-bottom: 8px;
-}
-.metric-label {
-  font-size: 13px;
-  color: #64748b;
-  font-weight: 500;
-}
-.tech-footer {
-  margin-top: 48px;
-  text-align: center;
-  font-size: 15px;
-  color: #94a3b8;
-  font-style: italic;
-}
+.feature-title { font-size: 15.5px; font-weight: 700; color: #0f172a; margin-bottom: 7px; }
+.feature-desc { font-size: 13.5px; color: #64748b; line-height: 1.55; }
 
-/* ==================== TEAM ==================== */
-.section-team {
-  position: relative;
-  z-index: 1;
-  padding: 100px 0;
-}
-.glass-card-solid {
-  background: white;
-  border: 1px solid rgba(0,0,0,0.06);
-  border-radius: 24px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+/* Команда */
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+  max-width: 1000px;
+  margin: 0 auto;
 }
 .team-card {
-  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  border-radius: 20px;
+  padding: 30px 26px;
+  text-align: center;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 .team-card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 30px 60px rgba(0,0,0,0.1) !important;
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.09);
 }
-.team-squircle {
-  width: 160px; height: 160px;
-  border-radius: 36px;
+.team-avatar {
+  width: 96px; height: 96px;
+  margin: 0 auto 18px;
+  border-radius: 26px;
   overflow: hidden;
-  border: 4px solid #f1f5f9;
-  background-color: #f1f5f9;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
 }
-.team-image {
+.team-avatar img {
   width: 100%; height: 100%;
   object-fit: cover;
-  object-position: center 10%;
-  transition: transform 0.5s ease;
+  display: block;
 }
-.team-card:hover .team-image { transform: scale(1.07); }
+.team-name { font-size: 17px; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
 .team-role {
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 700;
+  letter-spacing: 0.4px;
+  color: #4f46e5;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  margin-bottom: 14px;
 }
-.desc-text { font-size: 14px; line-height: 1.65; }
+.team-bio {
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.6;
+  text-align: left;
+}
 
-/* ==================== CTA ==================== */
-.section-cta {
-  position: relative;
-  z-index: 1;
-  padding: 60px 0 100px;
-}
+/* CTA */
 .cta-card {
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 60%, #a21caf 100%);
-  border-radius: 32px;
-  padding: 80px 60px;
-  text-align: center;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 30px 60px rgba(79, 70, 229, 0.3);
+  border-radius: 28px;
+  padding: 72px 48px;
+  text-align: center;
+  color: #fff;
+  background: linear-gradient(135deg, #312e81, #4f46e5 45%, #7c3aed 90%);
 }
-.cta-glow {
+.cta-card::before {
+  content: '';
   position: absolute;
-  top: -60%; left: -20%;
-  width: 140%; height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 65%);
-  pointer-events: none;
-}
-.cta-content {
-  position: relative;
-  z-index: 1;
+  inset: 0;
+  background:
+    radial-gradient(45% 60% at 80% 10%, rgba(255, 255, 255, 0.16), transparent 70%),
+    radial-gradient(40% 55% at 10% 90%, rgba(8, 145, 178, 0.35), transparent 70%);
 }
 .cta-title {
-  font-size: 2.4rem;
+  position: relative;
+  font-size: clamp(1.7rem, 3.2vw, 2.4rem);
   font-weight: 800;
-  color: white;
-  margin: 0 0 20px;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.6px;
+  margin: 0 0 14px;
 }
 .cta-subtitle {
-  font-size: 1.1rem;
-  color: rgba(255,255,255,0.8);
-  max-width: 560px;
-  margin: 0 auto 40px;
-  line-height: 1.6;
+  position: relative;
+  font-size: 1.05rem;
+  color: rgba(255, 255, 255, 0.82);
+  margin: 0 0 34px;
 }
 .cta-actions {
+  position: relative;
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 14px;
 }
+.cta-btn-primary {
+  border-radius: 12px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.25);
+}
+.cta-btn-secondary { border-radius: 12px; }
 
-/* ==================== GLASS ==================== */
-.glass-card {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  border-radius: 20px;
-  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.05);
+/* Footer */
+.landing-footer {
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+  padding: 28px 0;
+  background: #fff;
 }
-
-/* ==================== ANIMATIONS ==================== */
-.animate-fade-in-up {
-  animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-  opacity: 0;
-  transform: translateY(24px);
-}
-.animate-stagger-1 { animation-delay: 0.1s; }
-.animate-stagger-2 { animation-delay: 0.2s; }
-.animate-stagger-3 { animation-delay: 0.35s; }
-.animate-stagger-4 { animation-delay: 0.5s; }
-@keyframes fadeInUp {
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ==================== VIDEO DIALOG ==================== */
-.video-dialog-card {
-  border-radius: 16px;
-  overflow: hidden;
-}
-.video-dialog-body {
+.footer-inner {
   display: flex;
   align-items: center;
-  justify-content: center;
-  min-height: 400px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
 }
-.video-placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
+.logo--footer { font-size: 16px; }
+.logo--footer .logo-mark { width: 28px; height: 28px; border-radius: 8px; }
+.footer-copy { font-size: 13px; color: #94a3b8; }
+.footer-mail {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4f46e5;
+  text-decoration: none;
 }
+.footer-mail:hover { text-decoration: underline; }
 
 /* ==================== RESPONSIVE ==================== */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
+  .hero-grid { grid-template-columns: 1fr; gap: 56px; }
+  .hero-visual { max-width: 620px; margin: 0 auto; width: 100%; }
+  .mock-window { transform: none; }
+  .steps-grid { grid-template-columns: repeat(2, 1fr); }
+  .features-grid { grid-template-columns: repeat(2, 1fr); }
+  .team-grid { grid-template-columns: 1fr; max-width: 460px; }
+}
+@media (max-width: 640px) {
   .container { padding: 0 20px; }
-  .hero-section { padding: 80px 0 60px; }
-  .section-how, .section-tech, .section-team { padding: 60px 0; }
-  .section-title { font-size: 2rem; }
-  .cta-card { padding: 50px 28px; }
-  .cta-title { font-size: 1.8rem; }
-  .before-after-card { flex-direction: column; }
-  .ba-divider { transform: rotate(90deg); }
-  .ba-before { padding-right: 0; padding-bottom: 20px; }
-  .ba-after { padding-left: 0; padding-top: 20px; }
+  .hero { padding: 64px 0 72px; }
+  .section { padding: 64px 0; }
+  .compare-grid { grid-template-columns: 1fr; }
+  .steps-grid,
+  .features-grid { grid-template-columns: 1fr; }
+  .cta-card { padding: 48px 24px; }
+  .mock-sidebar { display: none; }
 }
 </style>
