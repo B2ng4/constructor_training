@@ -63,11 +63,20 @@ export function usePassageData(trainingDataRef) {
 				return edge.trigger_type === event;
 			})
 			.sort((a, b) => (b.priority || 0) - (a.priority || 0));
-		return routes[0] || outgoingTransitions.value.find((edge) => edge.is_default || edge.trigger_type === "default") || null;
+		if (routes[0]) return routes[0];
+		// fallback на «дефолтный» переход только для успешного действия:
+		// иначе неверный клик уходит по default-ветке как будто успешный
+		if (event === "success") {
+			return outgoingTransitions.value.find(
+				(edge) => edge.is_default || edge.trigger_type === "default"
+			) || null;
+		}
+		return null;
 	}
 	function advance(event = "success", context = {}) {
 		if (!hasScenario.value) {
-			if (event !== "success" || currentIndex.value >= steps.value.length - 1) return { completed: currentIndex.value >= steps.value.length - 1 };
+			if (event !== "success") return { completed: false };
+			if (currentIndex.value >= steps.value.length - 1) return { completed: true };
 			setCurrent(steps.value[currentIndex.value + 1].id);
 			return { completed: false, step: selectedStep.value };
 		}
