@@ -26,11 +26,11 @@ class S3Service:
     def __init__(
         self,
         session: Optional[AsyncSession] = None,
-        aws_access_key_id: str = configs.AWS_ACCESS_KEY_ID,
-        aws_secret_access_key: str = configs.AWS_SECRET_ACCESS_KEY,
-        region_name: str = configs.S3_REGION_NAME,
-        bucket_name: str = configs.S3_BUCKET_NAME,
-        endpoint_url: str = configs.S3_ENDPOINT_URL,
+        aws_access_key_id: str = configs.MINIO_ROOT_USER,
+        aws_secret_access_key: str = configs.MINIO_ROOT_PASSWORD,
+        region_name: str = "us-east-1",
+        bucket_name: str = configs.MINIO_BUCKET,
+        endpoint_url: str = configs.MINIO_ENDPOINT_URL,
     ):
         import botocore.config
         s3_config = botocore.config.Config(max_pool_connections=50)

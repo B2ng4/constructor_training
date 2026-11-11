@@ -5,6 +5,8 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    env_file:
+      - ./backend/.env
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
@@ -23,7 +25,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_BASE_URL: https://api.aicsis.ru
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-https://api.aicsis.ru}
     container_name: frontend
     expose:
       - "80"
@@ -49,6 +51,7 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
       HOST: 0.0.0.0
+      MINIO_ENDPOINT_URL: https://s3.aicsis.ru
     depends_on:
       db:
         condition: service_healthy
@@ -61,7 +64,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          'python -c "import urllib.request; urllib.request.urlopen(''http://127.0.0.1:8001/'', timeout=5)"',
+          'python -c "import os,urllib.request; urllib.request.urlopen(''http://127.0.0.1:''+os.environ.get(''PORT'',''8001'')+''/'', timeout=5)"',
         ]
       interval: 15s
       timeout: 10s
@@ -111,6 +114,43 @@ services:
       - app-network
     restart: unless-stopped
 
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    command: server /data --console-address ":9001"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - minio_data:/data
+    expose:
+      - "9000"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: minio-init
+    env_file:
+      - ./backend/.env
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        until mc alias set local http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}"; do sleep 3; done
+        mc mb --ignore-existing "local/$${MINIO_BUCKET}"
+        mc anonymous set download "local/$${MINIO_BUCKET}"
+    depends_on:
+      minio:
+        condition: service_healthy
+    networks:
+      - app-network
+
   celery_worker:
     build:
       context: ./backend
@@ -130,6 +170,7 @@ services:
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
+      MINIO_ENDPOINT_URL: https://s3.aicsis.ru
     depends_on:
       db:
         condition: service_healthy
@@ -145,6 +186,7 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  minio_data:
   caddy_data:
   caddy_config:
 

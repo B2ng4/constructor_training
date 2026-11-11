@@ -41,20 +41,17 @@ class Configs(BaseSettings):
     DB_NAME: Optional[str] = Field(default="postgres", env="DB_NAME")
     DB_PASS: Optional[str] = Field(default="admin", env="DB_PASS")
 
-    # ------------ S3 хранилище ----------------------------------------
-    AWS_ACCESS_KEY_ID: Optional[str] = Field(
-        default="AWS_ACCESS_KEY_ID", env="AWS_ACCESS_KEY_ID"
+    # ------------ MinIO хранилище ----------------------------------------
+    MINIO_ROOT_USER: Optional[str] = Field(
+        default="minioadmin", env="MINIO_ROOT_USER"
     )
-    AWS_SECRET_ACCESS_KEY: Optional[str] = Field(
-        default="AWS_SECRET_ACCESS_KEY", env="AWS_SECRET_ACCESS_KEY"
+    MINIO_ROOT_PASSWORD: Optional[str] = Field(
+        default="minioadmin", env="MINIO_ROOT_PASSWORD"
     )
-    S3_BUCKET_NAME: Optional[str] = Field(
-        default="S3_BUCKET_NAME", env="S3_BUCKET_NAME"
+    MINIO_BUCKET: Optional[str] = Field(default="trainings", env="MINIO_BUCKET")
+    MINIO_ENDPOINT_URL: Optional[str] = Field(
+        default="http://localhost:9000", env="MINIO_ENDPOINT_URL"
     )
-    S3_ENDPOINT_URL: Optional[str] = Field(
-        default="S3_ENDPOINT_URL", env="S3_ENDPOINT_URL"
-    )
-    S3_REGION_NAME: Optional[str] = Field(default="ru-1", env="S3_REGION_NAME")
 
     # ------------------- AI Video Analysis ---------------------------------
     AI_API_KEY: Optional[str] = Field(default="AI_API_KEY", env="AI_API_KEY")

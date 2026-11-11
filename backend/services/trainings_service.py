@@ -87,9 +87,9 @@ def _s3_object_key_from_public_url(image_url: str) -> Optional[str]:
     raw = (image_url or "").strip()
     if not raw:
         return None
-    ep = (configs.S3_ENDPOINT_URL or "").strip().rstrip("/")
-    bn = (configs.S3_BUCKET_NAME or "").strip()
-    if not ep or not bn or ep.startswith("S3_"):
+    ep = (configs.MINIO_ENDPOINT_URL or "").strip().rstrip("/")
+    bn = (configs.MINIO_BUCKET or "").strip()
+    if not ep or not bn:
         return None
     prefix = f"{ep}/{bn}/"
     if raw.startswith(prefix):

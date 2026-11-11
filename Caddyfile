@@ -3,5 +3,9 @@ aicsis.ru, www.aicsis.ru {
 }
 
 api.aicsis.ru {
-	reverse_proxy backend:8001
+	reverse_proxy backend:{$PORT:8001}
+}
+
+s3.aicsis.ru {
+	reverse_proxy minio:9000
 }
