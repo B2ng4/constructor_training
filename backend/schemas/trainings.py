@@ -251,6 +251,8 @@ class PassageHistoryItemResponse(BaseModel):
     is_completed: bool
     duration_seconds: Optional[int] = None
     wrong_attempts_total: Optional[int] = None
+    user_email: Optional[str] = None
+    user_name: Optional[str] = None
 
     class Config:
         from_attributes = True

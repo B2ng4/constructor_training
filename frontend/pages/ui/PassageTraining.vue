@@ -36,10 +36,11 @@
 
 <script setup>
 import { ref, watch, computed } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { TrainingApi } from "@api";
 
 const route = useRoute();
+const router = useRouter();
 
 const isPlayRoute = computed(() => route.name === "TrainingPlay");
 const trainingApi = new TrainingApi();
@@ -59,6 +60,13 @@ async function loadTraining() {
 
 		trainingData.value = data;
 
+		// Защищённый тренинг — проходим только под аккаунтом,
+		// чтобы в статистике было видно, кто проходил.
+		if (data.requires_auth && !localStorage.getItem("tokenAuth")) {
+			router.push({ path: "/login", query: { redirect: route.fullPath } });
+			return;
+		}
+
 		const attemptKey = `passage_attempt_${accessToken}`;
 		if (!sessionStorage.getItem(attemptKey)) {
 			try {
@@ -67,6 +75,10 @@ async function loadTraining() {
 					sessionStorage.setItem(attemptKey, String(startRes.data.attempt_id));
 				}
 			} catch (e) {
+				if (e?.response?.status === 401) {
+					router.push({ path: "/login", query: { redirect: route.fullPath } });
+					return;
+				}
 				console.warn("[passage] start attempt", e);
 			}
 		}

@@ -18,10 +18,22 @@
 
 				<q-card class="q-mb-md q-pa-md bg-grey-3 row" flat>
 					<q-icon name="shield" color="grey-7" size="24px" class="q-mr-md"/>
-					<div>
-						<div class="text-subtitle2 q-mb-xs">Настройки безопасности</div>
-						<div class="text-body2 text-grey-8">
-							Установить пароль, срок действия ссылки и запретить скачивание
+					<div class="col">
+						<div class="text-subtitle2 q-mb-xs">Кто может проходить</div>
+						<q-option-group
+							v-model="accessMode"
+							:options="accessOptions"
+							type="radio"
+							color="primary"
+							dense
+						/>
+						<div class="text-body2 text-grey-8 q-mt-xs">
+							<template v-if="accessMode === 'account'">
+								Прохождение только под аккаунтом — в статистике будет видно, кто проходил и сколько ошибок сделал
+							</template>
+							<template v-else>
+								Анонимно по ссылке — в статистике только общие цифры попыток
+							</template>
 						</div>
 					</div>
 				</q-card>
@@ -123,6 +135,11 @@ const emit = defineEmits(['published']);
 const $q = useQuasar();
 const publicLink = ref("");
 const publishing = ref(false);
+const accessMode = ref("link");
+const accessOptions = [
+	{ label: "Все, у кого есть ссылка", value: "link" },
+	{ label: "Только авторизованные пользователи", value: "account" },
+];
 
 const isAlreadyPublished = computed(() => !!props.data?.publish);
 
@@ -144,7 +161,10 @@ async function publish() {
 	if (!props.data?.uuid) return;
 	publishing.value = true;
 	try {
-		const { data } = await trainingApi.publishTraining(props.data.uuid);
+		const { data } = await trainingApi.publishTraining(
+			props.data.uuid,
+			accessMode.value === "account"
+		);
 		publicLink.value = data.public_link;
 		emit("published");
 		$q.notify({
@@ -169,7 +189,10 @@ async function republish() {
 	if (!props.data?.uuid) return;
 	publishing.value = true;
 	try {
-		const { data } = await trainingApi.publishTraining(props.data.uuid);
+		const { data } = await trainingApi.publishTraining(
+			props.data.uuid,
+			accessMode.value === "account"
+		);
 		publicLink.value = data.public_link;
 		emit("published");
 		$q.notify({

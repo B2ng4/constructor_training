@@ -320,6 +320,11 @@ class TrainingPublication(Base):
     views_count: Mapped[int] = mapped_column(default=0)
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
     is_active: Mapped[bool] = mapped_column(default=True)
+    # True — проходить могут только авторизованные пользователи;
+    # False — анонимно по ссылке.
+    requires_auth: Mapped[bool] = mapped_column(
+        default=False, server_default=sa.false()
+    )
     training: Mapped["Training"] = relationship(
         "Training", back_populates="publications", lazy="selectin"
     )
@@ -346,11 +351,16 @@ class TrainingPassageAttempt(Base):
     is_completed: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
     duration_seconds: Mapped[Optional[int]] = mapped_column(nullable=True)
     wrong_attempts_total: Mapped[Optional[int]] = mapped_column(nullable=True)
+    # Кто проходил (None — анонимная попытка)
+    user_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
 
     publication: Mapped["TrainingPublication"] = relationship(
         back_populates="passage_attempts",
         lazy="selectin",
     )
+    user: Mapped[Optional["User"]] = relationship(lazy="selectin")
 
 
 from models.users import User  # noqa: E402, F401

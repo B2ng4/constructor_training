@@ -22,6 +22,7 @@ from models.trainings import (
     TrainingStep,
     TypesAction,
 )
+from models.users import User
 from repositories.trainings_repository import TrainingRepository
 from schemas.trainings import (
     PassageAnalyticsResponse,
@@ -287,9 +288,13 @@ class TrainingsService:
         await self.session.commit()
         return await self.get_scenario_graph(training_uuid)
 
-    async def publish_training(self, training_uuid: UUID4) -> str:
+    async def publish_training(
+        self, training_uuid: UUID4, requires_auth: bool = False
+    ) -> str:
         """
         Публикует тренинг: ставит publish=True, создаёт/обновляет публикацию.
+        requires_auth=True — проходить могут только авторизованные пользователи
+        (в истории попыток будет видно, кто проходил).
         Возвращает публичный access_token.
         """
         training = await self.repo.get_by_uuid_with_relations(training_uuid)
@@ -307,6 +312,7 @@ class TrainingsService:
             training_uuid=training.uuid,
             access_token=access_token,
             snapshot_data=training_data,
+            requires_auth=requires_auth,
         )
 
         await self.session.commit()
@@ -347,7 +353,9 @@ class TrainingsService:
                 status_code=404, detail="Тренинг не найден или доступ закрыт"
             )
 
-        return TrainingResponse.model_validate(training)
+        data = TrainingResponse.model_validate(training).model_dump(mode="json")
+        data["requires_auth"] = bool(getattr(publication, "requires_auth", False))
+        return data
 
     async def get_trainings_by_params(
         self, skip: int = 0, limit: int = 100
@@ -1369,19 +1377,8 @@ class TrainingsService:
             )
         return training
 
-    async def start_public_passage_attempt(self, access_token: str) -> dict:
-        publication = await self.repo.get_publication_by_token(access_token)
-        if not publication:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Тренинг не найден или доступ закрыт",
-            )
-        att = await self.repo.create_passage_attempt(publication.id)
-        await self.session.commit()
-        return {"attempt_id": att.id}
-
-    async def complete_public_passage_attempt(
-        self, access_token: str, body: PassageCompleteRequest
+    async def start_public_passage_attempt(
+        self, access_token: str, user: Optional[User] = None
     ) -> dict:
         publication = await self.repo.get_publication_by_token(access_token)
         if not publication:
@@ -1389,12 +1386,41 @@ class TrainingsService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Тренинг не найден или доступ закрыт",
             )
+        if getattr(publication, "requires_auth", False) and user is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Для прохождения этого тренинга нужно войти в аккаунт",
+            )
+        att = await self.repo.create_passage_attempt(
+            publication.id, user_id=user.id if user else None
+        )
+        await self.session.commit()
+        return {"attempt_id": att.id}
+
+    async def complete_public_passage_attempt(
+        self,
+        access_token: str,
+        body: PassageCompleteRequest,
+        user: Optional[User] = None,
+    ) -> dict:
+        publication = await self.repo.get_publication_by_token(access_token)
+        if not publication:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Тренинг не найден или доступ закрыт",
+            )
+        if getattr(publication, "requires_auth", False) and user is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Для прохождения этого тренинга нужно войти в аккаунт",
+            )
         ok = await self.repo.complete_passage_attempt(
             body.attempt_id,
             publication.id,
             body.is_completed,
             body.duration_seconds,
             body.wrong_attempts_total,
+            user_id=user.id if user else None,
         )
         if not ok:
             raise HTTPException(
@@ -1422,7 +1448,24 @@ class TrainingsService:
         rows = await self.repo.list_passage_attempts_for_training(
             training_uuid, skip=skip, limit=min(limit, 100)
         )
-        return [PassageHistoryItemResponse.model_validate(r) for r in rows]
+        items = []
+        for r in rows:
+            u = getattr(r, "user", None)
+            name = (
+                f"{u.first_name or ''} {u.last_name or ''}".strip() if u else ""
+            ) or None
+            items.append(
+                PassageHistoryItemResponse(
+                    started_at=r.started_at,
+                    finished_at=r.finished_at,
+                    is_completed=r.is_completed,
+                    duration_seconds=r.duration_seconds,
+                    wrong_attempts_total=r.wrong_attempts_total,
+                    user_email=u.email if u else None,
+                    user_name=name,
+                )
+            )
+        return items
 
     async def add_steps_from_pdf(
         self,

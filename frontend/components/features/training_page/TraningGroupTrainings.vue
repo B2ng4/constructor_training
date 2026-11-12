@@ -316,6 +316,7 @@
 							<q-markup-table flat bordered class="passage-stats-table" wrap-cells>
 								<thead>
 									<tr>
+										<th class="text-left">Кто проходил</th>
 										<th class="text-left">Начало</th>
 										<th class="text-left">Конец</th>
 										<th class="text-center">Статус</th>
@@ -325,6 +326,15 @@
 								</thead>
 								<tbody>
 									<tr v-for="(row, idx) in passageHistory" :key="idx">
+										<td class="text-body2 text-grey-9">
+											<template v-if="row.user_name || row.user_email">
+												<div>{{ row.user_name || row.user_email }}</div>
+												<div v-if="row.user_name" class="text-caption text-grey-6">
+													{{ row.user_email }}
+												</div>
+											</template>
+											<span v-else class="text-grey-6">Анонимно</span>
+										</td>
 										<td class="text-body2 text-grey-9">{{ formatDt(row.started_at) }}</td>
 										<td class="text-body2 text-grey-9">{{ formatDt(row.finished_at) }}</td>
 										<td class="text-center text-body2">

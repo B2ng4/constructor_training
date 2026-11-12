@@ -42,8 +42,8 @@ export class TrainingApi extends BaseApi {
 		return super.createRequest();
 	}
 
-	publishTraining(uuid) {
-		super.params = {};
+	publishTraining(uuid, requiresAuth = false) {
+		super.params = { requires_auth: requiresAuth };
 		super.httpMethod = 'post';
 		super.sourceUrl = `/training/${uuid}/publish`;
 		return super.createRequest();

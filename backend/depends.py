@@ -1,3 +1,5 @@
+from typing import Optional
+
 import boto3
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -32,6 +34,9 @@ from services.video_ai_service import VideoAIService
 """
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+oauth2_scheme_optional = OAuth2PasswordBearer(
+    tokenUrl="auth/login", auto_error=False
+)
 
 
 async def get_user_repository(
@@ -147,6 +152,28 @@ async def get_current_user(
         await TempEmployeeAccountsService(session).cleanup_user_if_expired(user)
         raise credentials_exception
 
+    return user
+
+
+async def get_current_user_optional(
+    token: Optional[str] = Depends(oauth2_scheme_optional),
+    user_repo: UserRepository = Depends(get_user_repository),
+) -> Optional[User]:
+    """То же, что get_current_user, но без ошибки: None, если нет/невалидный токен."""
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, configs.SECRET_KEY, algorithms=[configs.ALGORITHM])
+        user_identifier: str = payload.get("sub")
+        if not user_identifier:
+            return None
+    except JWTError:
+        return None
+    user = None
+    if user_identifier.isdigit():
+        user = await user_repo.get_by_id(int(user_identifier))
+    if user is None:
+        user = await user_repo.find_one_or_none(user_identifier)
     return user
 
 

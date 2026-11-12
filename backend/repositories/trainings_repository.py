@@ -324,7 +324,11 @@ class TrainingRepository:
         return transitions
 
     async def create_or_update_publication(
-        self, training_uuid: UUID4, access_token: str, snapshot_data: Dict
+        self,
+        training_uuid: UUID4,
+        access_token: str,
+        snapshot_data: Dict,
+        requires_auth: bool = False,
     ) -> TrainingPublication:
         """
         Создает новую публикацию или обновляет существующую для данного тренинга.
@@ -340,11 +344,13 @@ class TrainingRepository:
             publication.access_token = access_token
             publication.data_snapshot = snapshot_data
             publication.is_active = True
+            publication.requires_auth = requires_auth
         else:
             publication = TrainingPublication(
                 training_uuid=training_uuid,
                 access_token=access_token,
                 data_snapshot=snapshot_data,
+                requires_auth=requires_auth,
             )
             self.session.add(publication)
 
@@ -397,9 +403,9 @@ class TrainingRepository:
         await self.session.execute(stmt)
 
     async def create_passage_attempt(
-        self, publication_id: int
+        self, publication_id: int, user_id: Optional[int] = None
     ) -> TrainingPassageAttempt:
-        att = TrainingPassageAttempt(publication_id=publication_id)
+        att = TrainingPassageAttempt(publication_id=publication_id, user_id=user_id)
         self.session.add(att)
         await self.session.flush()
         await self.session.refresh(att)
@@ -412,14 +418,18 @@ class TrainingRepository:
         is_completed: bool,
         duration_seconds: Optional[int],
         wrong_attempts_total: Optional[int],
+        user_id: Optional[int] = None,
     ) -> bool:
+        conditions = [
+            TrainingPassageAttempt.id == attempt_id,
+            TrainingPassageAttempt.publication_id == publication_id,
+            TrainingPassageAttempt.finished_at.is_(None),
+        ]
+        if user_id is not None:
+            conditions.append(TrainingPassageAttempt.user_id == user_id)
         stmt = (
             update(TrainingPassageAttempt)
-            .where(
-                TrainingPassageAttempt.id == attempt_id,
-                TrainingPassageAttempt.publication_id == publication_id,
-                TrainingPassageAttempt.finished_at.is_(None),
-            )
+            .where(*conditions)
             .values(
                 finished_at=func.now(),
                 is_completed=is_completed,

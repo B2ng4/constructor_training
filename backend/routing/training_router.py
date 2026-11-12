@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from core.config import public_passage_link
@@ -8,6 +8,7 @@ from pydantic import UUID4
 from depends import (
     get_current_creator,
     get_current_user,
+    get_current_user_optional,
     get_gigachat_tts_service,
     get_s3_service,
     get_trainings_service,
@@ -455,11 +456,12 @@ async def update_scenario_graph(
 @router.post("/{training_uuid}/publish", name="Опубликовать тренинг")
 async def publish_training(
     training_uuid: UUID4,
+    requires_auth: bool = Query(False),
     service: TrainingsService = Depends(get_trainings_service),
     user: User = Depends(get_current_creator),
 ):
     await service._require_training_owner(training_uuid, user.id)
-    token = await service.publish_training(training_uuid)
+    token = await service.publish_training(training_uuid, requires_auth=requires_auth)
     return {
         "success": True,
         "public_link": public_passage_link(token),
@@ -485,8 +487,9 @@ async def unpublish_training(
 async def start_passage_attempt(
     access_token: str,
     service: TrainingsService = Depends(get_trainings_service),
+    user: Optional[User] = Depends(get_current_user_optional),
 ):
-    return await service.start_public_passage_attempt(access_token)
+    return await service.start_public_passage_attempt(access_token, user=user)
 
 
 @router.post(
@@ -497,8 +500,9 @@ async def complete_passage_attempt(
     access_token: str,
     body: PassageCompleteRequest,
     service: TrainingsService = Depends(get_trainings_service),
+    user: Optional[User] = Depends(get_current_user_optional),
 ):
-    return await service.complete_public_passage_attempt(access_token, body)
+    return await service.complete_public_passage_attempt(access_token, body, user=user)
 
 
 @router.get(
